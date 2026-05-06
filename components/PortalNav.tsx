@@ -59,7 +59,7 @@ export function PortalNav({ displayName, email, isAdmin, isManager, avatarUrl }:
             )}
           </Link>
           <form action="/portal/logout" method="post">
-            <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] py-3 px-2 -my-1">
+            <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] inline-flex items-center min-h-[40px] px-3">
               Logout
             </button>
           </form>

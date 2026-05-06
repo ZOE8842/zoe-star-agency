@@ -117,7 +117,7 @@ export function AvatarUploader({
               type="button"
               onClick={() => fileInput.current?.click()}
               disabled={loading}
-              className="text-[10px] uppercase tracking-[0.2em] border border-champagne/40 hover:border-champagne hover:bg-champagne/5 text-cream py-2 px-4 transition disabled:opacity-50"
+              className="text-[10px] uppercase tracking-[0.2em] border border-champagne/40 hover:border-champagne hover:bg-champagne/5 text-cream inline-flex items-center min-h-[40px] px-4 transition disabled:opacity-50"
             >
               {loading ? "Lädt…" : previewUrl ? "Ändern" : "Hochladen"}
             </button>
@@ -126,7 +126,7 @@ export function AvatarUploader({
                 type="button"
                 onClick={handleRemove}
                 disabled={loading}
-                className="text-[10px] uppercase tracking-[0.2em] border border-cream/20 hover:border-red-500/60 hover:text-red-300 text-cream/60 py-2 px-4 transition disabled:opacity-50"
+                className="text-[10px] uppercase tracking-[0.2em] border border-cream/20 hover:border-red-500/60 hover:text-red-300 text-cream/60 inline-flex items-center min-h-[40px] px-4 transition disabled:opacity-50"
               >
                 Entfernen
               </button>
