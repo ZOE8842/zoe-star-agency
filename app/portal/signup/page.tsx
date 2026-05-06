@@ -21,6 +21,8 @@ function SignupForm() {
     country: "DE",
     language: "de",
   });
+  const [acceptDatenschutz, setAcceptDatenschutz] = useState(false);
+  const [acceptAgb, setAcceptAgb] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +34,10 @@ function SignupForm() {
     e.preventDefault();
     setError(null);
 
+    if (!acceptDatenschutz || !acceptAgb) {
+      setError("Bitte Datenschutz, AGB und Portal-Regeln akzeptieren.");
+      return;
+    }
     if (form.password !== form.passwordConfirm) {
       setError("Passwörter stimmen nicht überein.");
       return;
@@ -217,6 +223,41 @@ function SignupForm() {
               className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream placeholder-cream/30 focus:border-champagne focus:outline-none"
               placeholder="Repeat your password"
             />
+          </div>
+
+          <div className="border border-champagne/20 bg-champagne/5 p-4 mt-2">
+            <p className="text-champagne text-xs uppercase tracking-[0.2em] font-semibold mb-2">⚠ Sicherheits-Hinweis</p>
+            <p className="text-cream/70 text-xs leading-relaxed">
+              Bitte verwende NIE dein TikTok-Passwort. Wähle ein eigenes, einzigartiges Passwort nur für das ZOE-Portal.
+            </p>
+          </div>
+
+          <div className="space-y-3 mt-2">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox" required checked={acceptDatenschutz}
+                onChange={(e) => setAcceptDatenschutz(e.target.checked)}
+                className="mt-1 w-4 h-4 accent-champagne shrink-0"
+              />
+              <span className="text-cream/70 text-xs leading-relaxed">
+                Ich akzeptiere die{" "}
+                <a href="/legal/datenschutz" target="_blank" className="text-champagne hover:underline">Datenschutzerklärung</a>.
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox" required checked={acceptAgb}
+                onChange={(e) => setAcceptAgb(e.target.checked)}
+                className="mt-1 w-4 h-4 accent-champagne shrink-0"
+              />
+              <span className="text-cream/70 text-xs leading-relaxed">
+                Ich akzeptiere die{" "}
+                <a href="/legal/agb" target="_blank" className="text-champagne hover:underline">AGB</a>{" "}
+                und die{" "}
+                <a href="/legal/portal-regeln" target="_blank" className="text-champagne hover:underline">Portal-Regeln</a>.
+              </span>
+            </label>
           </div>
 
           {error && (

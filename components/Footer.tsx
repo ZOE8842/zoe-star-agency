@@ -58,10 +58,12 @@ export function Footer() {
           <p className="text-cream/40 text-xs uppercase tracking-[0.25em]">
             © {new Date().getFullYear()} ZOE Star Agency
           </p>
-          <div className="flex gap-6">
-            <Link href="/legal" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">Legal</Link>
-            <Link href="/legal#privacy" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">Privacy</Link>
-            <Link href="/legal#imprint" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">Imprint</Link>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <Link href="/legal/impressum" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">Impressum</Link>
+            <Link href="/legal/datenschutz" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">Datenschutz</Link>
+            <Link href="/legal/agb" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">AGB</Link>
+            <Link href="/legal/portal-regeln" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">Portal-Regeln</Link>
+            <Link href="/contact" className="text-cream/40 hover:text-champagne text-xs uppercase tracking-[0.25em]">Kontakt</Link>
           </div>
         </div>
       </div>
