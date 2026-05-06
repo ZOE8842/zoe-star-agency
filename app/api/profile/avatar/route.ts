@@ -25,11 +25,11 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Kein File uebergeben." }, { status: 400 });
+    return NextResponse.json({ error: "Kein File übergeben." }, { status: 400 });
   }
 
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "Datei zu gross. Max 2 MB." }, { status: 400 });
+    return NextResponse.json({ error: "Datei zu groß. Max 2 MB." }, { status: 400 });
   }
   if (!ALLOWED_MIME.includes(file.type)) {
     return NextResponse.json({ error: "Nur JPEG, PNG oder WebP erlaubt." }, { status: 400 });

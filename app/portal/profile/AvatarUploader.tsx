@@ -30,7 +30,7 @@ export function AvatarUploader({
     setError(null);
 
     if (file.size > 2 * 1024 * 1024) {
-      setError("Datei zu gross. Max 2 MB.");
+      setError("Datei zu groß. Max 2 MB.");
       return;
     }
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -70,7 +70,7 @@ export function AvatarUploader({
     const res = await fetch("/api/profile/avatar", { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error || "Loeschen fehlgeschlagen.");
+      setError(data.error || "Löschen fehlgeschlagen.");
       setLoading(false);
       return;
     }
@@ -119,7 +119,7 @@ export function AvatarUploader({
               disabled={loading}
               className="text-[10px] uppercase tracking-[0.2em] border border-champagne/40 hover:border-champagne hover:bg-champagne/5 text-cream py-2 px-4 transition disabled:opacity-50"
             >
-              {loading ? "Laedt..." : previewUrl ? "Aendern" : "Hochladen"}
+              {loading ? "Lädt…" : previewUrl ? "Ändern" : "Hochladen"}
             </button>
             {previewUrl && (
               <button
