@@ -14,15 +14,24 @@ export default function AGBPage() {
       </h1>
 
       <div className="border border-champagne/40 bg-champagne/5 px-5 py-4 mb-12">
-        <p className="text-champagne text-[10px] uppercase tracking-[0.25em] font-semibold mb-1">⚠ Entwurf · Bitte rechtlich prüfen</p>
+        <p className="text-champagne text-[10px] uppercase tracking-[0.25em] font-semibold mb-1">⚠ Entwurf · Anwalt-Prüfung empfohlen</p>
         <p className="text-cream/70 text-sm">
-          Diese AGB sind ein Entwurf. Vor Live-Schaltung empfohlen: Prüfung durch eine:n Anwält:in für Vertragsrecht / Medienrecht. Gerichtsstand „Berlin" anpassen falls Geschäftssitz abweicht.
+          Diese AGB sind ein Entwurf. Vor finaler Live-Schaltung Prüfung durch eine:n Anwält:in für Vertragsrecht / Medienrecht empfohlen.
         </p>
       </div>
 
+      <section className="mb-10 pb-8 border-b border-champagne/15">
+        <p className="eyebrow mb-3">Anbieter</p>
+        <p className="text-cream/80 leading-relaxed">
+          <strong className="text-champagne font-display italic text-lg block mb-2">ZOE ⭐ Star Agency</strong>
+          c/o SourceArt · Tuttlingerstraße 45 · 78333 Stockach · Deutschland<br />
+          USt-IdNr. DE461789258 · <a href="mailto:info@zoe-star.de" className="text-champagne hover:underline">info@zoe-star.de</a>
+        </p>
+      </section>
+
       <Section title="§ 1 Geltungsbereich">
         <p>
-          Diese AGB regeln das Vertragsverhältnis zwischen ZOE Star Agency („wir", „uns") und Creatorn („Creator", „du") betreffend die Nutzung des Creator-Portals zoe-star.de.
+          Diese AGB regeln das Vertragsverhältnis zwischen ZOE ⭐ Star Agency („wir", „uns") und Creatorn („Creator", „du") betreffend die Nutzung des Creator-Portals zoe-star.de.
         </p>
       </Section>
 
@@ -75,7 +84,7 @@ export default function AGBPage() {
 
       <Section title="§ 9 Schlussbestimmungen">
         <p>
-          Es gilt deutsches Recht. Erfüllungsort und Gerichtsstand ist, soweit gesetzlich zulässig, Berlin. Sollte eine Bestimmung dieser AGB unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.
+          Es gilt deutsches Recht. Erfüllungsort und Gerichtsstand ist, soweit gesetzlich zulässig, der Sitz des Anbieters. Sollte eine Bestimmung dieser AGB unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.
         </p>
       </Section>
 

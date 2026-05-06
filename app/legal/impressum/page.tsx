@@ -7,42 +7,37 @@ export const metadata: Metadata = {
 
 export default function ImpressumPage() {
   return (
-    <article className="prose-luxe">
+    <article>
       <p className="eyebrow mb-4">Legal</p>
-      <h1 className="heading-display text-4xl md:text-5xl mb-8 text-cream">Impressum</h1>
+      <h1 className="heading-display text-4xl md:text-5xl mb-12 text-cream">Impressum</h1>
 
-      <div className="border border-champagne/40 bg-champagne/5 px-5 py-4 mb-12">
-        <p className="text-champagne text-[10px] uppercase tracking-[0.25em] font-semibold mb-1">⚠ Platzhalter · Bitte finalisieren</p>
-        <p className="text-cream/70 text-sm">
-          Diese Seite enthält Platzhalter. Vor Live-Schaltung müssen Inhaber:in, vollständige Anschrift, Kontakt-Mail und ggf. USt-ID/Register eingetragen werden.
-        </p>
-      </div>
-
-      <Section title="Anbieter">
-        <p>ZOE Star Agency<br />
-        Inhaber:in: <span className="text-champagne">[Vollständiger Name]</span><br />
-        <span className="text-champagne">[Straße + Hausnummer]</span><br />
-        <span className="text-champagne">[PLZ + Ort]</span><br />
-        Deutschland</p>
-      </Section>
+      {/* BRAND-PROMINENT BLOCK */}
+      <section className="mb-12 pb-10 border-b border-champagne/15">
+        <p className="eyebrow mb-3">Betreiber</p>
+        <h2 className="heading-display text-3xl md:text-4xl text-champagne mb-6">
+          ZOE <span className="text-champagne/70">⭐</span> Star Agency
+        </h2>
+        <div className="text-cream/80 text-sm leading-relaxed space-y-1">
+          <p>c/o SourceArt</p>
+          <p>Tuttlingerstraße 45</p>
+          <p>78333 Stockach</p>
+          <p>Deutschland</p>
+        </div>
+      </section>
 
       <Section title="Kontakt">
         <p>
-          E-Mail: <span className="text-champagne">[kontakt@zoe-star.de]</span><br />
+          E-Mail: <a href="mailto:info@zoe-star.de" className="text-champagne hover:underline">info@zoe-star.de</a><br />
           Web: zoe-star.de
         </p>
       </Section>
 
-      <Section title="Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV">
-        <p><span className="text-champagne">[Vollständiger Name]</span> · Anschrift wie oben</p>
+      <Section title="Umsatzsteuer-Identifikationsnummer">
+        <p>USt-IdNr. nach § 27a UStG: <span className="text-cream">DE461789258</span></p>
       </Section>
 
-      <Section title="Optional · einzutragen wenn anwendbar">
-        <ul className="list-disc list-outside ml-5 space-y-2 text-cream/70">
-          <li>USt-Identifikationsnummer (§ 27a UStG): <span className="text-champagne">[falls vorhanden]</span></li>
-          <li>Handelsregistereintrag: <span className="text-champagne">[HRB · Amtsgericht falls vorhanden]</span></li>
-          <li>Berufsbezeichnung + zuständige Kammer: <span className="text-champagne">[falls anwendbar]</span></li>
-        </ul>
+      <Section title="Verantwortlich für redaktionelle Inhalte nach § 18 Abs. 2 MStV">
+        <p className="text-cream/60">Andreea Schütz · Anschrift wie oben</p>
       </Section>
 
       <Section title="Streitschlichtung">
