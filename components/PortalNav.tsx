@@ -23,41 +23,12 @@ export function PortalNav({ displayName, email, isAdmin, isManager }: Props) {
   return (
     <header className="border-b border-champagne/10 sticky top-0 bg-ink/95 backdrop-blur z-50">
       <div className="container-luxe py-4 flex items-center justify-between gap-6">
-        <div className="flex items-center gap-10">
-          <Link href="/portal" aria-label="ZOE Star Agency">
-            <Logo variant="horizontal" className="h-8" />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {navItems.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="text-cream/70 hover:text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors"
-              >
-                {label}
-              </Link>
-            ))}
-            {isAdmin && (
-              <Link
-                href="/portal/admin"
-                className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]"
-              >
-                Admin
-              </Link>
-            )}
-            {isManager && !isAdmin && (
-              <Link
-                href="/portal/manager"
-                className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]"
-              >
-                Manager
-              </Link>
-            )}
-          </nav>
-        </div>
+        <Link href="/portal" aria-label="ZOE Star Agency" className="shrink-0">
+          <Logo variant="horizontal" className="h-8" />
+        </Link>
 
-        <div className="flex items-center gap-5">
-          <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em]">
+        <div className="flex items-center gap-5 shrink-0">
+          <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[200px]">
             {displayName || email}
           </span>
           <form action="/portal/logout" method="post">
@@ -67,6 +38,28 @@ export function PortalNav({ displayName, email, isAdmin, isManager }: Props) {
           </form>
         </div>
       </div>
+
+      <nav className="container-luxe pb-3 -mt-1 flex items-center gap-6 overflow-x-auto">
+        {navItems.map(({ href, label }) => (
+          <Link
+            key={href}
+            href={href}
+            className="text-cream/70 hover:text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors whitespace-nowrap"
+          >
+            {label}
+          </Link>
+        ))}
+        {isAdmin && (
+          <Link href="/portal/admin" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap">
+            Admin
+          </Link>
+        )}
+        {isManager && !isAdmin && (
+          <Link href="/portal/manager" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap">
+            Manager
+          </Link>
+        )}
+      </nav>
     </header>
   );
 }

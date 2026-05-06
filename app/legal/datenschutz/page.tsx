@@ -9,15 +9,22 @@ export default function DatenschutzPage() {
   return (
     <article className="prose-luxe">
       <p className="eyebrow mb-4">Legal</p>
-      <h1 className="heading-display text-4xl md:text-5xl mb-12 text-cream">Datenschutzerklärung</h1>
+      <h1 className="heading-display text-4xl md:text-5xl mb-8 text-cream">Datenschutzerklärung</h1>
+
+      <div className="border border-champagne/40 bg-champagne/5 px-5 py-4 mb-10">
+        <p className="text-champagne text-[10px] uppercase tracking-[0.25em] font-semibold mb-1">⚠ Platzhalter · Bitte finalisieren</p>
+        <p className="text-cream/70 text-sm">
+          Diese Seite ist DSGVO-konform strukturiert, enthält aber Platzhalter für Verantwortlichen-Daten. Vor Live-Schaltung Name, Anschrift und Datenschutz-E-Mail eintragen.
+        </p>
+      </div>
 
       <p className="text-cream/70 text-sm mb-10 leading-relaxed">
         Wir nehmen den Schutz personenbezogener Daten ernst. Diese Erklärung informiert dich nach Art. 13/14 DSGVO sowie § 25 TDDDG, welche Daten wir verarbeiten, warum und welche Rechte du hast.
       </p>
 
       <Section title="1. Verantwortlicher">
-        <p>ZOE Star Agency · Nesip Vural · Berlin · Deutschland<br />
-        E-Mail: <a href="mailto:datenschutz@zoe-star.de" className="text-champagne hover:underline">datenschutz@zoe-star.de</a></p>
+        <p>ZOE Star Agency · <span className="text-champagne">[Vollständiger Name]</span> · <span className="text-champagne">[Anschrift]</span> · Deutschland<br />
+        E-Mail: <span className="text-champagne">[datenschutz@zoe-star.de]</span></p>
       </Section>
 
       <Section title="2. Welche Daten wir verarbeiten">
@@ -74,7 +81,7 @@ export default function DatenschutzPage() {
           <li>Beschwerde bei einer Aufsichtsbehörde (z. B. Berliner Beauftragte für Datenschutz)</li>
         </ul>
         <p className="mt-4">
-          Anfragen an: <a href="mailto:datenschutz@zoe-star.de" className="text-champagne hover:underline">datenschutz@zoe-star.de</a>
+          Anfragen an: <span className="text-champagne">[datenschutz@zoe-star.de]</span>
         </p>
       </Section>
 
