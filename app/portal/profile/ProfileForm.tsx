@@ -36,14 +36,14 @@ export function ProfileForm({ profile }: { profile: any }) {
   }
 
   return (
-    <form onSubmit={submit} className="border border-champagne/15 p-8 space-y-5">
+    <form onSubmit={submit} className="border border-champagne/15 p-6 md:p-8 space-y-5">
       <p className="eyebrow mb-2">Edit profile</p>
       <div>
         <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Display Name</label>
         <input
           type="text" required value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream focus:border-champagne focus:outline-none"
+          className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream focus:border-champagne focus:outline-none text-base"
         />
       </div>
       <div>
@@ -53,7 +53,7 @@ export function ProfileForm({ profile }: { profile: any }) {
           <input
             type="text" required value={tiktok}
             onChange={(e) => setTiktok(e.target.value.replace(/^@/, ""))}
-            className="flex-1 bg-transparent py-3 pr-4 text-cream focus:outline-none"
+            className="flex-1 bg-transparent py-3 pr-4 text-cream focus:outline-none text-base"
           />
         </div>
       </div>
@@ -92,7 +92,7 @@ export function ProfileForm({ profile }: { profile: any }) {
         <textarea
           rows={3} value={bio} maxLength={300}
           onChange={(e) => setBio(e.target.value)}
-          className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream focus:border-champagne focus:outline-none resize-none"
+          className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream focus:border-champagne focus:outline-none resize-none text-base"
         />
       </div>
 
