@@ -59,30 +59,30 @@ export function PortalNav({ displayName, email, isAdmin, isManager, avatarUrl }:
             )}
           </Link>
           <form action="/portal/logout" method="post">
-            <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] py-2 px-1">
+            <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] py-3 px-2 -my-1">
               Logout
             </button>
           </form>
         </div>
       </div>
 
-      <nav className="container-luxe pb-3 -mt-1 flex items-center gap-6 overflow-x-auto">
+      <nav className="container-luxe pb-1 -mt-1 flex items-center gap-5 overflow-x-auto">
         {navItems.map(({ href, label }) => (
           <Link
             key={href}
             href={href}
-            className="text-cream/70 hover:text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors whitespace-nowrap"
+            className="text-cream/70 hover:text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors whitespace-nowrap py-3"
           >
             {label}
           </Link>
         ))}
         {isAdmin && (
-          <Link href="/portal/admin" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap">
+          <Link href="/portal/admin" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap py-3">
             Admin
           </Link>
         )}
         {isManager && !isAdmin && (
-          <Link href="/portal/manager" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap">
+          <Link href="/portal/manager" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap py-3">
             Manager
           </Link>
         )}
