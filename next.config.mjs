@@ -6,9 +6,6 @@ const nextConfig = {
       { protocol: "https", hostname: "vvmsftyyijeyshikshsi.supabase.co" },
     ],
   },
-  experimental: {
-    serverActions: { bodySizeLimit: "5mb" },
-  },
 };
 
 export default nextConfig;
