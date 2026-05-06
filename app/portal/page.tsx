@@ -1,62 +1,58 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { Logo } from "@/components/Logo";
+import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
+import { PortalNav } from "@/components/PortalNav";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, profile } = await getAuthedProfile();
 
-  if (!user) redirect("/portal/login");
+  if (profile.role === "admin") redirect("/portal/admin");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  // Wenn Admin → /portal/admin
-  // Wenn Manager → /portal/manager
-  // Wenn Creator → /portal Dashboard
-  if (profile?.role === "admin") redirect("/portal/admin");
-  if (profile?.role === "manager") redirect("/portal/manager");
+  // Counts parallel
+  const [
+    { count: unreadCount },
+    { count: upcomingEvents },
+    { count: weekSlots },
+    { count: openTickets },
+  ] = await Promise.all([
+    supabase.from("messages").select("*", { count: "exact", head: true })
+      .or(`recipient_id.eq.${profile.id},recipient_group.eq.all_creators`),
+    supabase.from("events").select("*", { count: "exact", head: true })
+      .eq("status", "open").gte("start_at", new Date().toISOString()),
+    supabase.from("slots").select("*", { count: "exact", head: true })
+      .eq("creator_id", profile.id).gte("start_at", new Date().toISOString())
+      .lte("start_at", new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString()),
+    supabase.from("support_tickets").select("*", { count: "exact", head: true })
+      .eq("creator_id", profile.id).in("status", ["open", "in_progress"]),
+  ]);
 
   return (
-    <div className="min-h-screen bg-ink text-cream">
-      {/* Top Bar */}
-      <header className="border-b border-champagne/10 px-6 md:px-12 py-5 flex items-center justify-between">
-        <Link href="/portal"><Logo variant="horizontal" className="h-9" /></Link>
-        <div className="flex items-center gap-6">
-          <span className="text-cream/60 text-xs uppercase tracking-[0.25em]">
-            {profile?.display_name || user.email}
-          </span>
-          <form action="/portal/logout" method="post">
-            <button className="text-champagne hover:text-champagne-300 text-xs uppercase tracking-[0.25em]">
-              Logout
-            </button>
-          </form>
-        </div>
-      </header>
+    <>
+      <PortalNav
+        displayName={profile.display_name}
+        email={profile.email}
+        isAdmin={profile.role === "admin"}
+        isManager={profile.role === "manager"}
+      />
 
       <main className="container-luxe py-16">
         <p className="eyebrow mb-4">Dashboard</p>
         <h1 className="heading-display text-4xl md:text-5xl mb-4">
-          Welcome back, <span className="text-champagne">{profile?.display_name?.split(" ")[0] || "Creator"}</span>
+          Welcome back, <span className="text-champagne">{profile.display_name?.split(" ")[0] || "Creator"}</span>
         </h1>
         <p className="text-cream/60 text-lg mb-16 max-w-2xl">
-          @{profile?.tiktok_username || "—"} · {profile?.country || "—"} · {profile?.language?.toUpperCase() || "DE"}
+          @{profile.tiktok_username} · {profile.country || "—"} · {profile.language?.toUpperCase()}
         </p>
 
-        {/* Quick-Tiles */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-16">
-          <DashboardTile href="/portal/inbox" eyebrow="Inbox" title="Messages" hint="Unread: —" />
-          <DashboardTile href="/portal/events" eyebrow="Events" title="Upcoming" hint="0 signed" />
-          <DashboardTile href="/portal/slots" eyebrow="Slots" title="Live-Plan" hint="0 this week" />
-          <DashboardTile href="/portal/downloads" eyebrow="Assets" title="Downloads" hint="Logos · Templates · PDFs" />
-          <DashboardTile href="/portal/info" eyebrow="Info" title="Rules & Tips" hint="Live-Tag · TikTok-Regeln" />
-          <DashboardTile href="/portal/academy" eyebrow="Academy" title="Phase 1" hint="Coming Phase 2" />
-          <DashboardTile href="/portal/badges" eyebrow="Achievements" title="Badges" hint="0 earned" />
-          <DashboardTile href="/portal/support" eyebrow="Support" title="Help" hint="Open ticket" />
+          <Tile href="/portal/inbox" eyebrow="Inbox" title="Messages" hint={`${unreadCount ?? 0} total`} />
+          <Tile href="/portal/events" eyebrow="Events" title="Upcoming" hint={`${upcomingEvents ?? 0} open`} />
+          <Tile href="/portal/slots" eyebrow="Slots" title="Live-Plan" hint={`${weekSlots ?? 0} this week`} />
+          <Tile href="/portal/downloads" eyebrow="Assets" title="Downloads" hint="Logos · Templates · PDFs" />
+          <Tile href="/portal/info" eyebrow="Info" title="Rules & Tips" hint="Live-Tag · TikTok-Regeln" />
+          <Tile href="/portal/academy" eyebrow="Academy" title="Phase 1" hint="Coming Phase 2" />
+          <Tile href="/portal/badges" eyebrow="Achievements" title="Badges" hint="0 earned" />
+          <Tile href="/portal/support" eyebrow="Support" title="Help" hint={`${openTickets ?? 0} open ticket${openTickets === 1 ? "" : "s"}`} />
         </div>
 
         <div className="border-t border-champagne/10 pt-10">
@@ -66,13 +62,11 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </main>
-    </div>
+    </>
   );
 }
 
-function DashboardTile({
-  href, eyebrow, title, hint,
-}: { href: string; eyebrow: string; title: string; hint: string }) {
+function Tile({ href, eyebrow, title, hint }: { href: string; eyebrow: string; title: string; hint: string }) {
   return (
     <Link
       href={href}
