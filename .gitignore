@@ -18,3 +18,8 @@ coverage/
 *.pem
 desktop.ini
 Thumbs.db
+
+.vercel
+
+scripts/
+
