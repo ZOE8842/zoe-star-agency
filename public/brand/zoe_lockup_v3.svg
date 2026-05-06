@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1300" width="2048" height="2662" shape-rendering="geometricPrecision">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500&amp;family=Playfair+Display:wght@900&amp;display=swap');
+      .zoe-word { font-family: 'Playfair Display', 'Bodoni Moda', 'Times New Roman', serif; font-weight: 900; font-size: 100px; letter-spacing: 14px; }
+      .star-agency { font-family: 'Inter', 'Helvetica Neue', sans-serif; font-weight: 300; font-size: 28px; letter-spacing: 16px; }
+    </style>
+  </defs>
+  <rect width="1000" height="1300" fill="#F2EAD8"/>
+  <g transform="translate(140, -43) scale(0.725)" fill="#C9A86A">
+    <polygon points="235,175 815,170 800,335 220,335"/>
+    <path d="M 800 335 C 660 365, 480 585, 200 700 L 380 700 C 580 605, 700 385, 745 335 Z"/>
+    <path d="M 200 700 L 765 700 C 800 715, 810 790, 760 830 L 180 830 Z"/>
+    <polygon points="700,235 705,250 721,251 708,260 713,275 700,266 687,275 692,260 679,251 695,250"/>
+  </g>
+  <text class="zoe-word" x="500" y="780" text-anchor="middle" fill="#C9A86A">ZOE</text>
+  <text class="star-agency" x="500" y="850" text-anchor="middle" fill="#C9A86A">STAR AGENCY</text>
+</svg>

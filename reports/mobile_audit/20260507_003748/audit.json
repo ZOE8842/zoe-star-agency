@@ -1,0 +1,1598 @@
+{
+  "iPhone-SE": {
+    "/": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/legal/impressum": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'ec.europa.eu/consumers/odr' (193x17)"
+      }
+    ],
+    "/legal/datenschutz": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      }
+    ],
+    "/legal/agb": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (131x20)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (146x17)"
+      }
+    ],
+    "/legal/portal-regeln": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/portal/login": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Forgot password?' (101x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Have an invite? Sign up →' (148x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← BACK TO SITE' (327x15)"
+      }
+    ],
+    "/portal/signup": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (126x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGB' (26x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Portal-Regeln' (78x15)"
+      }
+    ],
+    "/portal/forgot-password": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← Back to login' (89x16)"
+      }
+    ],
+    "/portal": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/profile": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/profile/security": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/admin/users": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      }
+    ],
+    "/portal/admin/invites": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/messages": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/events": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/downloads": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ]
+  },
+  "iPhone-13-14": {
+    "/": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/legal/impressum": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'ec.europa.eu/consumers/odr' (193x17)"
+      }
+    ],
+    "/legal/datenschutz": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      }
+    ],
+    "/legal/agb": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (131x20)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (146x17)"
+      }
+    ],
+    "/legal/portal-regeln": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/portal/login": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Forgot password?' (101x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Have an invite? Sign up →' (148x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← BACK TO SITE' (342x15)"
+      }
+    ],
+    "/portal/signup": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (126x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGB' (26x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Portal-Regeln' (78x15)"
+      }
+    ],
+    "/portal/forgot-password": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← Back to login' (89x16)"
+      }
+    ],
+    "/portal": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/profile": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/profile/security": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/admin/users": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      }
+    ],
+    "/portal/admin/invites": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/messages": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/events": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/downloads": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ]
+  },
+  "iPhone-15-Pro-Max": {
+    "/": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/legal/impressum": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'ec.europa.eu/consumers/odr' (194x17)"
+      }
+    ],
+    "/legal/datenschutz": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      }
+    ],
+    "/legal/agb": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (131x20)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (146x17)"
+      }
+    ],
+    "/legal/portal-regeln": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/portal/login": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Forgot password?' (101x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Have an invite? Sign up →' (148x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← BACK TO SITE' (382x15)"
+      }
+    ],
+    "/portal/signup": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (126x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGB' (26x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Portal-Regeln' (78x15)"
+      }
+    ],
+    "/portal/forgot-password": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← Back to login' (89x16)"
+      }
+    ],
+    "/portal": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/profile": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/profile/security": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/admin/users": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      }
+    ],
+    "/portal/admin/invites": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/messages": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/events": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/downloads": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ]
+  },
+  "Android-Small": {
+    "/": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (50x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (39x17)"
+      }
+    ],
+    "/legal/impressum": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (114x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'ec.europa.eu/consumers/odr' (192x17)"
+      }
+    ],
+    "/legal/datenschutz": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (114x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (114x17)"
+      }
+    ],
+    "/legal/agb": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (146x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (50x17)"
+      }
+    ],
+    "/legal/portal-regeln": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (50x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (39x17)"
+      }
+    ],
+    "/portal/login": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Forgot password?' (101x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Have an invite? Sign up →' (148x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← BACK TO SITE' (312x15)"
+      }
+    ],
+    "/portal/signup": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (125x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGB' (25x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Portal-Regeln' (78x15)"
+      }
+    ],
+    "/portal/forgot-password": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← Back to login' (89x16)"
+      }
+    ],
+    "/portal": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/profile": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/profile/security": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/admin/users": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      }
+    ],
+    "/portal/admin/invites": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/messages": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/events": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/downloads": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ]
+  },
+  "Android-Large": {
+    "/": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (50x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (39x17)"
+      }
+    ],
+    "/legal/impressum": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (114x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'ec.europa.eu/consumers/odr' (192x17)"
+      }
+    ],
+    "/legal/datenschutz": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (114x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (114x17)"
+      }
+    ],
+    "/legal/agb": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (130x20)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (146x17)"
+      }
+    ],
+    "/legal/portal-regeln": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (50x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (39x17)"
+      }
+    ],
+    "/portal/login": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Forgot password?' (101x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Have an invite? Sign up →' (148x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← BACK TO SITE' (364x15)"
+      }
+    ],
+    "/portal/signup": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (125x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGB' (25x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Portal-Regeln' (78x15)"
+      }
+    ],
+    "/portal/forgot-password": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← Back to login' (89x16)"
+      }
+    ],
+    "/portal": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/profile": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/profile/security": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/admin/users": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      }
+    ],
+    "/portal/admin/invites": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/messages": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/events": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/downloads": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ]
+  },
+  "iPad-Mini": {
+    "/": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/legal/impressum": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'ec.europa.eu/consumers/odr' (193x17)"
+      }
+    ],
+    "/legal/datenschutz": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (115x17)"
+      }
+    ],
+    "/legal/agb": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'info@zoe-star.de' (131x20)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (146x17)"
+      }
+    ],
+    "/legal/portal-regeln": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGIN' (55x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Agency' (51x17)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'About' (40x17)"
+      }
+    ],
+    "/portal/login": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Forgot password?' (101x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Have an invite? Sign up →' (148x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← BACK TO SITE' (448x15)"
+      }
+    ],
+    "/portal/signup": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (126x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGB' (26x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Portal-Regeln' (78x15)"
+      }
+    ],
+    "/portal/forgot-password": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← Back to login' (89x16)"
+      }
+    ],
+    "/portal": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/profile": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/profile/security": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/admin/users": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      }
+    ],
+    "/portal/admin/invites": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/messages": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/events": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/downloads": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY\n' (146x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ]
+  },
+  "Desktop-Small": {
+    "/": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGENCY' (72x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'TALENT' (67x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'MEDIA' (56x18)"
+      }
+    ],
+    "/legal/impressum": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGENCY' (72x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'TALENT' (67x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'MEDIA' (56x18)"
+      }
+    ],
+    "/legal/datenschutz": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGENCY' (72x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'TALENT' (67x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'MEDIA' (56x18)"
+      }
+    ],
+    "/legal/agb": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGENCY' (72x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'TALENT' (67x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'MEDIA' (56x18)"
+      }
+    ],
+    "/legal/portal-regeln": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGENCY' (72x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'TALENT' (67x18)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'MEDIA' (56x18)"
+      }
+    ],
+    "/portal/login": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Forgot password?' (101x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Have an invite? Sign up →' (148x16)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← BACK TO SITE' (448x15)"
+      }
+    ],
+    "/portal/signup": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Datenschutzerklärung' (125x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'AGB' (25x15)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Portal-Regeln' (78x15)"
+      }
+    ],
+    "/portal/forgot-password": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'← Back to login' (89x16)"
+      }
+    ],
+    "/portal": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/profile": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/profile/security": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (68x16)"
+      }
+    ],
+    "/portal/admin/users": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      },
+      {
+        "type": "input-fontsize-too-small",
+        "msg": "select-one font=12px"
+      }
+    ],
+    "/portal/admin/invites": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/messages": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/events": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ],
+    "/portal/admin/downloads": [
+      {
+        "type": "tap-target-too-small",
+        "msg": "'Z\nZOE\nSTAR AGENCY' (116x32)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'LOGOUT' (65x31)"
+      },
+      {
+        "type": "tap-target-too-small",
+        "msg": "'DASHBOARD' (85x15)"
+      }
+    ]
+  }
+}

@@ -23,14 +23,47 @@ export const metadata: Metadata = {
     default: "ZOE Star Agency · Premium Talent · Media · Entertainment",
     template: "%s · ZOE Star Agency",
   },
-  description: "Premium Creator Talent Agency. Building a multi-vertical brand for talent, media, fashion, and entertainment.",
+  description:
+    "Premium Creator Talent Agency. ZOE Star Agency baut die nächste Generation von Creator-Marken — mit redaktioneller Präzision, Business-Tiefe und globalem Anspruch.",
+  applicationName: "ZOE Star Agency",
+  keywords: [
+    "ZOE Star Agency",
+    "TikTok Agency",
+    "Creator Management",
+    "Talent Agency",
+    "Live Creator",
+    "Deutschland",
+  ],
   openGraph: {
     type: "website",
     locale: "de_DE",
     url: "/",
     siteName: "ZOE Star Agency",
     title: "ZOE Star Agency · Premium Talent · Media · Entertainment",
-    description: "Premium Creator Talent Agency. Building a multi-vertical brand.",
+    description:
+      "Premium Creator Talent Agency — multi-vertical brand für Talent, Media, Events und Studio.",
+    images: [
+      {
+        url: "/brand/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "ZOE Star Agency",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ZOE Star Agency",
+    description: "Premium Creator Talent Agency",
+    images: ["/brand/og-image.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/icon-512.png", sizes: "512x512" }],
   },
   robots: { index: true, follow: true },
 };

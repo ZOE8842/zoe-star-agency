@@ -34,8 +34,15 @@ export default function HomePage() {
             </MotionReveal>
             <MotionReveal delay={0.4}>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/join" className="btn-primary">Join as Talent</Link>
-                <Link href="/contact" className="btn-outline">Partner with ZOE</Link>
+                <a
+                  href="https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary"
+                >
+                  Als Creator bewerben
+                </a>
+                <Link href="/contact" className="btn-outline">Kontakt aufnehmen</Link>
               </div>
             </MotionReveal>
           </div>
@@ -80,25 +87,19 @@ export default function HomePage() {
           </MotionReveal>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: "Agency", desc: "Creator management & talent representation", href: "/agency" },
-              { title: "Media", desc: "Brand campaigns & content production", href: "/media" },
-              { title: "Events", desc: "Live formats & ranking shows", href: "/events" },
-              { title: "Studio", desc: "Original IP & format development", href: "/studio" },
+              { title: "Agency", desc: "Creator-Management & Talent-Repräsentation" },
+              { title: "Media", desc: "Brand-Kampagnen & Content-Produktion" },
+              { title: "Events", desc: "Live-Formate & Ranking-Shows" },
+              { title: "Studio", desc: "Original IP & Format-Entwicklung" },
             ].map((cat, i) => (
               <MotionReveal key={cat.title} delay={i * 0.1}>
-                <Link
-                  href={cat.href}
-                  className="group block border border-champagne/20 p-8 md:p-10 transition-all duration-500 hover:border-champagne hover:bg-champagne/5"
-                >
+                <div className="border border-champagne/20 p-8 md:p-10">
                   <p className="eyebrow mb-6">{cat.title}</p>
-                  <h3 className="font-display italic font-black text-2xl md:text-3xl text-cream mb-4 group-hover:text-champagne transition-colors">
+                  <h3 className="font-display italic font-black text-2xl md:text-3xl text-cream mb-4">
                     {cat.title}
                   </h3>
                   <p className="text-cream/60 text-sm leading-relaxed">{cat.desc}</p>
-                  <span className="inline-block mt-8 text-champagne text-[10px] uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-opacity">
-                    Explore →
-                  </span>
-                </Link>
+                </div>
               </MotionReveal>
             ))}
           </div>
@@ -117,7 +118,14 @@ export default function HomePage() {
             </h2>
           </MotionReveal>
           <MotionReveal delay={0.2}>
-            <Link href="/join" className="btn-primary">Apply now</Link>
+            <a
+              href="https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary"
+            >
+              Jetzt bewerben
+            </a>
           </MotionReveal>
         </div>
       </section>
