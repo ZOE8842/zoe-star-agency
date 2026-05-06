@@ -1,13 +1,12 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
 
 function SignupForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const inviteFromUrl = searchParams.get("invite") || "";
 
@@ -25,6 +24,7 @@ function SignupForm() {
   const [acceptAgb, setAcceptAgb] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   function update<K extends keyof typeof form>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -60,7 +60,7 @@ function SignupForm() {
 
     const supabase = createClient();
 
-    // 1. Auth-Account erstellen
+    // 1. Auth-Account erstellen (sendet Verify-Mail, KEINE Session)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -85,23 +85,31 @@ function SignupForm() {
       return;
     }
 
-    // 2. Profile-Insert (RPC ruft Server-Function die Invite validiert + Profile anlegt)
-    const { error: profileError } = await supabase.rpc("redeem_invite_and_create_profile", {
-      invite_code_input: form.invite,
-      tiktok_username_input: tiktokClean,
-      display_name_input: form.display_name,
-      country_input: form.country,
-      language_input: form.language,
+    // 2. Profile-Insert via Server-API (Service-Role bypasst RLS,
+    //    weil signUp() bei aktivem Email-Confirm KEINE Session liefert)
+    const res = await fetch("/api/signup-profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: authData.user.id,
+        email: form.email,
+        invite_code: form.invite,
+        tiktok_username: tiktokClean,
+        display_name: form.display_name,
+        country: form.country,
+        language: form.language,
+      }),
     });
 
-    if (profileError) {
-      setError(`Profile konnte nicht erstellt werden: ${profileError.message}`);
+    const result = await res.json();
+    if (!res.ok) {
+      setError(result.error || "Profile konnte nicht erstellt werden.");
       setLoading(false);
       return;
     }
 
-    router.push("/portal");
-    router.refresh();
+    setSuccess(true);
+    setLoading(false);
   }
 
   return (
@@ -114,6 +122,25 @@ function SignupForm() {
         <h1 className="heading-display text-cream text-3xl text-center mb-3">Create your account</h1>
         <p className="text-cream/60 text-sm text-center mb-10">Invite-only access to the ZOE creator portal</p>
 
+        {success ? (
+          <div className="border border-champagne/30 bg-champagne/5 p-8 text-center space-y-5">
+            <p className="eyebrow text-champagne">✓ Account erstellt</p>
+            <h2 className="font-display italic text-2xl text-cream">Bitte Email bestätigen</h2>
+            <p className="text-cream/70 text-sm leading-relaxed">
+              Wir haben dir einen Bestätigungs-Link an
+              <br />
+              <span className="text-champagne font-mono text-xs">{form.email}</span>
+              <br />
+              gesendet. Klicke den Link, um dein Konto zu aktivieren.
+            </p>
+            <p className="text-cream/40 text-xs leading-relaxed">
+              Keine Mail im Posteingang? Prüfe deinen Spam-Ordner. Der Link ist 24 Stunden gültig.
+            </p>
+            <Link href="/portal/login" className="btn-outline inline-block mt-4">
+              Zum Login
+            </Link>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="eyebrow block mb-2">Invite Code</label>
@@ -275,6 +302,7 @@ function SignupForm() {
             <Link href="/portal/login" className="text-champagne hover:text-champagne-300">Sign in</Link>
           </p>
         </form>
+        )}
       </div>
     </div>
   );

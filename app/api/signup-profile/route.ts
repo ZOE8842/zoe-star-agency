@@ -1,0 +1,109 @@
+// Server-Side Signup-Profile-Creation
+// Workaround für Email-Confirm-Mode: signUp() gibt user zurück OHNE Session
+// → auth.uid() ist null in RPC → Profile-Insert failt
+// Lösung: Server-API mit Service-Role legt Profile direkt an, bypasst RLS,
+// braucht auth.uid() nicht.
+
+import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+interface Body {
+  user_id: string;
+  email: string;
+  invite_code: string;
+  tiktok_username: string;
+  display_name: string;
+  country: string;
+  language: string;
+}
+
+export async function POST(req: NextRequest) {
+  let body: Body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { user_id, email, invite_code, tiktok_username, display_name, country, language } = body;
+
+  if (!user_id || !email || !invite_code || !tiktok_username || !display_name) {
+    return NextResponse.json({ error: "Pflichtfelder fehlen." }, { status: 400 });
+  }
+
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+
+  // 1. Verifizieren dass der User wirklich grade angelegt wurde
+  const { data: userData, error: userErr } = await admin.auth.admin.getUserById(user_id);
+  if (userErr || !userData?.user) {
+    return NextResponse.json({ error: "User nicht gefunden. Bitte neu registrieren." }, { status: 400 });
+  }
+
+  // Email-Match-Check — Schutz gegen ID-Forgery
+  if (userData.user.email !== email) {
+    return NextResponse.json({ error: "Email stimmt nicht mit Account überein." }, { status: 400 });
+  }
+
+  // 2. Invite holen + validieren
+  const { data: invite, error: inviteErr } = await admin
+    .from("invites")
+    .select("id, intended_role, expires_at, used_at")
+    .eq("code", invite_code)
+    .maybeSingle();
+
+  if (inviteErr || !invite) {
+    return NextResponse.json({ error: "Ungültiger Invite-Code." }, { status: 400 });
+  }
+
+  if (invite.used_at) {
+    return NextResponse.json({ error: "Invite-Code wurde bereits verwendet." }, { status: 400 });
+  }
+
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+    return NextResponse.json({ error: "Invite-Code ist abgelaufen." }, { status: 400 });
+  }
+
+  // 3. Prüfen ob TikTok-Username schon vergeben (UNIQUE-Constraint, aber friendly error)
+  const { data: existing } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("tiktok_username", tiktok_username)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json({ error: "Dieser TikTok-Username ist bereits registriert." }, { status: 400 });
+  }
+
+  // 4. Profile anlegen
+  const { error: profErr } = await admin.from("profiles").insert({
+    id: user_id,
+    email,
+    tiktok_username,
+    display_name,
+    role: invite.intended_role,
+    status: "active",
+    country,
+    language,
+  });
+
+  if (profErr) {
+    // Falls Profile-Insert failt: User-Cleanup (sonst dangling auth-user ohne profile)
+    await admin.auth.admin.deleteUser(user_id).catch(() => {});
+    return NextResponse.json({ error: `Profile konnte nicht angelegt werden: ${profErr.message}` }, { status: 500 });
+  }
+
+  // 5. Invite als used markieren
+  await admin
+    .from("invites")
+    .update({ used_at: new Date().toISOString(), used_by: user_id })
+    .eq("id", invite.id);
+
+  return NextResponse.json({ success: true, role: invite.intended_role });
+}
