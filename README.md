@@ -175,3 +175,4 @@ npm run db:gen-types # TypeScript-Types aus Supabase-Schema generieren
 | Version | Datum | Änderung | Autor |
 |---|---|---|---|
 | v0.1.0 | 2026-05-06 | Initial-Skeleton: Homepage + Login + Signup + Dashboard + Admin + DB-Schema + RLS | Aura |
+
