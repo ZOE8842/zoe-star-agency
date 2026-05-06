@@ -40,22 +40,26 @@ export function PortalNav({ displayName, email, isAdmin, isManager, avatarUrl }:
           <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[180px]">
             {displayName || email}
           </span>
-          <Link href="/portal/profile" aria-label="Profile" className="shrink-0">
+          <Link
+            href="/portal/profile"
+            aria-label="Profile"
+            className="shrink-0 p-1 -m-1 inline-flex"
+          >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarUrl}
                 alt=""
-                className="w-8 h-8 rounded-full object-cover border border-champagne/30 hover:border-champagne transition"
+                className="w-9 h-9 rounded-full object-cover border border-champagne/30 hover:border-champagne transition"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-champagne/10 border border-champagne/30 hover:border-champagne flex items-center justify-center text-champagne text-xs font-display italic transition">
+              <div className="w-9 h-9 rounded-full bg-champagne/10 border border-champagne/30 hover:border-champagne flex items-center justify-center text-champagne text-xs font-display italic transition">
                 {initials || "?"}
               </div>
             )}
           </Link>
           <form action="/portal/logout" method="post">
-            <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]">
+            <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] py-2 px-1">
               Logout
             </button>
           </form>

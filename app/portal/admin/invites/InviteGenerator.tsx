@@ -53,7 +53,7 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
             <input
               type="text" required value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="flex-1 bg-transparent border border-champagne/30 px-3 py-2 text-cream font-mono text-sm focus:border-champagne focus:outline-none"
+              className="flex-1 bg-transparent border border-champagne/30 px-3 py-2 text-cream font-mono text-base focus:border-champagne focus:outline-none"
             />
             <button
               type="button"
@@ -68,7 +68,7 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
           <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Role</label>
           <select
             value={role} onChange={(e) => setRole(e.target.value as "creator" | "manager")}
-            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream text-sm focus:border-champagne focus:outline-none"
+            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream text-base focus:border-champagne focus:outline-none"
           >
             <option value="creator">Creator</option>
             <option value="manager">Manager</option>
@@ -79,7 +79,7 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
           <input
             type="number" min={0} max={365} value={expiresInDays}
             onChange={(e) => setExpiresInDays(parseInt(e.target.value) || 0)}
-            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream text-sm focus:border-champagne focus:outline-none"
+            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream text-base focus:border-champagne focus:outline-none"
           />
         </div>
       </div>

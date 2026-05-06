@@ -61,7 +61,7 @@ export function BroadcastForm({ senderId }: { senderId: string }) {
           <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Target</label>
           <select
             value={target} onChange={(e) => setTarget(e.target.value as any)}
-            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
           >
             <option value="all_creators">All Creators (Broadcast)</option>
             <option value="single">Single Recipient</option>
@@ -71,7 +71,7 @@ export function BroadcastForm({ senderId }: { senderId: string }) {
           <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Category</label>
           <select
             value={category} onChange={(e) => setCategory(e.target.value as any)}
-            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
           >
             {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -84,7 +84,7 @@ export function BroadcastForm({ senderId }: { senderId: string }) {
           <input
             type="email" required value={recipientEmail}
             onChange={(e) => setRecipientEmail(e.target.value)}
-            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
           />
         </div>
       )}
@@ -94,7 +94,7 @@ export function BroadcastForm({ senderId }: { senderId: string }) {
         <input
           type="text" required value={subject} maxLength={200}
           onChange={(e) => setSubject(e.target.value)}
-          className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+          className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
         />
       </div>
 
@@ -103,7 +103,7 @@ export function BroadcastForm({ senderId }: { senderId: string }) {
         <textarea
           required rows={6} value={body}
           onChange={(e) => setBody(e.target.value)}
-          className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none resize-none"
+          className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none resize-none text-base"
         />
       </div>
 

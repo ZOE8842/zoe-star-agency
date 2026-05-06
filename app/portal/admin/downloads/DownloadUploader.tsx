@@ -71,7 +71,7 @@ export function DownloadUploader({ adminId }: { adminId: string }) {
           <input
             type="text" required value={title} maxLength={200}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
           />
         </div>
         <div className="md:col-span-2">
@@ -79,7 +79,7 @@ export function DownloadUploader({ adminId }: { adminId: string }) {
           <input
             type="text" value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+            className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
           />
         </div>
 
@@ -87,7 +87,7 @@ export function DownloadUploader({ adminId }: { adminId: string }) {
           <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Category</label>
           <select
             value={category} onChange={(e) => setCategory(e.target.value as any)}
-            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
           >
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -96,7 +96,7 @@ export function DownloadUploader({ adminId }: { adminId: string }) {
           <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Visibility</label>
           <select
             value={visibleTo} onChange={(e) => setVisibleTo(e.target.value as any)}
-            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none"
+            className="w-full bg-ink border border-champagne/30 px-3 py-2 text-cream focus:border-champagne focus:outline-none text-base"
           >
             <option value="">All authenticated</option>
             <option value="creator">Creators only</option>
