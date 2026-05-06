@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { href: "/portal", label: "Dashboard" },
@@ -40,6 +41,7 @@ export function PortalNav({ displayName, email, isAdmin, isManager, avatarUrl }:
           <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[180px]">
             {displayName || email}
           </span>
+          <ThemeToggle className="hidden sm:inline-flex" />
           <Link
             href="/portal/profile"
             aria-label="Profile"

@@ -2,10 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme-Tokens als RGB-Triplets fuer Tailwind <alpha-value>-Support
+   Default = DARK (Premium): bg=ink, fg=cream
+   .light = LIGHT (warm): bg=cream, fg=ink
+*/
+:root,
+:root.dark {
+  --c-bg: 10 10 10;
+  --c-fg: 244 241 231;
+}
+
+:root.light {
+  --c-bg: 244 241 231;
+  --c-fg: 10 10 10;
+}
+
 :root {
   --champagne: #C9A86A;
-  --cream: #F4F1E7;
-  --ink: #0A0A0A;
 }
 
 @layer base {

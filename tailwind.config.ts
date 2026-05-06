@@ -23,15 +23,16 @@ const config: Config = {
           800: "#5E4C2F",
           900: "#3F331F",
         },
+        // theme-aware: tausch im Light-Mode ink<->cream via CSS-Variable
         cream: {
-          DEFAULT: "#F4F1E7",
+          DEFAULT: "rgb(var(--c-fg) / <alpha-value>)",
           50: "#FBFAF5",
           100: "#F4F1E7",
           200: "#EDE7D8",
           300: "#E0D7BD",
         },
         ink: {
-          DEFAULT: "#0A0A0A",
+          DEFAULT: "rgb(var(--c-bg) / <alpha-value>)",
           50: "#1A1A1A",
           100: "#141414",
           200: "#0F0F0F",
