@@ -17,9 +17,18 @@ interface Props {
   email: string;
   isAdmin?: boolean;
   isManager?: boolean;
+  avatarUrl?: string | null;
 }
 
-export function PortalNav({ displayName, email, isAdmin, isManager }: Props) {
+export function PortalNav({ displayName, email, isAdmin, isManager, avatarUrl }: Props) {
+  const initials = (displayName || email)
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
     <header className="border-b border-champagne/10 sticky top-0 bg-ink/95 backdrop-blur z-50">
       <div className="container-luxe py-4 flex items-center justify-between gap-6">
@@ -27,10 +36,24 @@ export function PortalNav({ displayName, email, isAdmin, isManager }: Props) {
           <Logo variant="horizontal" className="h-8" />
         </Link>
 
-        <div className="flex items-center gap-5 shrink-0">
-          <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[200px]">
+        <div className="flex items-center gap-4 shrink-0">
+          <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[180px]">
             {displayName || email}
           </span>
+          <Link href="/portal/profile" aria-label="Profile" className="shrink-0">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="w-8 h-8 rounded-full object-cover border border-champagne/30 hover:border-champagne transition"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-champagne/10 border border-champagne/30 hover:border-champagne flex items-center justify-center text-champagne text-xs font-display italic transition">
+                {initials || "?"}
+              </div>
+            )}
+          </Link>
           <form action="/portal/logout" method="post">
             <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]">
               Logout

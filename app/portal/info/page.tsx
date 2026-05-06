@@ -9,6 +9,7 @@ export default async function InfoPage() {
       <PortalNav
         displayName={profile.display_name}
         email={profile.email}
+        avatarUrl={profile.avatar_url}
         isAdmin={profile.role === "admin"}
         isManager={profile.role === "manager"}
       />

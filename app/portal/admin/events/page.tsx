@@ -12,7 +12,8 @@ export default async function AdminEventsPage() {
 
   return (
     <>
-      <PortalNav displayName={profile.display_name} email={profile.email} isAdmin />
+      <PortalNav displayName={profile.display_name} email={profile.email}
+        avatarUrl={profile.avatar_url} isAdmin />
       <main className="container-luxe py-16">
         <p className="eyebrow mb-3">Admin · Events</p>
         <h1 className="heading-display text-4xl md:text-5xl mb-12">

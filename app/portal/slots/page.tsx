@@ -17,6 +17,7 @@ export default async function SlotsPage() {
       <PortalNav
         displayName={profile.display_name}
         email={profile.email}
+        avatarUrl={profile.avatar_url}
         isAdmin={profile.role === "admin"}
         isManager={profile.role === "manager"}
       />

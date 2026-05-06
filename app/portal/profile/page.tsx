@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { ProfileForm } from "./ProfileForm";
+import { AvatarUploader } from "./AvatarUploader";
 
 export default async function ProfilePage() {
   const { profile } = await getAuthedProfile();
@@ -11,6 +12,7 @@ export default async function ProfilePage() {
       <PortalNav
         displayName={profile.display_name}
         email={profile.email}
+        avatarUrl={profile.avatar_url}
         isAdmin={profile.role === "admin"}
         isManager={profile.role === "manager"}
       />
@@ -20,6 +22,8 @@ export default async function ProfilePage() {
         <h1 className="heading-display text-4xl md:text-5xl mb-12">
           Your <span className="text-champagne">profile.</span>
         </h1>
+
+        <AvatarUploader currentUrl={profile.avatar_url} displayName={profile.display_name} />
 
         <div className="border border-champagne/15 p-6 md:p-8 mb-6">
           <p className="eyebrow mb-3">Account</p>
