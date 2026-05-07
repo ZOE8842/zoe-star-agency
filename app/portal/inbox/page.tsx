@@ -53,10 +53,20 @@ export default async function InboxPage() {
       />
 
       <main className="container-luxe py-16 md:py-24 max-w-3xl mx-auto">
-        <p className="eyebrow mb-4">Postfach</p>
-        <h1 className="font-display italic text-cream text-5xl md:text-7xl leading-[0.95] tracking-[-0.02em] mb-4">
-          Inbox.
-        </h1>
+        <div className="flex items-start justify-between gap-6 mb-4">
+          <div>
+            <p className="eyebrow mb-4">Postfach</p>
+            <h1 className="font-display italic text-cream text-5xl md:text-7xl leading-[0.95] tracking-[-0.02em]">
+              Inbox.
+            </h1>
+          </div>
+          <Link
+            href="/portal/inbox/compose"
+            className="shrink-0 mt-3 text-cream/60 hover:text-champagne text-[10px] uppercase tracking-[0.3em] inline-flex items-center min-h-[40px] px-3 border border-cream/15 hover:border-champagne transition"
+          >
+            Verfassen
+          </Link>
+        </div>
         <p className="text-cream/45 text-sm mb-20">
           {messages?.length || 0} Nachrichten
           {unreadCount > 0 && (
