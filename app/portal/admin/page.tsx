@@ -138,6 +138,7 @@ export default async function AdminPage() {
             {isAdmin && (
               <>
                 <AdminTile href="/portal/admin/invites" title="Invites" hint="Codes generieren" />
+                <AdminTile href="/portal/admin/showcase" title="Showcase" hint="Creator-Cards · Approve" />
                 <AdminTile href="/portal/admin/messages" title="Broadcasts" hint="Nachrichten an Gruppen" />
                 <AdminTile href="/portal/admin/downloads" title="Downloads" hint="Asset-Library" />
                 <AdminTile href="/portal/admin/analytics" title="Analytics" hint="Login · Aktivität" />

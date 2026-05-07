@@ -10,6 +10,7 @@ import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
 import { CreatorShowcaseCard, type CreatorShowcase } from "@/components/CreatorShowcaseCard";
 import { FeaturedCreatorsStrip } from "@/components/FeaturedCreatorsStrip";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import {
   TikTokIcon,
   InstagramIcon,
@@ -17,35 +18,57 @@ import {
   ArrowExternalIcon,
 } from "@/components/SocialIcons";
 
-// Hardcoded Demo-Showcase fuer Phase A.
-// Phase B: ersetzt durch supabase-query auf "showcase_creators" (approved=true).
-const FEATURED_CREATORS: CreatorShowcase[] = [
+const VISUAL_CYCLE: NonNullable<CreatorShowcase["visual"]>[] = ["champagne", "warm", "cool", "ink"];
+
+async function fetchFeaturedCreators(): Promise<CreatorShowcase[]> {
+  const supabase = await createServerClient();
+  const { data } = await supabase
+    .from("showcase_creators")
+    .select("display_name, category, showcase_image, tiktok_url, instagram_url")
+    .eq("is_approved", true)
+    .eq("is_featured", true)
+    .order("sort_order", { ascending: true })
+    .order("approved_at", { ascending: false });
+
+  if (!data || data.length === 0) return [];
+
+  return data.map((r, i): CreatorShowcase => {
+    const platform: CreatorShowcase["platform"] =
+      r.tiktok_url ? "tiktok" : r.instagram_url ? "instagram" : null;
+    const href = r.tiktok_url || r.instagram_url || undefined;
+    return {
+      displayName: r.display_name,
+      category: r.category ?? undefined,
+      imageSrc: r.showcase_image ?? undefined,
+      platform,
+      href,
+      visual: VISUAL_CYCLE[i % VISUAL_CYCLE.length],
+    };
+  });
+}
+
+// Fallback wenn DB leer (Soft-Launch-Phase): klare Platzhalter-Cards
+const FALLBACK_CARDS: CreatorShowcase[] = [
   {
     displayName: "ZOE Star Agency",
-    category: "Match Night · Berlin",
+    category: "Berlin · Phase 01",
     platform: "tiktok",
     href: "https://www.tiktok.com/@zoe.star.agency",
     visual: "champagne",
   },
   {
     displayName: "Nesip · ZOELANDO",
-    category: "Founder · Berlin",
+    category: "Founder",
     platform: "tiktok",
     href: "https://www.tiktok.com/@zoelandoo",
     visual: "warm",
   },
   {
     displayName: "ZOE Visuals",
-    category: "Editorial · 05/26",
+    category: "Editorial",
     platform: "instagram",
     href: "https://www.instagram.com/starzagency_88",
     visual: "cool",
-  },
-  {
-    displayName: "Pending Roster",
-    category: "Phase 01 · Aufbau",
-    platform: null,
-    visual: "ink",
   },
 ];
 
@@ -59,7 +82,11 @@ const SOCIAL = {
 const APPLY_URL =
   "https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const fetched = await fetchFeaturedCreators();
+  const featured = fetched.length > 0 ? fetched : FALLBACK_CARDS;
+  // Hero-Stack zieht die ersten 3
+  const hero = featured.slice(0, 3);
   return (
     <>
       <Header />
@@ -164,45 +191,31 @@ export default function HomePage() {
             <div className="lg:col-span-6 order-1 lg:order-2 relative">
               <div className="relative max-w-[300px] md:max-w-[360px] mx-auto">
                 {/* Hauptcard vorne */}
-                <div className="hero-rise relative z-20" style={{ animationDelay: "0.4s" }}>
-                  <CreatorShowcaseCard
-                    displayName="ZOE Star Agency"
-                    category="Match Night · Berlin"
-                    platform="tiktok"
-                    href={SOCIAL.tiktokMain}
-                    visual="champagne"
-                  />
-                </div>
+                {hero[0] && (
+                  <div className="hero-rise relative z-20" style={{ animationDelay: "0.4s" }}>
+                    <CreatorShowcaseCard {...hero[0]} visual="champagne" />
+                  </div>
+                )}
 
                 {/* Card hinten links — peak-out */}
-                <div
-                  className="hidden md:block absolute -left-[26%] top-[7%] w-[66%] z-10 hero-rise opacity-65"
-                  style={{ animationDelay: "0.6s" }}
-                >
-                  <CreatorShowcaseCard
-                    displayName="Nesip · ZOELANDO"
-                    category="Founder"
-                    platform="tiktok"
-                    href={SOCIAL.tiktokManager}
-                    visual="warm"
-                    rotation={-6}
-                  />
-                </div>
+                {hero[1] && (
+                  <div
+                    className="hidden md:block absolute -left-[26%] top-[7%] w-[66%] z-10 hero-rise opacity-65"
+                    style={{ animationDelay: "0.6s" }}
+                  >
+                    <CreatorShowcaseCard {...hero[1]} visual="warm" rotation={-6} />
+                  </div>
+                )}
 
                 {/* Card hinten rechts */}
-                <div
-                  className="hidden md:block absolute -right-[24%] top-[12%] w-[62%] z-10 hero-rise opacity-60"
-                  style={{ animationDelay: "0.75s" }}
-                >
-                  <CreatorShowcaseCard
-                    displayName="ZOE Visuals"
-                    category="Editorial"
-                    platform="instagram"
-                    href={SOCIAL.instagram}
-                    visual="cool"
-                    rotation={5}
-                  />
-                </div>
+                {hero[2] && (
+                  <div
+                    className="hidden md:block absolute -right-[24%] top-[12%] w-[62%] z-10 hero-rise opacity-60"
+                    style={{ animationDelay: "0.75s" }}
+                  >
+                    <CreatorShowcaseCard {...hero[2]} visual="cool" rotation={5} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -262,7 +275,7 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 container-luxe">
-          <FeaturedCreatorsStrip creators={FEATURED_CREATORS} />
+          <FeaturedCreatorsStrip creators={featured} />
         </div>
       </section>
 
