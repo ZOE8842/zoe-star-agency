@@ -50,7 +50,7 @@ export function PublicNav() {
               <Link
                 key={it.href}
                 href={it.href}
-                className="text-cream/80 hover:text-champagne text-[12px] uppercase tracking-[0.25em] transition-colors py-3"
+                className="link-underline text-cream/80 hover:text-champagne text-[11px] uppercase tracking-[0.25em] transition-colors py-3"
               >
                 {it.label}
               </Link>
@@ -107,12 +107,15 @@ export function PublicNav() {
           }`}
         >
           <nav className="flex flex-col gap-1 mb-12">
-            {NAV_ITEMS.map((it) => (
+            {NAV_ITEMS.map((it, i) => (
               <Link
                 key={it.href}
                 href={it.href}
                 onClick={() => setOpen(false)}
-                className="font-display italic text-3xl text-cream hover:text-champagne py-4 border-b border-champagne/10 transition-colors"
+                style={{
+                  animation: open ? `hero-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${0.08 + i * 0.06}s both` : "none",
+                }}
+                className="font-display italic text-[40px] sm:text-5xl text-cream hover:text-champagne py-3 border-b border-cream/[0.05] transition-colors"
               >
                 {it.label}
               </Link>
