@@ -13,7 +13,8 @@ export default async function AdminMessagesPage() {
 
   return (
     <>
-      <PortalNav displayName={profile.display_name} email={profile.email}
+      <PortalNav userId={profile.id}
+        displayName={profile.display_name} email={profile.email}
         avatarUrl={profile.avatar_url} isAdmin />
       <main className="container-luxe py-16">
         <p className="eyebrow mb-3">Admin · Messages</p>

@@ -67,6 +67,7 @@ export default async function AdminPage() {
   return (
     <>
       <PortalNav
+        userId={profile.id}
         displayName={profile.display_name}
         email={profile.email}
         avatarUrl={profile.avatar_url}

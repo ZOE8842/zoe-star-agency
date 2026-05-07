@@ -10,15 +10,27 @@ const CATEGORY_LABEL: Record<string, string> = {
   system: "System",
 };
 
-export default async function InboxPage() {
+export default async function InboxPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const { supabase, profile } = await getAuthedProfile();
+  const params = await searchParams;
+  const query = (params.q || "").trim();
 
-  const { data: messages } = await supabase
+  let req = supabase
     .from("messages")
     .select("id, subject, category, sent_at, requires_ack, sender_id, body")
     .or(`recipient_id.eq.${profile.id},recipient_group.eq.all_creators`)
     .order("sent_at", { ascending: false })
     .limit(80);
+
+  if (query) {
+    req = req.or(`subject.ilike.%${query}%,body.ilike.%${query}%`);
+  }
+
+  const { data: messages } = await req;
 
   const { data: reads } = await supabase
     .from("message_reads")
@@ -45,6 +57,7 @@ export default async function InboxPage() {
   return (
     <>
       <PortalNav
+        userId={profile.id}
         displayName={profile.display_name}
         email={profile.email}
         avatarUrl={profile.avatar_url}
@@ -67,12 +80,36 @@ export default async function InboxPage() {
             Verfassen
           </Link>
         </div>
-        <p className="text-cream/45 text-sm mb-20">
+        <p className="text-cream/45 text-sm mb-12">
           {messages?.length || 0} Nachrichten
           {unreadCount > 0 && (
             <span className="text-champagne"> · {unreadCount} ungelesen</span>
           )}
+          {query && (
+            <span className="text-cream/35"> · Suche „{query}"</span>
+          )}
         </p>
+
+        {/* Search — minimal, ruhig */}
+        <form method="get" action="/portal/inbox" className="mb-16">
+          <div className="relative">
+            <input
+              type="search"
+              name="q"
+              defaultValue={query}
+              placeholder="Im Postfach suchen…"
+              className="w-full bg-transparent border-b border-cream/[0.08] focus:border-champagne/60 px-0 py-3 text-cream/85 text-base font-light focus:outline-none placeholder-cream/30 transition-colors"
+            />
+            {query && (
+              <Link
+                href="/portal/inbox"
+                className="absolute right-0 top-1/2 -translate-y-1/2 text-cream/40 hover:text-champagne text-[10px] uppercase tracking-[0.3em]"
+              >
+                Zurücksetzen
+              </Link>
+            )}
+          </div>
+        </form>
 
         {(!messages || messages.length === 0) && (
           <div className="py-20 text-center">

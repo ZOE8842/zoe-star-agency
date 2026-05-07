@@ -1,10 +1,12 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
+import { InboxIndicator } from "./InboxIndicator";
 
 const navItems = [
   { href: "/portal", label: "Dashboard" },
-  { href: "/portal/inbox", label: "Inbox" },
+  { href: "/portal/inbox", label: "Inbox", indicator: true as const },
   { href: "/portal/events", label: "Events" },
   { href: "/portal/slots", label: "Slots" },
   { href: "/portal/downloads", label: "Downloads" },
@@ -14,6 +16,7 @@ const navItems = [
 ];
 
 interface Props {
+  userId?: string;
   displayName: string;
   email: string;
   isAdmin?: boolean;
@@ -21,7 +24,7 @@ interface Props {
   avatarUrl?: string | null;
 }
 
-export function PortalNav({ displayName, email, isAdmin, isManager, avatarUrl }: Props) {
+export function PortalNav({ userId, displayName, email, isAdmin, isManager, avatarUrl }: Props) {
   const initials = (displayName || email)
     .split(/\s+/)
     .map((w) => w[0])
@@ -69,13 +72,18 @@ export function PortalNav({ displayName, email, isAdmin, isManager, avatarUrl }:
       </div>
 
       <nav className="container-luxe pb-1 -mt-1 flex items-center gap-5 overflow-x-auto">
-        {navItems.map(({ href, label }) => (
+        {navItems.map(({ href, label, indicator }) => (
           <Link
             key={href}
             href={href}
-            className="text-cream/70 hover:text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors whitespace-nowrap py-3"
+            className="text-cream/70 hover:text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors whitespace-nowrap py-3 inline-flex items-center"
           >
-            {label}
+            <span>{label}</span>
+            {indicator && userId && (
+              <Suspense fallback={null}>
+                <InboxIndicator userId={userId} />
+              </Suspense>
+            )}
           </Link>
         ))}
         {isAdmin && (
