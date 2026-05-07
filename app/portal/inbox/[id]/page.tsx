@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AcknowledgeButton } from "./AcknowledgeButton";
+import { ReplyForm } from "./ReplyForm";
 import { markRead } from "./actions";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -12,6 +13,18 @@ const CATEGORY_LABEL: Record<string, string> = {
   reminder: "Reminder",
   system: "System",
 };
+
+function formatLongDate(iso: string) {
+  return new Date(iso).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function stripRePrefix(s: string): string {
+  return s.replace(/^(re:\s*)+/i, "").trim();
+}
 
 export default async function MessageDetailPage({
   params,
@@ -29,17 +42,14 @@ export default async function MessageDetailPage({
 
   if (!msg) notFound();
 
-  // Sicherheit: User muss Empfänger sein (entweder direkt oder in Gruppe)
   const isRecipient =
     msg.recipient_id === profile.id ||
     msg.recipient_group === "all_creators" ||
     profile.role === "admin";
   if (!isRecipient) notFound();
 
-  // Mark-as-read (Server-Action) — idempotent
   await markRead(msg.id, profile.id);
 
-  // Read-Info nach dem Mark
   const { data: readInfo } = await supabase
     .from("message_reads")
     .select("read_at, acknowledged_at")
@@ -47,16 +57,70 @@ export default async function MessageDetailPage({
     .eq("reader_id", profile.id)
     .maybeSingle();
 
-  // Sender-Name
-  let senderName: string | null = null;
-  if (msg.sender_id) {
+  // Korrespondenz-Kette: alle Messages mit gleichem subject-Stamm + zwischen denselben 2 Personen
+  const baseSubject = stripRePrefix(msg.subject || "");
+  type ChainItem = {
+    id: string;
+    subject: string | null;
+    body: string;
+    sent_at: string;
+    sender_id: string | null;
+    recipient_id: string | null;
+    category: string;
+  };
+  let correspondence: ChainItem[] = [];
+  let canReply = false;
+  let replyTargetId: string | null = null;
+
+  if (msg.sender_id && msg.recipient_id && baseSubject) {
+    const a = msg.sender_id;
+    const b = msg.recipient_id;
+    const { data: chain } = await supabase
+      .from("messages")
+      .select("id, subject, body, sent_at, sender_id, recipient_id, category")
+      .or(`and(sender_id.eq.${a},recipient_id.eq.${b}),and(sender_id.eq.${b},recipient_id.eq.${a})`)
+      .order("sent_at", { ascending: true });
+
+    correspondence = (chain || []).filter((c) => stripRePrefix(c.subject || "") === baseSubject);
+    canReply = true;
+    replyTargetId = msg.sender_id === profile.id ? msg.recipient_id : msg.sender_id;
+  }
+
+  // Sender-Names fuer alle Korrespondenz-Items
+  const senderIds = Array.from(
+    new Set(
+      correspondence
+        .map((c) => c.sender_id)
+        .filter((id): id is string => !!id),
+    ),
+  );
+  const senderMap = new Map<string, string>();
+  if (senderIds.length > 0) {
+    const { data: senders } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", senderIds);
+    (senders || []).forEach((s) => senderMap.set(s.id, s.display_name));
+  } else if (msg.sender_id) {
     const { data: sender } = await supabase
       .from("profiles")
-      .select("display_name")
+      .select("id, display_name")
       .eq("id", msg.sender_id)
       .maybeSingle();
-    senderName = sender?.display_name || null;
+    if (sender) senderMap.set(sender.id, sender.display_name);
   }
+
+  // Wenn keine Kette: nur die aktuelle Nachricht zeigen
+  const items: ChainItem[] = correspondence.length > 0 ? correspondence : [{
+    id: msg.id,
+    subject: msg.subject,
+    body: msg.body,
+    sent_at: msg.sent_at,
+    sender_id: msg.sender_id,
+    recipient_id: msg.recipient_id,
+    category: msg.category,
+  }];
+  const replySubject = `Re: ${baseSubject}`;
 
   return (
     <>
@@ -68,49 +132,63 @@ export default async function MessageDetailPage({
         isManager={profile.role === "manager"}
       />
 
-      <main className="container-luxe py-16 md:py-24 max-w-2xl mx-auto">
+      <main className="container-luxe py-20 md:py-32 max-w-[640px] mx-auto">
         <Link
           href="/portal/inbox"
-          className="inline-flex items-center gap-2 text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.3em] mb-16 transition-colors"
+          className="inline-flex items-center gap-2 text-cream/40 hover:text-champagne text-[10px] uppercase tracking-[0.3em] mb-24 transition-colors"
         >
           <span aria-hidden="true">←</span> Inbox
         </Link>
 
-        {/* Meta-Header */}
-        <div className="mb-12 flex items-center gap-5 text-[10px] uppercase tracking-[0.3em] text-cream/45">
-          <span>{CATEGORY_LABEL[msg.category] || msg.category}</span>
-          {senderName && <span className="text-cream/35">· {senderName}</span>}
-          <span className="text-cream/35">
-            ·{" "}
-            {new Date(msg.sent_at).toLocaleDateString("de-DE", {
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-            })}
-          </span>
-        </div>
+        {/* Editorial-Korrespondenz-Timeline */}
+        <article>
+          {items.map((item, idx) => {
+            const isFirst = idx === 0;
+            const senderName = item.sender_id ? senderMap.get(item.sender_id) : null;
+            const isFromMe = item.sender_id === profile.id;
 
-        {/* Subject als Display-Headline */}
-        <h1 className="font-display italic text-cream text-3xl md:text-5xl leading-[1.05] tracking-[-0.015em] mb-12">
-          {msg.subject || "(ohne Betreff)"}
-        </h1>
+            return (
+              <div
+                key={item.id}
+                className={idx > 0 ? "mt-32 md:mt-40 pt-20 md:pt-24 border-t border-cream/[0.04]" : ""}
+              >
+                {/* Meta */}
+                <div className="mb-10 text-[10px] uppercase tracking-[0.3em] text-cream/40">
+                  <span>{senderName || (isFromMe ? "Du" : "—")}</span>
+                  <span className="mx-3 text-cream/25">·</span>
+                  <span className="text-cream/35">{formatLongDate(item.sent_at)}</span>
+                  {!isFirst && (
+                    <>
+                      <span className="mx-3 text-cream/25">·</span>
+                      <span className="text-cream/35">
+                        {CATEGORY_LABEL[item.category] || item.category}
+                      </span>
+                    </>
+                  )}
+                </div>
 
-        {/* Body — generous reading width + line-height */}
-        <div className="text-cream/75 text-base md:text-lg leading-[1.75] whitespace-pre-wrap font-light">
-          {msg.body}
-        </div>
+                {/* Subject — nur beim ersten Item */}
+                {isFirst && (
+                  <h1 className="font-display italic text-cream text-[40px] sm:text-5xl md:text-6xl leading-[1.0] tracking-[-0.02em] mb-16">
+                    {stripRePrefix(item.subject || "") || "(ohne Betreff)"}
+                  </h1>
+                )}
+
+                {/* Body */}
+                <div className="text-cream/85 text-base md:text-lg leading-[1.85] whitespace-pre-wrap font-light">
+                  {item.body}
+                </div>
+              </div>
+            );
+          })}
+        </article>
 
         {/* Acknowledge falls noetig */}
         {msg.requires_ack && (
-          <div className="mt-16 pt-10 border-t border-cream/[0.05]">
+          <div className="mt-32 pt-12 border-t border-cream/[0.05]">
             {readInfo?.acknowledged_at ? (
-              <p className="text-cream/40 text-sm">
-                ✓ Bestätigt am{" "}
-                {new Date(readInfo.acknowledged_at).toLocaleDateString("de-DE", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
+              <p className="text-cream/35 text-[11px] uppercase tracking-[0.3em]">
+                Bestätigt · {formatLongDate(readInfo.acknowledged_at)}
               </p>
             ) : (
               <div>
@@ -125,19 +203,27 @@ export default async function MessageDetailPage({
           </div>
         )}
 
+        {/* Reply — als ruhige Verlaengerung */}
+        {canReply && replyTargetId && (
+          <div className="mt-32 md:mt-40 pt-16 md:pt-20 border-t border-cream/[0.04]">
+            <p className="eyebrow mb-8">Antworten</p>
+            <ReplyForm
+              recipientId={replyTargetId}
+              defaultSubject={replySubject}
+            />
+          </div>
+        )}
+
         {/* Footer */}
-        <div className="mt-20 pt-8 border-t border-cream/[0.05] flex items-center justify-between">
-          <p className="text-cream/30 text-[10px] uppercase tracking-[0.3em]">
+        <div className="mt-32 pt-10 border-t border-cream/[0.04] flex items-center justify-between text-[10px] uppercase tracking-[0.3em]">
+          <p className="text-cream/25">
             {readInfo?.read_at
-              ? `Gelesen ${new Date(readInfo.read_at).toLocaleDateString("de-DE", {
-                  day: "2-digit",
-                  month: "short",
-                })}`
+              ? `Gelesen · ${formatLongDate(readInfo.read_at)}`
               : ""}
           </p>
           <Link
             href="/portal/inbox"
-            className="text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.3em] transition-colors"
+            className="text-cream/45 hover:text-champagne transition-colors"
           >
             Zurück
           </Link>
