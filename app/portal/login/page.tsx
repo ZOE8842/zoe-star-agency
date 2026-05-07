@@ -6,6 +6,13 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
 
+function editionMarker(): string {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const y = String(d.getFullYear()).slice(-2);
+  return `Edit. ${m}/${y}`;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,42 +41,55 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <label htmlFor="email" className="eyebrow block mb-2">Email</label>
+    <form onSubmit={handleSubmit} className="space-y-7">
+      <div className="stagger-3">
+        <label htmlFor="email" className="block text-cream/55 text-[10px] uppercase tracking-[0.3em] mb-3 italic font-display">
+          Email
+        </label>
         <input
           id="email"
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream placeholder-cream/30 focus:border-champagne focus:outline-none transition"
+          className="input-editorial"
           placeholder="you@email.com"
+          autoComplete="email"
         />
       </div>
 
-      <div>
-        <label htmlFor="password" className="eyebrow block mb-2">Password</label>
+      <div className="stagger-4">
+        <label htmlFor="password" className="block text-cream/55 text-[10px] uppercase tracking-[0.3em] mb-3 italic font-display">
+          Password
+        </label>
         <input
           id="password"
           type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream placeholder-cream/30 focus:border-champagne focus:outline-none transition"
-          placeholder="Your portal password"
+          className="input-editorial"
+          placeholder="dein portal-passwort"
+          autoComplete="current-password"
         />
-        <p className="text-cream/40 text-xs mt-2">Not your TikTok password — your dedicated ZOE portal password.</p>
+        <p className="text-cream/35 text-xs mt-3 italic">
+          Nicht dein TikTok-Passwort — dein dediziertes ZOE-Portal-Passwort.
+        </p>
       </div>
 
       {error && (
-        <div className="border border-red-500/40 bg-red-500/10 px-4 py-3 text-red-300 text-sm">
+        <div className="border-l-2 border-red-500/50 pl-4 py-2 text-red-300 text-sm italic">
           {error}
         </div>
       )}
 
-      <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
-        {loading ? "Signing in..." : "Sign in"}
+      <button
+        type="submit"
+        disabled={loading}
+        className="btn-editorial w-full disabled:opacity-50 stagger-5"
+      >
+        {loading ? "Sign in…" : "Sign in"}
+        {!loading && <span aria-hidden>→</span>}
       </button>
     </form>
   );
@@ -77,34 +97,64 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-md">
-        <Link href="/" className="block mb-14 mx-auto w-fit">
-          <Logo variant="avatar" className="h-20" />
-        </Link>
+    <>
+      <div className="atelier-atmosphere" />
+      <div className="atelier-grain" />
+      <div className="atelier-vignette" />
 
-        <p className="eyebrow text-center mb-4">Portal · Login</p>
-        <h1 className="heading-display text-cream text-4xl md:text-5xl text-center leading-[1.05] mb-4">
-          Welcome <span className="text-champagne">back.</span>
-        </h1>
-        <div className="hairline mx-auto mb-6" />
-        <p className="text-cream/55 text-sm text-center mb-12 italic font-display">
-          Sign in to the ZOE creator portal.
-        </p>
+      <main className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
+        <div className="w-full max-w-md">
 
-        <Suspense fallback={<div className="text-cream/40 text-sm text-center">Loading…</div>}>
-          <LoginForm />
-        </Suspense>
+          {/* Logo */}
+          <Link href="/" className="block mb-12 mx-auto w-fit stagger-1">
+            <Logo variant="avatar" className="h-24 breathe" />
+          </Link>
 
-        <div className="flex justify-between mt-10 text-xs">
-          <Link href="/portal/forgot-password" className="text-cream/60 hover:text-champagne transition-colors">Forgot password?</Link>
-          <Link href="/portal/signup" className="text-champagne hover:text-champagne-300 transition-colors">Have an invite? Sign up →</Link>
+          {/* Edition-Marker */}
+          <p className="volume-marker text-center text-xs tracking-[0.3em] mb-6 stagger-1">
+            {editionMarker()} · Portal
+          </p>
+
+          {/* Hero */}
+          <h1 className="heading-display text-cream text-5xl md:text-6xl text-center leading-[1.0] mb-6 stagger-2">
+            Welcome <span className="text-champagne italic">back.</span>
+          </h1>
+
+          <div className="hairline-divider w-32 mx-auto mb-6 stagger-2" />
+
+          <p className="text-cream/60 text-center text-base md:text-lg italic font-display mb-14 stagger-2">
+            Eine geschlossene Korrespondenz.
+          </p>
+
+          {/* Form */}
+          <Suspense fallback={<div className="text-cream/40 text-sm text-center italic">Lade…</div>}>
+            <LoginForm />
+          </Suspense>
+
+          {/* Sub-Links */}
+          <div className="flex justify-between items-center mt-10 text-xs">
+            <Link
+              href="/portal/forgot-password"
+              className="text-cream/55 hover:text-champagne transition-colors italic font-display"
+            >
+              Passwort vergessen?
+            </Link>
+            <Link
+              href="/portal/signup"
+              className="text-champagne hover:text-champagne-300 transition-colors uppercase tracking-[0.2em] text-[10px]"
+            >
+              Invite einlösen →
+            </Link>
+          </div>
+
+          <Link
+            href="/"
+            className="block text-center mt-16 text-cream/35 text-[10px] uppercase tracking-[0.35em] hover:text-champagne transition-colors"
+          >
+            ← Zurück zur Site
+          </Link>
         </div>
-
-        <Link href="/" className="block text-center mt-14 text-cream/40 text-[10px] uppercase tracking-[0.3em] hover:text-champagne transition-colors">
-          ← Back to site
-        </Link>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

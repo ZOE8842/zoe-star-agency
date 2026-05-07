@@ -112,32 +112,56 @@ function SignupForm() {
     setLoading(false);
   }
 
+  const editionMarker = (() => {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const y = String(d.getFullYear()).slice(-2);
+    return `Edit. ${m}/${y}`;
+  })();
+
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center px-6 py-16">
+    <>
+      <div className="atelier-atmosphere" />
+      <div className="atelier-grain" />
+      <div className="atelier-vignette" />
+
+      <main className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
       <div className="w-full max-w-md">
-        <Link href="/" className="block mb-12 mx-auto w-fit">
-          <Logo variant="avatar" className="h-20" />
+        <Link href="/" className="block mb-12 mx-auto w-fit stagger-1">
+          <Logo variant="avatar" className="h-24 breathe" />
         </Link>
 
-        <h1 className="heading-display text-cream text-3xl text-center mb-3">Create your account</h1>
-        <p className="text-cream/60 text-sm text-center mb-10">Invite-only access to the ZOE creator portal</p>
+        <p className="volume-marker text-center text-xs tracking-[0.3em] mb-6 stagger-1">
+          {editionMarker} · Aufnahme
+        </p>
+
+        <h1 className="heading-display text-cream text-5xl md:text-6xl text-center leading-[1.0] mb-6 stagger-2">
+          Eine <span className="text-champagne italic">Geste.</span>
+        </h1>
+
+        <div className="hairline-divider w-32 mx-auto mb-6 stagger-2" />
+
+        <p className="text-cream/60 text-center text-base italic font-display mb-12 stagger-2">
+          Du wurdest persönlich eingeladen. Lege deinen Zugang an.
+        </p>
 
         {success ? (
-          <div className="border border-champagne/30 bg-champagne/5 p-8 text-center space-y-5">
-            <p className="eyebrow text-champagne">✓ Account erstellt</p>
-            <h2 className="font-display italic text-2xl text-cream">Bitte Email bestätigen</h2>
-            <p className="text-cream/70 text-sm leading-relaxed">
-              Wir haben dir einen Bestätigungs-Link an
-              <br />
-              <span className="text-champagne font-mono text-xs">{form.email}</span>
-              <br />
+          <div className="card-featured p-10 text-center space-y-6">
+            <p className="eyebrow text-champagne">✓ Aufnahme bestätigt</p>
+            <h2 className="font-display italic text-3xl md:text-4xl text-cream leading-tight">
+              Bitte Email <span className="text-champagne">bestätigen.</span>
+            </h2>
+            <div className="hairline-divider w-24 mx-auto" />
+            <p className="text-cream/65 text-sm md:text-base leading-relaxed italic font-display">
+              Wir haben dir einen Bestätigungs-Link an<br />
+              <span className="text-champagne font-mono text-xs not-italic">{form.email}</span><br />
               gesendet. Klicke den Link, um dein Konto zu aktivieren.
             </p>
-            <p className="text-cream/40 text-xs leading-relaxed">
+            <p className="text-cream/40 text-xs leading-relaxed italic">
               Keine Mail im Posteingang? Prüfe deinen Spam-Ordner. Der Link ist 24 Stunden gültig.
             </p>
-            <Link href="/portal/login" className="btn-outline inline-block mt-4">
-              Zum Login
+            <Link href="/portal/login" className="btn-editorial inline-flex mt-4">
+              Zum Login <span aria-hidden>→</span>
             </Link>
           </div>
         ) : (
@@ -297,14 +321,15 @@ function SignupForm() {
             {loading ? "Creating account..." : "Create account"}
           </button>
 
-          <p className="text-center text-cream/50 text-xs mt-6">
+          <p className="text-center text-cream/50 text-xs mt-6 italic font-display">
             Already have an account?{" "}
-            <Link href="/portal/login" className="text-champagne hover:text-champagne-300">Sign in</Link>
+            <Link href="/portal/login" className="text-champagne hover:text-champagne-300 not-italic uppercase tracking-[0.2em] text-[10px]">Sign in →</Link>
           </p>
         </form>
         )}
       </div>
-    </div>
+      </main>
+    </>
   );
 }
 
