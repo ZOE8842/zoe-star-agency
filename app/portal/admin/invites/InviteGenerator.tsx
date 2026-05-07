@@ -12,39 +12,117 @@ function generateCode() {
   return `ZOE-${year}-${rand}`;
 }
 
+type Mode = "send" | "code_only";
+
+interface SuccessState {
+  code: string;
+  signupUrl: string;
+  mailed: boolean;
+  recipient?: string;
+}
+
 export function InviteGenerator({ adminId }: { adminId: string }) {
   const router = useRouter();
+
+  const [mode, setMode] = useState<Mode>("send");
   const [code, setCode] = useState(generateCode());
   const [role, setRole] = useState<"creator" | "manager">("creator");
   const [expiresInDays, setExpiresInDays] = useState(30);
+  const [email, setEmail] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [personalNote, setPersonalNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<string | null>(null);
+  const [success, setSuccess] = useState<SuccessState | null>(null);
+
+  function reset() {
+    setSuccess(null);
+    setEmail("");
+    setRecipientName("");
+    setPersonalNote("");
+    setCode(generateCode());
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
 
-    const supabase = createClient();
     const expires_at = expiresInDays > 0
       ? new Date(Date.now() + expiresInDays * 24 * 3600 * 1000).toISOString()
       : null;
 
-    const { error: err } = await supabase.from("invites").insert({
-      code, created_by: adminId, intended_role: role, expires_at,
-    });
+    if (mode === "send") {
+      // Code + Mail in einem Schritt via Admin-API
+      const res = await fetch("/api/admin/invites/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          intended_role: role,
+          expires_in_days: expiresInDays,
+          recipient_name: recipientName.trim() || undefined,
+          personal_note: personalNote.trim() || undefined,
+          code,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || "Mail-Versand fehlgeschlagen.");
+        setLoading(false);
+        return;
+      }
+      setSuccess({
+        code: json.code,
+        signupUrl: json.signup_url,
+        mailed: true,
+        recipient: email.trim(),
+      });
+    } else {
+      // Code-only via direktem Supabase-Insert (alter Pfad, RLS)
+      const supabase = createClient();
+      const { error: err } = await supabase.from("invites").insert({
+        code, created_by: adminId, intended_role: role, expires_at,
+      });
+      if (err) {
+        setError(err.message);
+        setLoading(false);
+        return;
+      }
+      setSuccess({
+        code,
+        signupUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/portal/signup?invite=${code}`,
+        mailed: false,
+      });
+    }
 
-    if (err) { setError(err.message); setLoading(false); return; }
-
-    setCreated(code);
-    setCode(generateCode());
     setLoading(false);
+    setCode(generateCode());
     router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="border border-champagne/15 p-8">
-      <p className="eyebrow mb-5">Create invite</p>
+      <div className="flex items-center justify-between mb-6">
+        <p className="eyebrow">Create invite</p>
+        <div className="flex gap-2 text-[10px] uppercase tracking-[0.2em]">
+          <button
+            type="button"
+            onClick={() => setMode("send")}
+            className={`px-3 py-1.5 border ${mode === "send" ? "border-champagne text-champagne" : "border-champagne/20 text-cream/40 hover:text-cream/70"}`}
+          >
+            Code + Mail
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("code_only")}
+            className={`px-3 py-1.5 border ${mode === "code_only" ? "border-champagne text-champagne" : "border-champagne/20 text-cream/40 hover:text-cream/70"}`}
+          >
+            Code only
+          </button>
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-3 gap-4 mb-5">
         <div>
@@ -84,18 +162,72 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
         </div>
       </div>
 
+      {mode === "send" && (
+        <div className="space-y-4 mb-5 pt-5 border-t border-champagne/10">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Empfaenger Email</label>
+              <input
+                type="email" required value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="creator@email.com"
+                className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream text-base focus:border-champagne focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">Name (optional)</label>
+              <input
+                type="text" value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="Vorname"
+                className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream text-base focus:border-champagne focus:outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-cream/60 text-[10px] uppercase tracking-[0.2em] block mb-2">
+              Persoenliche Notiz (optional, max 800)
+            </label>
+            <textarea
+              value={personalNote}
+              onChange={(e) => setPersonalNote(e.target.value.slice(0, 800))}
+              rows={3}
+              placeholder="Wir haben deine Stimme bei TikTok gesehen und wollen dich persoenlich einladen."
+              className="w-full bg-transparent border border-champagne/30 px-3 py-2 text-cream text-sm focus:border-champagne focus:outline-none italic"
+            />
+            <p className="text-cream/30 text-[10px] mt-1 text-right">{personalNote.length}/800</p>
+          </div>
+        </div>
+      )}
+
       {error && <div className="border border-red-500/40 bg-red-500/10 px-4 py-2 text-red-300 text-sm mb-4">{error}</div>}
-      {created && (
-        <div className="border border-green-500/40 bg-green-500/10 px-4 py-3 mb-4">
-          <p className="text-green-300 text-sm">Invite-Code <span className="font-mono">{created}</span> erstellt.</p>
-          <p className="text-cream/50 text-xs mt-1">
-            Signup-Link: <span className="font-mono">{typeof window !== "undefined" ? window.location.origin : ""}/portal/signup?invite={created}</span>
+      {success && (
+        <div className="border border-green-500/40 bg-green-500/5 px-4 py-3 mb-4 space-y-1.5">
+          <p className="text-green-300 text-sm">
+            {success.mailed
+              ? <>Mail an <span className="font-mono text-champagne">{success.recipient}</span> versendet.</>
+              : <>Invite-Code <span className="font-mono text-champagne">{success.code}</span> erstellt.</>}
           </p>
+          <p className="text-cream/50 text-xs">
+            Code: <span className="font-mono text-cream/80">{success.code}</span>
+          </p>
+          <p className="text-cream/50 text-xs">
+            Signup-Link: <span className="font-mono text-cream/80 break-all">{success.signupUrl}</span>
+          </p>
+          <button
+            type="button"
+            onClick={reset}
+            className="text-champagne text-[10px] uppercase tracking-[0.2em] mt-2 hover:underline"
+          >
+            ↻ Naechster Invite
+          </button>
         </div>
       )}
 
       <button type="submit" disabled={loading} className="btn-primary text-[10px] py-3 px-7 disabled:opacity-50">
-        {loading ? "Creating..." : "Create invite"}
+        {loading
+          ? (mode === "send" ? "Sende..." : "Erstelle...")
+          : (mode === "send" ? "Code erstellen + Mail senden" : "Code erstellen")}
       </button>
     </form>
   );
