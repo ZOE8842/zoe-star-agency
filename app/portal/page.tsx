@@ -113,35 +113,39 @@ export default async function DashboardPage() {
         isManager={profile.role === "manager"}
       />
 
-      <main className="container-luxe py-10 md:py-14">
-        {/* WELCOME */}
-        <section className="mb-12 md:mb-16">
-          <div className="flex items-start gap-4 md:gap-5">
+      <main className="container-luxe py-12 md:py-20">
+        {/* WELCOME — editorial, mit Datum-Eyebrow + Hairline-Mark */}
+        <section className="mb-14 md:mb-20">
+          <p className="eyebrow mb-5 md:mb-6">
+            {new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+          </p>
+          <div className="flex items-start gap-5 md:gap-6">
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={profile.avatar_url}
                 alt=""
-                className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border border-champagne/30 shrink-0"
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border border-champagne/30 shrink-0"
               />
             ) : (
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-champagne/10 border border-champagne/30 flex items-center justify-center text-champagne text-xl font-display italic shrink-0">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-champagne/10 border border-champagne/30 flex items-center justify-center text-champagne text-2xl font-display italic shrink-0">
                 {(profile.display_name || "?").slice(0, 1).toUpperCase()}
               </div>
             )}
-            <div className="min-w-0 flex-1">
-              <p className="eyebrow mb-1">{greeting()}</p>
-              <h1 className="heading-display text-3xl md:text-5xl leading-tight">
+            <div className="min-w-0 flex-1 pt-1">
+              <p className="text-cream/55 text-xs md:text-sm mb-1 italic font-display">{greeting()},</p>
+              <h1 className="heading-display text-4xl md:text-6xl leading-[1.05]">
                 {firstName}<span className="text-champagne">.</span>
               </h1>
-              <p className="text-cream/50 text-sm mt-2 truncate">
-                <span className="inline-block px-2 py-0.5 border border-champagne/30 text-champagne text-[10px] uppercase tracking-[0.2em] mr-2 align-middle">
+              <p className="text-cream/50 text-sm mt-3 truncate">
+                <span className="inline-block px-2 py-0.5 border border-champagne/30 text-champagne text-[10px] uppercase tracking-[0.25em] mr-2 align-middle">
                   {profile.role}
                 </span>
                 @{profile.tiktok_username}
               </p>
             </div>
           </div>
+          <div className="hero-mark" />
         </section>
 
         {/* QUICK STATS */}
@@ -178,7 +182,10 @@ export default async function DashboardPage() {
                 <p className="text-cream/50 text-xs mt-1">Status: {nextSlot.status}</p>
               </div>
             ) : (
-              <p className="text-cream/40 text-sm mb-4">Kein Slot geplant. <Link href="/portal/slots" className="text-champagne hover:underline">Slot eintragen →</Link></p>
+              <p className="editorial-empty mb-4">
+                Keine Termine in Sicht. Du entscheidest, wann.{" "}
+                <Link href="/portal/slots" className="text-champagne hover:underline not-italic">Slot eintragen →</Link>
+              </p>
             )}
             {nextEvent && (
               <div className="border-t border-champagne/10 pt-4">
@@ -195,7 +202,7 @@ export default async function DashboardPage() {
           <div className="border border-champagne/15 p-6">
             <p className="eyebrow mb-4">Letzte Nachrichten</p>
             {recentMessages.length === 0 ? (
-              <p className="text-cream/40 text-sm">Noch keine Nachrichten.</p>
+              <p className="editorial-empty">Stille Inbox. Wenn etwas wichtig ist, erfährst du es hier zuerst.</p>
             ) : (
               <ul className="space-y-3">
                 {recentMessages.map((m) => (
@@ -249,11 +256,11 @@ function StatCard({ href, eyebrow, value, hint, highlight }: { href: string; eye
   return (
     <Link
       href={href}
-      className={`group border p-4 md:p-5 transition-all duration-300 ${highlight ? "border-champagne bg-champagne/5" : "border-champagne/15 hover:border-champagne hover:bg-champagne/5"}`}
+      className={`group card-lift border p-5 md:p-6 ${highlight ? "border-champagne bg-champagne/5" : "border-champagne/15 hover:border-champagne hover:bg-champagne/5"}`}
     >
-      <p className="text-cream/50 text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-3 leading-tight">{eyebrow}</p>
-      <p className={`font-display italic font-black text-3xl md:text-4xl ${highlight ? "text-champagne" : "text-cream group-hover:text-champagne"} transition-colors`}>{value}</p>
-      <p className="text-cream/40 text-[10px] mt-2 leading-tight">{hint}</p>
+      <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-4 leading-tight">{eyebrow}</p>
+      <p className={`font-display italic font-black text-4xl md:text-5xl ${highlight ? "text-champagne" : "text-cream group-hover:text-champagne"} transition-colors`}>{value}</p>
+      <p className="text-cream/40 text-[10px] mt-3 leading-tight tracking-wide">{hint}</p>
     </Link>
   );
 }
@@ -262,7 +269,7 @@ function ActionCard({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="border border-champagne/15 hover:border-champagne hover:bg-champagne/5 p-4 transition text-cream text-xs md:text-sm font-medium inline-flex items-center justify-center min-h-[64px] text-center leading-tight"
+      className="card-lift border border-champagne/15 hover:border-champagne hover:bg-champagne/5 p-4 text-cream text-xs md:text-sm font-medium inline-flex items-center justify-center min-h-[72px] text-center leading-tight"
     >
       {label}
     </Link>

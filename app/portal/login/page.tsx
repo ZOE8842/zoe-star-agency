@@ -77,25 +77,31 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center px-6">
+    <div className="min-h-screen bg-ink flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <Link href="/" className="block mb-12 mx-auto w-fit">
+        <Link href="/" className="block mb-14 mx-auto w-fit">
           <Logo variant="avatar" className="h-20" />
         </Link>
 
-        <h1 className="heading-display text-cream text-3xl text-center mb-3">Welcome back</h1>
-        <p className="text-cream/60 text-sm text-center mb-10">Sign in to the ZOE creator portal</p>
+        <p className="eyebrow text-center mb-4">Portal · Login</p>
+        <h1 className="heading-display text-cream text-4xl md:text-5xl text-center leading-[1.05] mb-4">
+          Welcome <span className="text-champagne">back.</span>
+        </h1>
+        <div className="hairline mx-auto mb-6" />
+        <p className="text-cream/55 text-sm text-center mb-12 italic font-display">
+          Sign in to the ZOE creator portal.
+        </p>
 
-        <Suspense fallback={<div className="text-cream/40 text-sm text-center">Loading...</div>}>
+        <Suspense fallback={<div className="text-cream/40 text-sm text-center">Loading…</div>}>
           <LoginForm />
         </Suspense>
 
-        <div className="flex justify-between mt-8 text-xs">
-          <Link href="/portal/forgot-password" className="text-cream/60 hover:text-champagne">Forgot password?</Link>
-          <Link href="/portal/signup" className="text-champagne hover:text-champagne-300">Have an invite? Sign up →</Link>
+        <div className="flex justify-between mt-10 text-xs">
+          <Link href="/portal/forgot-password" className="text-cream/60 hover:text-champagne transition-colors">Forgot password?</Link>
+          <Link href="/portal/signup" className="text-champagne hover:text-champagne-300 transition-colors">Have an invite? Sign up →</Link>
         </div>
 
-        <Link href="/" className="block text-center mt-12 text-cream/40 text-[10px] uppercase tracking-[0.3em] hover:text-champagne">
+        <Link href="/" className="block text-center mt-14 text-cream/40 text-[10px] uppercase tracking-[0.3em] hover:text-champagne transition-colors">
           ← Back to site
         </Link>
       </div>

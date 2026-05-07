@@ -68,6 +68,24 @@
     @apply h-px w-32 bg-champagne/40;
   }
 
+  /* Hairline-Mark unter Hero-Headline */
+  .hero-mark {
+    @apply h-px w-16 bg-champagne/60 mt-6 md:mt-8;
+  }
+
+  /* Editorial Empty-State — italic, ruhig, mit etwas Atem */
+  .editorial-empty {
+    @apply font-display italic text-cream/45 leading-relaxed text-sm md:text-[15px] py-2;
+  }
+
+  /* Premium Card-Lift — sehr dezent bei Hover, nur 1px */
+  .card-lift {
+    @apply transition-all duration-300;
+  }
+  .card-lift:hover {
+    transform: translateY(-1px);
+  }
+
   /* Editorial-Underline für Premium-Hover-States */
   .link-underline {
     position: relative;

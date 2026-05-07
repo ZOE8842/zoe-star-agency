@@ -96,17 +96,21 @@ export default async function AdminPage() {
         isManager={!isAdmin}
       />
 
-      <main className="container-luxe py-10 md:py-14">
-        {/* WELCOME */}
-        <section className="mb-12">
-          <p className="eyebrow mb-2">{greeting()} · {isAdmin ? "Admin Console" : "Manager Cockpit"}</p>
-          <h1 className="heading-display text-3xl md:text-5xl leading-tight">
+      <main className="container-luxe py-12 md:py-20">
+        {/* WELCOME — Admin/Manager mit Datum-Eyebrow */}
+        <section className="mb-14 md:mb-20">
+          <p className="eyebrow mb-5 md:mb-6">
+            {new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })} · {isAdmin ? "Admin Console" : "Manager Cockpit"}
+          </p>
+          <h1 className="heading-display text-4xl md:text-6xl leading-[1.05]">
             {isAdmin ? (
               <>System <span className="text-champagne">overview.</span></>
             ) : (
               <>Mein <span className="text-champagne">Roster.</span></>
             )}
           </h1>
+          <p className="text-cream/55 text-xs md:text-sm mt-3 italic font-display">{greeting()}.</p>
+          <div className="hero-mark" />
         </section>
 
         {/* STATS */}
@@ -152,7 +156,7 @@ export default async function AdminPage() {
               <Link href="/portal/admin/users" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">Alle →</Link>
             </div>
             {recentSignups.length === 0 ? (
-              <p className="text-cream/40 text-sm">Noch keine Anmeldungen.</p>
+              <p className="editorial-empty">Noch keine Stimmen im Roster.</p>
             ) : (
               <ul className="space-y-3">
                 {recentSignups.map((p) => (
@@ -186,7 +190,7 @@ export default async function AdminPage() {
               <Link href="/portal/admin/invites" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">Alle →</Link>
             </div>
             {recentInvites.length === 0 ? (
-              <p className="text-cream/40 text-sm">Keine Invites generiert.</p>
+              <p className="editorial-empty">Noch keine Einladungen versandt.</p>
             ) : (
               <ul className="space-y-3">
                 {recentInvites.map((i) => {
@@ -218,7 +222,7 @@ export default async function AdminPage() {
             <Link href="/portal/support" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">Alle →</Link>
           </div>
           {recentTickets.length === 0 ? (
-            <p className="text-cream/40 text-sm">Keine Tickets.</p>
+            <p className="editorial-empty">Alles ruhig im Support.</p>
           ) : (
             <ul className="space-y-2">
               {recentTickets.map((t) => (
@@ -247,10 +251,10 @@ function Stat({ label, value, href, highlight }: { label: string; value: number;
   return (
     <Link
       href={href}
-      className={`group border p-4 md:p-5 transition-all duration-300 ${highlight ? "border-champagne bg-champagne/5" : "border-champagne/15 hover:border-champagne hover:bg-champagne/5"}`}
+      className={`group card-lift border p-5 md:p-6 ${highlight ? "border-champagne bg-champagne/5" : "border-champagne/15 hover:border-champagne hover:bg-champagne/5"}`}
     >
-      <p className="text-cream/50 text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-3 leading-tight">{label}</p>
-      <p className={`font-display italic font-black text-3xl md:text-4xl ${highlight ? "text-champagne" : "text-cream group-hover:text-champagne"} transition-colors`}>{value}</p>
+      <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-4 leading-tight">{label}</p>
+      <p className={`font-display italic font-black text-4xl md:text-5xl ${highlight ? "text-champagne" : "text-cream group-hover:text-champagne"} transition-colors`}>{value}</p>
     </Link>
   );
 }
@@ -259,12 +263,12 @@ function AdminTile({ href, title, hint }: { href: string; title: string; hint: s
   return (
     <Link
       href={href}
-      className="group border border-champagne/15 p-5 md:p-6 transition-all duration-300 hover:border-champagne hover:bg-champagne/5"
+      className="group card-lift border border-champagne/15 p-6 md:p-7 hover:border-champagne hover:bg-champagne/5"
     >
-      <h3 className="font-display italic font-black text-lg md:text-xl text-cream mb-1 md:mb-2 group-hover:text-champagne transition-colors">
+      <h3 className="font-display italic font-black text-xl md:text-2xl text-cream mb-2 group-hover:text-champagne transition-colors">
         {title}
       </h3>
-      <p className="text-cream/40 text-xs leading-tight">{hint}</p>
+      <p className="text-cream/45 text-xs leading-relaxed tracking-wide">{hint}</p>
     </Link>
   );
 }

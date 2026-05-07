@@ -16,15 +16,21 @@ export default async function AdminInvitesPage() {
       <PortalNav userId={profile.id}
         displayName={profile.display_name} email={profile.email}
         avatarUrl={profile.avatar_url} isAdmin />
-      <main className="container-luxe py-16">
-        <p className="eyebrow mb-3">Admin · Invites</p>
-        <h1 className="heading-display text-4xl md:text-5xl mb-12">
-          Invite <span className="text-champagne">codes.</span>
-        </h1>
+      <main className="container-luxe py-12 md:py-20">
+        <section className="mb-14 md:mb-16">
+          <p className="eyebrow mb-5">Admin · Invites</p>
+          <h1 className="heading-display text-4xl md:text-6xl leading-[1.05]">
+            Invite <span className="text-champagne">codes.</span>
+          </h1>
+          <p className="text-cream/55 text-sm md:text-base mt-3 italic font-display max-w-2xl">
+            Eine Einladung ist kein Formular. Sie ist eine Geste.
+          </p>
+          <div className="hero-mark" />
+        </section>
 
         <InviteGenerator adminId={profile.id} />
 
-        <div className="mt-16 mb-6">
+        <div className="mt-20 mb-6">
           <p className="eyebrow">History</p>
         </div>
         <div className="border border-champagne/15 overflow-hidden">
