@@ -7,6 +7,19 @@ import { BrandRow } from "@/components/BrandRow";
 import { Marquee } from "@/components/Marquee";
 import { GlassCard } from "@/components/GlassCard";
 import { LiveDot } from "@/components/LiveDot";
+import {
+  TikTokIcon,
+  InstagramIcon,
+  MailIcon,
+  ArrowExternalIcon,
+} from "@/components/SocialIcons";
+
+const SOCIAL = {
+  instagram: "https://www.instagram.com/starzagency_88",
+  tiktokMain: "https://www.tiktok.com/@zoe.star.agency",
+  tiktokManager: "https://www.tiktok.com/@zoelandoo",
+  email: "info@zoe-star.de",
+};
 
 const APPLY_URL =
   "https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756";
@@ -84,6 +97,37 @@ export default function HomePage() {
                 <Link href="/about" className="btn-cta-secondary">
                   Mehr erfahren
                 </Link>
+              </div>
+
+              {/* Platform-Chips — klickbar, monochrom, dezent */}
+              <div className="flex flex-wrap gap-2 mt-8 md:mt-10 hero-rise" style={{ animationDelay: "1.05s" }}>
+                <a
+                  href={SOCIAL.tiktokMain}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 px-3.5 py-2 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/75 hover:text-champagne text-xs"
+                >
+                  <TikTokIcon className="w-3.5 h-3.5" />
+                  <span>@zoe.star.agency</span>
+                  <ArrowExternalIcon className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </a>
+                <a
+                  href={SOCIAL.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 px-3.5 py-2 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/75 hover:text-champagne text-xs"
+                >
+                  <InstagramIcon className="w-3.5 h-3.5" />
+                  <span>@starzagency_88</span>
+                  <ArrowExternalIcon className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </a>
+                <a
+                  href={`mailto:${SOCIAL.email}`}
+                  className="group inline-flex items-center gap-2 px-3.5 py-2 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/75 hover:text-champagne text-xs"
+                >
+                  <MailIcon className="w-3.5 h-3.5" />
+                  <span>info@zoe-star.de</span>
+                </a>
               </div>
             </div>
 
@@ -192,6 +236,70 @@ export default function HomePage() {
           {/* Brand-Sektoren */}
           <MotionReveal delay={0.25}>
             <BrandRow caption="Sektoren · Erste Kohorte" />
+          </MotionReveal>
+
+          {/* PLATFORM-ROW — wo wir aktiv sind */}
+          <MotionReveal delay={0.35}>
+            <div className="mt-14 md:mt-20 pt-10 md:pt-14 border-t border-champagne/10">
+              <div className="flex items-center gap-4 mb-6">
+                <LiveDot label="Aktiv auf" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <a
+                  href={SOCIAL.tiktokMain}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group glass-card flex items-center gap-4 px-5 py-5 md:px-6 md:py-6 hover:border-champagne transition-all duration-300"
+                >
+                  <span className="w-11 h-11 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
+                    <TikTokIcon className="w-5 h-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-0.5">TikTok · Agency</p>
+                    <p className="text-cream group-hover:text-champagne text-sm md:text-base font-medium truncate transition-colors">
+                      @zoe.star.agency
+                    </p>
+                  </div>
+                  <ArrowExternalIcon className="w-4 h-4 text-cream/30 group-hover:text-champagne transition-colors shrink-0" />
+                </a>
+
+                <a
+                  href={SOCIAL.tiktokManager}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group glass-card flex items-center gap-4 px-5 py-5 md:px-6 md:py-6 hover:border-champagne transition-all duration-300"
+                >
+                  <span className="w-11 h-11 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
+                    <TikTokIcon className="w-5 h-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-0.5">TikTok · Founder</p>
+                    <p className="text-cream group-hover:text-champagne text-sm md:text-base font-medium truncate transition-colors">
+                      @zoelandoo
+                    </p>
+                  </div>
+                  <ArrowExternalIcon className="w-4 h-4 text-cream/30 group-hover:text-champagne transition-colors shrink-0" />
+                </a>
+
+                <a
+                  href={SOCIAL.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group glass-card flex items-center gap-4 px-5 py-5 md:px-6 md:py-6 hover:border-champagne transition-all duration-300"
+                >
+                  <span className="w-11 h-11 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
+                    <InstagramIcon className="w-5 h-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-0.5">Instagram</p>
+                    <p className="text-cream group-hover:text-champagne text-sm md:text-base font-medium truncate transition-colors">
+                      @starzagency_88
+                    </p>
+                  </div>
+                  <ArrowExternalIcon className="w-4 h-4 text-cream/30 group-hover:text-champagne transition-colors shrink-0" />
+                </a>
+              </div>
+            </div>
           </MotionReveal>
         </div>
       </section>
