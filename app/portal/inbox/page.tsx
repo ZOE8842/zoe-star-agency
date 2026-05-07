@@ -2,24 +2,45 @@ import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 
+const CATEGORY_LABEL: Record<string, string> = {
+  broadcast: "Broadcast",
+  direct: "Direkt",
+  event: "Event",
+  reminder: "Reminder",
+  system: "System",
+};
+
 export default async function InboxPage() {
   const { supabase, profile } = await getAuthedProfile();
 
-  // Nachrichten holen — RLS sortiert was sichtbar ist
   const { data: messages } = await supabase
     .from("messages")
     .select("id, subject, category, sent_at, requires_ack, sender_id, body")
     .or(`recipient_id.eq.${profile.id},recipient_group.eq.all_creators`)
     .order("sent_at", { ascending: false })
-    .limit(50);
+    .limit(80);
 
-  // Read-Status fuer den User holen
   const { data: reads } = await supabase
     .from("message_reads")
     .select("message_id, read_at, acknowledged_at")
     .eq("reader_id", profile.id);
 
-  const readMap = new Map((reads || []).map(r => [r.message_id, r]));
+  const readMap = new Map((reads || []).map((r) => [r.message_id, r]));
+
+  // Sender-Display-Names (fuer direct messages)
+  const senderIds = Array.from(
+    new Set((messages || []).map((m) => m.sender_id).filter(Boolean) as string[]),
+  );
+  const senderMap = new Map<string, string>();
+  if (senderIds.length > 0) {
+    const { data: senders } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", senderIds);
+    (senders || []).forEach((s) => senderMap.set(s.id, s.display_name));
+  }
+
+  const unreadCount = (messages || []).filter((m) => !readMap.has(m.id)).length;
 
   return (
     <>
@@ -31,58 +52,88 @@ export default async function InboxPage() {
         isManager={profile.role === "manager"}
       />
 
-      <main className="container-luxe py-16">
-        <p className="eyebrow mb-3">Postfach</p>
-        <h1 className="heading-display text-4xl md:text-5xl mb-4">
-          Inbox <span className="text-champagne">·</span> {messages?.length || 0} messages
+      <main className="container-luxe py-16 md:py-24 max-w-3xl mx-auto">
+        <p className="eyebrow mb-4">Postfach</p>
+        <h1 className="font-display italic text-cream text-5xl md:text-7xl leading-[0.95] tracking-[-0.02em] mb-4">
+          Inbox.
         </h1>
-        <p className="text-cream/60 text-sm mb-12">Direct messages, broadcasts, and event updates.</p>
+        <p className="text-cream/45 text-sm mb-20">
+          {messages?.length || 0} Nachrichten
+          {unreadCount > 0 && (
+            <span className="text-champagne"> · {unreadCount} ungelesen</span>
+          )}
+        </p>
 
         {(!messages || messages.length === 0) && (
-          <div className="border border-champagne/15 p-10 text-center">
-            <p className="text-cream/40 text-sm">No messages yet.</p>
+          <div className="py-20 text-center">
+            <p className="font-display italic text-cream/30 text-2xl">
+              Hier ist es noch ruhig.
+            </p>
           </div>
         )}
 
-        <div className="space-y-2">
+        <ul className="divide-y divide-cream/[0.05]">
           {messages?.map((msg) => {
             const readInfo = readMap.get(msg.id);
             const unread = !readInfo;
             const needsAck = msg.requires_ack && !readInfo?.acknowledged_at;
+            const sender = msg.sender_id ? senderMap.get(msg.sender_id) : null;
 
             return (
-              <Link
-                key={msg.id}
-                href={`/portal/inbox/${msg.id}`}
-                className={`group block border p-5 transition-all duration-200
-                  ${unread ? "border-champagne bg-champagne/5" : "border-champagne/15"}
-                  ${needsAck ? "border-l-4 border-l-champagne" : ""}
-                  hover:bg-champagne/5`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="eyebrow">{msg.category}</span>
-                      {unread && <span className="w-1.5 h-1.5 rounded-full bg-champagne" />}
-                      {needsAck && (
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-champagne">
-                          Acknowledge required
-                        </span>
+              <li key={msg.id}>
+                <Link
+                  href={`/portal/inbox/${msg.id}`}
+                  className="group block py-7 md:py-8 transition-colors hover:bg-cream/[0.015]"
+                >
+                  <div className="flex items-start gap-5">
+                    <div className="shrink-0 w-1 self-stretch">
+                      {unread && (
+                        <span
+                          className="block w-1 h-1 rounded-full bg-champagne mt-3"
+                          aria-label="ungelesen"
+                        />
                       )}
                     </div>
-                    <h3 className="font-display italic text-lg text-cream group-hover:text-champagne transition-colors mb-1">
-                      {msg.subject}
-                    </h3>
-                    <p className="text-cream/50 text-sm line-clamp-2">{msg.body}</p>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-4 mb-3 text-[10px] uppercase tracking-[0.25em]">
+                        <span className="text-cream/45">
+                          {CATEGORY_LABEL[msg.category] || msg.category}
+                        </span>
+                        {sender && (
+                          <span className="text-cream/35">{sender}</span>
+                        )}
+                        {needsAck && (
+                          <span className="text-champagne">Bestätigen</span>
+                        )}
+                      </div>
+
+                      <h2
+                        className={`font-display italic text-2xl md:text-3xl mb-2 leading-tight tracking-[-0.01em] transition-colors ${
+                          unread ? "text-cream group-hover:text-champagne" : "text-cream/70 group-hover:text-cream"
+                        }`}
+                      >
+                        {msg.subject || "(ohne Betreff)"}
+                      </h2>
+
+                      <p className="text-cream/45 text-sm leading-relaxed line-clamp-2 mb-3 max-w-2xl">
+                        {msg.body}
+                      </p>
+
+                      <p className="text-cream/30 text-[10px] uppercase tracking-[0.25em]">
+                        {new Date(msg.sent_at).toLocaleDateString("de-DE", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-cream/40 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap">
-                    {new Date(msg.sent_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })}
-                  </span>
-                </div>
-              </Link>
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </main>
     </>
   );
