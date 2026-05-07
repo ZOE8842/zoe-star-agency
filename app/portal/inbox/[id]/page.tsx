@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { AttachmentList } from "@/components/AttachmentList";
 import { AcknowledgeButton } from "./AcknowledgeButton";
 import { ReplyForm } from "./ReplyForm";
 import { markRead } from "./actions";
@@ -34,11 +35,20 @@ export default async function MessageDetailPage({
   const { id } = await params;
   const { supabase, profile } = await getAuthedProfile();
 
-  const { data: msg } = await supabase
+  // Versuch mit attachments-Spalte; Fallback ohne (falls Migration noch fehlt)
+  let { data: msg } = await supabase
     .from("messages")
-    .select("id, subject, body, category, sent_at, requires_ack, sender_id, recipient_id, recipient_group")
+    .select("id, subject, body, category, sent_at, requires_ack, sender_id, recipient_id, recipient_group, attachments")
     .eq("id", id)
     .maybeSingle();
+  if (!msg) {
+    const fallback = await supabase
+      .from("messages")
+      .select("id, subject, body, category, sent_at, requires_ack, sender_id, recipient_id, recipient_group")
+      .eq("id", id)
+      .maybeSingle();
+    msg = fallback.data ? { ...fallback.data, attachments: [] } : null;
+  }
 
   if (!msg) notFound();
 
@@ -178,6 +188,11 @@ export default async function MessageDetailPage({
                 <div className="text-cream/85 text-base md:text-lg leading-[1.85] whitespace-pre-wrap font-light">
                   {item.body}
                 </div>
+
+                {/* Attachments — nur beim aktuellen Item (msg.id) */}
+                {item.id === msg.id && msg.attachments && msg.attachments.length > 0 && (
+                  <AttachmentList paths={msg.attachments} />
+                )}
               </div>
             );
           })}

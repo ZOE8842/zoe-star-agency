@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendMessage } from "../compose/actions";
+import { AttachmentField, type UploadedAttachment } from "@/components/AttachmentField";
 
 export function ReplyForm({
   recipientId,
@@ -13,6 +14,7 @@ export function ReplyForm({
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
+  const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -31,6 +33,7 @@ export function ReplyForm({
       recipientId,
       subject: defaultSubject,
       body: body.trim(),
+      attachments: attachments.map((a) => a.path),
     });
 
     if ("error" in result && result.error) {
@@ -63,6 +66,10 @@ export function ReplyForm({
         placeholder="In Ruhe antworten."
         className="w-full bg-transparent border-b border-cream/[0.08] focus:border-champagne/60 px-0 py-3 text-cream/85 text-base md:text-lg leading-[1.75] font-light focus:outline-none placeholder-cream/20 resize-none transition-colors"
       />
+
+      <div className="mt-6">
+        <AttachmentField attachments={attachments} onChange={setAttachments} />
+      </div>
 
       {error && (
         <div className="border-l-2 border-red-500/40 pl-4 text-red-300/80 text-sm mt-4">

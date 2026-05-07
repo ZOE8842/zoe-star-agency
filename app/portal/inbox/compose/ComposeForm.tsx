@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendMessage } from "./actions";
+import { AttachmentField, type UploadedAttachment } from "@/components/AttachmentField";
 
 export function ComposeForm({
   recipientId,
@@ -14,6 +15,7 @@ export function ComposeForm({
   const router = useRouter();
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +37,7 @@ export function ComposeForm({
       recipientId,
       subject: subject.trim(),
       body: body.trim(),
+      attachments: attachments.map((a) => a.path),
     });
 
     if ("error" in result && result.error) {
@@ -84,6 +87,14 @@ export function ComposeForm({
         <p className="text-cream/25 text-[10px] uppercase tracking-[0.3em] mt-3 text-right">
           {body.length} / 5000
         </p>
+      </div>
+
+      {/* Anlagen */}
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-4">
+          Anlagen
+        </p>
+        <AttachmentField attachments={attachments} onChange={setAttachments} />
       </div>
 
       {error && (

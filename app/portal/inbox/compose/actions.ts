@@ -8,9 +8,10 @@ interface SendArgs {
   recipientId: string;
   subject: string;
   body: string;
+  attachments?: string[];
 }
 
-export async function sendMessage({ recipientId, subject, body }: SendArgs) {
+export async function sendMessage({ recipientId, subject, body, attachments }: SendArgs) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,16 +31,31 @@ export async function sendMessage({ recipientId, subject, body }: SendArgs) {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
-  const { error } = await admin.from("messages").insert({
+  const insertPayload: Record<string, unknown> = {
     sender_id: user.id,
     recipient_id: recipientId,
     subject: subject.trim(),
     body: body.trim(),
     category: "direct",
     sent_at: new Date().toISOString(),
-  });
+  };
+  if (attachments && attachments.length > 0) {
+    insertPayload.attachments = attachments;
+  }
+
+  const { error } = await admin.from("messages").insert(insertPayload);
 
   if (error) {
+    // Falls Spalte attachments noch fehlt: ohne attachments retry
+    if (error.message.includes("attachments")) {
+      delete insertPayload.attachments;
+      const { error: retry } = await admin.from("messages").insert(insertPayload);
+      if (!retry) {
+        revalidatePath("/portal/inbox");
+        return { success: true, attachmentsSkipped: true };
+      }
+      return { error: `Senden fehlgeschlagen: ${retry.message}` };
+    }
     return { error: `Senden fehlgeschlagen: ${error.message}` };
   }
 
