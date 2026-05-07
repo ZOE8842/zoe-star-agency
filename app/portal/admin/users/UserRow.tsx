@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -33,7 +34,11 @@ export function UserRow({ user }: { user: User }) {
 
   return (
     <tr className="border-t border-champagne/10 hover:bg-champagne/5">
-      <td className="px-4 py-3 text-sm text-cream font-medium">{user.display_name}</td>
+      <td className="px-4 py-3 text-sm text-cream font-medium">
+        <Link href={`/portal/admin/users/${user.id}`} className="hover:text-champagne transition-colors">
+          {user.display_name}
+        </Link>
+      </td>
       <td className="px-4 py-3 text-sm text-cream/70">@{user.tiktok_username}</td>
       <td className="px-4 py-3 text-sm text-cream/60">{user.email}</td>
       <td className="px-4 py-3">
