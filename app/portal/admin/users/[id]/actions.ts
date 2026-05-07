@@ -53,3 +53,35 @@ export async function updateUserStatus(userId: string, status: string) {
   revalidatePath("/portal/admin/users");
   return { success: true };
 }
+
+export async function updateUserManager(userId: string, managerId: string | null) {
+  const auth = await ensureAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  // Validierung: managerId muss existieren UND role manager/admin sein
+  if (managerId !== null) {
+    const { data: mgr } = await admin()
+      .from("profiles")
+      .select("id, role")
+      .eq("id", managerId)
+      .maybeSingle();
+    if (!mgr) return { error: "Manager nicht gefunden." };
+    if (!["manager", "admin"].includes(mgr.role)) {
+      return { error: "Diese Person ist kein Manager." };
+    }
+    // Self-Assign vermeiden
+    if (managerId === userId) {
+      return { error: "Creator kann nicht sein eigener Manager sein." };
+    }
+  }
+
+  const { error } = await admin()
+    .from("profiles")
+    .update({ manager_id: managerId })
+    .eq("id", userId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/portal/admin/users/${userId}`);
+  revalidatePath("/portal/admin/users");
+  return { success: true };
+}

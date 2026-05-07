@@ -22,7 +22,7 @@ export default async function CreatorDetailPage({
 
   // Stats parallel
   const now = new Date().toISOString();
-  const [slotsRes, eventsRes, messagesRes, ticketsRes, managerRes] = await Promise.all([
+  const [slotsRes, eventsRes, messagesRes, ticketsRes, managerRes, managersRes] = await Promise.all([
     supabase
       .from("slots")
       .select("id", { count: "exact", head: true })
@@ -43,6 +43,12 @@ export default async function CreatorDetailPage({
     user.manager_id
       ? supabase.from("profiles").select("display_name").eq("id", user.manager_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("profiles")
+      .select("id, display_name, role")
+      .in("role", ["manager", "admin"])
+      .eq("status", "active")
+      .order("display_name", { ascending: true }),
   ]);
 
   const upcomingSlots = slotsRes.count ?? 0;
@@ -50,6 +56,7 @@ export default async function CreatorDetailPage({
   const messageCount = messagesRes.count ?? 0;
   const ticketCount = ticketsRes.count ?? 0;
   const managerName = managerRes.data?.display_name || null;
+  const availableManagers = (managersRes.data || []).filter((m) => m.id !== user.id);
 
   return (
     <>
@@ -146,7 +153,13 @@ export default async function CreatorDetailPage({
         {/* Aktionen */}
         <section className="border-t border-cream/[0.05] pt-12">
           <p className="eyebrow mb-8">Aktionen</p>
-          <UserActions userId={user.id} currentRole={user.role} currentStatus={user.status} />
+          <UserActions
+            userId={user.id}
+            currentRole={user.role}
+            currentStatus={user.status}
+            currentManagerId={user.manager_id}
+            availableManagers={availableManagers}
+          />
         </section>
       </main>
     </>
