@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { UserActions } from "./UserActions";
+import { CreatorNotes } from "./CreatorNotes";
 
 export default async function CreatorDetailPage({
   params,
@@ -57,6 +58,33 @@ export default async function CreatorDetailPage({
   const ticketCount = ticketsRes.count ?? 0;
   const managerName = managerRes.data?.display_name || null;
   const availableManagers = (managersRes.data || []).filter((m) => m.id !== user.id);
+
+  // Creator-Notes laden — graceful falls Tabelle fehlt
+  type Note = {
+    id: string;
+    body: string;
+    created_at: string;
+    updated_at: string | null;
+    author_id: string;
+    author_name?: string;
+  };
+  let notes: Note[] = [];
+  const { data: rawNotes, error: notesErr } = await supabase
+    .from("creator_notes")
+    .select("id, body, created_at, updated_at, author_id")
+    .eq("creator_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (!notesErr && rawNotes) {
+    // Author-Names parallel
+    const authorIds = Array.from(new Set(rawNotes.map((n) => n.author_id)));
+    const { data: authors } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", authorIds);
+    const authorMap = new Map((authors || []).map((a) => [a.id, a.display_name]));
+    notes = rawNotes.map((n) => ({ ...n, author_name: authorMap.get(n.author_id) }));
+  }
 
   return (
     <>
@@ -159,6 +187,17 @@ export default async function CreatorDetailPage({
             currentStatus={user.status}
             currentManagerId={user.manager_id}
             availableManagers={availableManagers}
+          />
+        </section>
+
+        {/* Akte — interne Manager-Notes */}
+        <section className="border-t border-cream/[0.05] pt-12 mt-16">
+          <p className="eyebrow mb-8">Akte</p>
+          <CreatorNotes
+            creatorId={user.id}
+            currentUserId={admin.id}
+            isAdmin={admin.role === "admin"}
+            notes={notes}
           />
         </section>
       </main>
