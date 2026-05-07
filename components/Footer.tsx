@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
 import {
-  TikTokIcon,
-  InstagramIcon,
   MailIcon,
   ArrowExternalIcon,
   ChatIcon,
@@ -32,17 +30,17 @@ function SocialCard({ href, external = true, icon, label, handle, meta }: Social
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="group flex items-center gap-4 border border-champagne/15 hover:border-champagne hover:bg-champagne/5 transition-all duration-300 px-5 py-4 md:px-6 md:py-5"
+      className="group flex items-center gap-5 border border-champagne/15 hover:border-champagne hover:bg-champagne/5 transition-all duration-300 px-5 py-5 md:px-6 md:py-6 cursor-pointer"
     >
-      <span className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
-        <span className="w-5 h-5 md:w-[22px] md:h-[22px] inline-block">{icon}</span>
+      <span className="w-12 h-12 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
+        <span className="w-5 h-5 inline-block">{icon}</span>
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-1">{label}</p>
-        <p className="text-cream group-hover:text-champagne text-sm md:text-base font-medium truncate transition-colors">
+        <p className="text-cream group-hover:text-champagne font-display italic text-xl md:text-2xl leading-tight transition-colors">
           {handle}
         </p>
-        {meta && <p className="text-cream/35 text-xs mt-0.5 truncate">{meta}</p>}
+        {meta && <p className="text-cream/35 text-[11px] mt-0.5 truncate">{meta}</p>}
       </div>
       <span className="text-cream/30 group-hover:text-champagne shrink-0 transition-all duration-300 group-hover:translate-x-0.5">
         <ArrowExternalIcon className="w-4 h-4" />
@@ -86,50 +84,24 @@ export function Footer() {
           </div>
         </div>
 
-        {/* SOCIAL-CARDS — 3 prominente Cards + 2 Kontakt-Rows */}
+        {/* KONTAKT-CARDS — Email + Kontaktformular (Plattform-Cards sind in Trust-Mitte) */}
         <div className="mb-16 md:mb-20">
-          <p className="eyebrow mb-6 md:mb-8">Connect</p>
-
-          <div className="grid md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-5">
-            <SocialCard
-              href={SOCIAL.tiktokMain}
-              icon={<TikTokIcon className="w-full h-full" />}
-              label="TikTok · Agency"
-              handle="@zoe.star.agency"
-              meta="Premium Creator House"
-            />
-            <SocialCard
-              href={SOCIAL.tiktokManager}
-              icon={<TikTokIcon className="w-full h-full" />}
-              label="TikTok · Founder"
-              handle="@zoelandoo"
-              meta="Behind the scenes"
-            />
-            <SocialCard
-              href={SOCIAL.instagram}
-              icon={<InstagramIcon className="w-full h-full" />}
-              label="Instagram"
-              handle="@starzagency_88"
-              meta="Visual Magazine"
-            />
-          </div>
-
+          <p className="eyebrow mb-6 md:mb-8">Kontakt</p>
           <div className="grid md:grid-cols-2 gap-3 md:gap-4">
             <SocialCard
               href={`mailto:${SOCIAL.email}`}
               external={false}
               icon={<MailIcon className="w-full h-full" />}
-              label="Email · direkt"
-              handle={SOCIAL.email}
-              meta="Antwort innerhalb 48h"
+              label="Email"
+              handle="Direct Contact"
+              meta={SOCIAL.email}
             />
             <SocialCard
               href="/contact"
               external={false}
               icon={<ChatIcon className="w-full h-full" />}
               label="Kontaktformular"
-              handle="Persönliche Anfrage"
-              meta="Brands · Press · Cooperation"
+              handle="Business Request"
             />
           </div>
         </div>
