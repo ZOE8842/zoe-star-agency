@@ -3,9 +3,10 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
 import { Logo } from "@/components/Logo";
-import { AvatarStack } from "@/components/AvatarStack";
 import { BrandRow } from "@/components/BrandRow";
-import { StatsRow } from "@/components/StatsRow";
+import { Marquee } from "@/components/Marquee";
+import { GlassCard } from "@/components/GlassCard";
+import { LiveDot } from "@/components/LiveDot";
 
 const APPLY_URL =
   "https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756";
@@ -15,13 +16,12 @@ export default function HomePage() {
     <>
       <Header />
 
-      {/* HERO — Premium Creator House */}
-      <section className="relative min-h-[100vh] flex items-center bg-ink overflow-hidden">
-        {/* Glow-Mesh */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden>
-          <div className="absolute top-1/4 -right-[20vw] w-[80vw] h-[80vw] bg-champagne/[0.06] rounded-full blur-[160px]" />
-          <div className="absolute -bottom-[10vh] -left-[20vw] w-[60vw] h-[60vw] bg-champagne/[0.03] rounded-full blur-[140px]" />
-        </div>
+      {/* ============================================================
+          HERO — VOLT · Premium Creator Energy
+          ============================================================ */}
+      <section className="relative min-h-screen flex items-center bg-ink overflow-hidden pb-24 md:pb-0">
+        {/* Multi-Stop Glow-Mesh — drift 22s */}
+        <div className="hero-glow-mesh" aria-hidden />
 
         {/* Z-Watermark dezent */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -29,93 +29,168 @@ export default function HomePage() {
           src="/brand/zoe_monogram_v3.svg"
           alt=""
           aria-hidden
-          className="absolute pointer-events-none select-none opacity-[0.04] hidden lg:block"
-          style={{ top: "10%", right: "-10%", width: "80vh" }}
+          className="absolute pointer-events-none select-none opacity-[0.045] hidden lg:block"
+          style={{ top: "8%", right: "-12%", width: "78vh" }}
         />
 
-        <div className="container-luxe relative z-10 pt-36 pb-16 md:pt-40 md:pb-24 w-full">
-          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            {/* TYPO + CTA + TRUST */}
-            <div className="lg:col-span-8">
-              <p className="eyebrow mb-8 hero-rise" style={{ animationDelay: "0.1s" }}>
-                Premium Creator House · Berlin
-              </p>
-              <h1 className="heading-display text-cream leading-[0.85] tracking-[-0.025em]">
+        <div className="container-luxe relative z-10 pt-32 pb-32 md:pt-36 md:pb-40 w-full">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+
+            {/* LEFT — Typo + Tagline + CTA */}
+            <div className="lg:col-span-7">
+              <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
+                <LiveDot label="Live now" meta="Berlin · 2026" />
+              </div>
+
+              <h1 className="heading-display text-cream leading-[0.85] tracking-[-0.025em] mt-6 md:mt-8">
                 <span
-                  className="block text-[80px] sm:text-[128px] md:text-[160px] lg:text-[200px] hero-rise"
-                  style={{ animationDelay: "0.25s" }}
+                  className="block text-[80px] sm:text-[128px] md:text-[152px] lg:text-[180px] xl:text-[200px] hero-rise"
+                  style={{ animationDelay: "0.2s" }}
                 >
                   ZOE
                 </span>
                 <span
-                  className="block text-[24px] sm:text-[36px] md:text-[44px] lg:text-[52px] text-cream/70 hero-rise mt-3"
-                  style={{ animationDelay: "0.45s" }}
+                  className="block text-[22px] sm:text-[34px] md:text-[42px] lg:text-[48px] text-cream/65 hero-rise mt-2"
+                  style={{ animationDelay: "0.4s" }}
                 >
                   Star Agency
                 </span>
               </h1>
+
+              {/* Mixed-Type Tagline — Sans + Italic-Display Akzent */}
               <p
-                className="text-cream/65 text-lg md:text-2xl leading-relaxed max-w-xl mt-10 hero-rise"
-                style={{ animationDelay: "0.7s" }}
+                className="text-cream text-2xl sm:text-3xl md:text-4xl lg:text-[40px] leading-[1.1] tracking-[-0.01em] mt-10 md:mt-12 max-w-2xl font-light hero-rise"
+                style={{ animationDelay: "0.6s" }}
               >
-                Boutique-Management für TikTok-Creator. Hand-picked, persönlich, premium.
+                Premium Creator.{" "}
+                <span className="font-display italic font-black text-champagne">Hand-picked.</span>
+                <br />
+                Built different.
               </p>
+
               <div
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-10 hero-rise"
-                style={{ animationDelay: "0.95s" }}
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-10 md:mt-12 hero-rise"
+                style={{ animationDelay: "0.85s" }}
               >
                 <a
                   href={APPLY_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-cta"
+                  className="btn-cta btn-shimmer"
                 >
-                  Als Creator bewerben
+                  Creator werden
                   <span className="btn-cta-arrow" aria-hidden>→</span>
                 </a>
                 <Link href="/about" className="btn-cta-secondary">
                   Mehr erfahren
                 </Link>
               </div>
-
-              {/* Trust-Layer above-fold */}
-              <div className="mt-12 md:mt-14 hero-rise" style={{ animationDelay: "1.15s" }}>
-                <AvatarStack
-                  size="md"
-                  caption="Roster im Aufbau · Phase 01 · 2026"
-                />
-              </div>
             </div>
 
-            {/* LOGO-SIDE — Desktop only */}
-            <div className="lg:col-span-4 hidden lg:flex items-center justify-center">
-              <div className="relative w-full max-w-sm aspect-square">
-                <Logo variant="avatar" className="absolute inset-0 w-full h-full breathe" />
+            {/* RIGHT — Glass-Card Stack mit Z-Avatar (Desktop only) */}
+            <div className="lg:col-span-5 hidden lg:block relative">
+              <div className="relative aspect-square w-full max-w-[440px] mx-auto">
+                {/* Z-Avatar Hauptelement */}
+                <div className="absolute inset-0 hero-rise" style={{ animationDelay: "0.5s" }}>
+                  <Logo variant="avatar" className="w-full h-full breathe" />
+                </div>
+
+                {/* Floating Tag 1 — top-right (Wrapper für hero-rise, inner GlassCard hat rotate) */}
+                <div className="absolute top-[8%] -right-[6%] hero-rise" style={{ animationDelay: "0.95s" }}>
+                  <GlassCard variant="strong" className="px-4 py-3" style={{ transform: "rotate(2deg)" }}>
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-cream/55 mb-1">Standort</p>
+                    <p className="font-display italic text-champagne text-xl leading-none">Berlin</p>
+                  </GlassCard>
+                </div>
+
+                {/* Floating Tag 2 — bottom-left */}
+                <div className="absolute bottom-[10%] -left-[8%] hero-rise" style={{ animationDelay: "1.1s" }}>
+                  <GlassCard variant="strong" className="px-4 py-3" style={{ transform: "rotate(-3deg)" }}>
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-cream/55 mb-1">Modell</p>
+                    <p className="font-display italic text-champagne text-xl leading-none">Boutique</p>
+                  </GlassCard>
+                </div>
+
+                {/* Floating Tag 3 — middle-right */}
+                <div className="absolute top-[48%] right-[-12%] hero-rise" style={{ animationDelay: "1.25s" }}>
+                  <GlassCard variant="strong" className="px-4 py-3" style={{ transform: "rotate(1deg)" }}>
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-cream/55 mb-1">Roster</p>
+                    <p className="font-display italic text-champagne text-xl leading-none">Hand-picked</p>
+                  </GlassCard>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-cream/30 text-[10px] uppercase tracking-[0.4em] hidden md:block">
-          Scroll
+        {/* Marquee — Hero-Bottom-Linie, full-width */}
+        <div className="absolute bottom-0 left-0 right-0 border-t border-champagne/15 py-5 bg-ink/60 backdrop-blur-sm hero-rise" style={{ animationDelay: "1.4s" }}>
+          <Marquee
+            items={[
+              <span key="a" className="font-display italic text-cream/85 text-xl md:text-2xl">Premium Creator House</span>,
+              <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Berlin · 2026</span>,
+              <span key="c" className="font-display italic text-cream/85 text-xl md:text-2xl">Boutique Management</span>,
+              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Hand-picked</span>,
+              <span key="e" className="font-display italic text-cream/85 text-xl md:text-2xl">Beauty · Fashion · Lifestyle</span>,
+              <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Tech · Food · Travel</span>,
+              <span key="g" className="font-display italic text-cream/85 text-xl md:text-2xl">Private Network</span>,
+              <span key="h" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Phase 01</span>,
+            ]}
+            separatorStyle="dot"
+          />
         </div>
       </section>
 
-      {/* TRUST-SECTION — direkt nach Hero */}
-      <section className="bg-ink border-t border-champagne/10">
-        <div className="container-luxe py-16 md:py-24">
-          <MotionReveal>
-            <p className="eyebrow mb-3">Was wir bauen</p>
-            <h2 className="heading-display text-cream text-3xl md:text-5xl leading-tight mb-12 max-w-3xl">
-              Kein Netzwerk. <span className="text-champagne italic">Ein Haus.</span>
-            </h2>
+      {/* ============================================================
+          TRUST — Glass-Cards · LiveDot · BrandRow
+          ============================================================ */}
+      <section className="bg-ink border-t border-champagne/10 relative overflow-hidden">
+        {/* Subtle ambient glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden
+          style={{
+            background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201, 168, 106, 0.08), transparent 60%)",
+          }}
+        />
+
+        <div className="container-luxe relative z-10 py-20 md:py-28">
+          {/* Header */}
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-end mb-14 md:mb-16">
+            <MotionReveal>
+              <LiveDot label="Live now" meta="Berlin · 2026" className="mb-6" />
+              <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
+                Kein Netzwerk.{" "}
+                <span className="text-champagne italic">Ein Haus.</span>
+              </h2>
+            </MotionReveal>
+            <MotionReveal delay={0.1}>
+              <p className="text-cream/65 text-lg leading-relaxed max-w-md md:justify-self-end">
+                Boutique-Management aus Berlin. Wir arbeiten mit ausgewählten Creator-Stimmen — persönlich, langfristig, exklusiv.
+              </p>
+            </MotionReveal>
+          </div>
+
+          {/* Glass-Card Stats — 4 cards */}
+          <MotionReveal delay={0.15}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-14 md:mb-20">
+              {[
+                { label: "Standort", value: "Berlin", hint: "Europe · DE" },
+                { label: "Year", value: "2026", hint: "Phase 01 · Live" },
+                { label: "Modell", value: "Boutique", hint: "Hand-picked Roster" },
+                { label: "Network", value: "Private", hint: "Invite-only Access" },
+              ].map((s) => (
+                <GlassCard key={s.label} variant="default" className="p-5 md:p-7">
+                  <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-3">{s.label}</p>
+                  <p className="font-display italic text-champagne text-3xl md:text-4xl leading-none mb-2">{s.value}</p>
+                  <p className="text-cream/45 text-xs leading-tight">{s.hint}</p>
+                </GlassCard>
+              ))}
+            </div>
           </MotionReveal>
 
-          <MotionReveal delay={0.12}>
-            <StatsRow className="mb-16" />
-          </MotionReveal>
-
-          <MotionReveal delay={0.24}>
+          {/* Brand-Sektoren */}
+          <MotionReveal delay={0.25}>
             <BrandRow caption="Sektoren · Erste Kohorte" />
           </MotionReveal>
         </div>
@@ -266,6 +341,19 @@ export default function HomePage() {
       </section>
 
       <Footer />
+
+      {/* STICKY MOBILE-CTA — Apply-Bar nur Mobile */}
+      <div className="sticky-cta-bar">
+        <a
+          href={APPLY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-cta btn-shimmer w-full"
+        >
+          Creator werden
+          <span className="btn-cta-arrow" aria-hidden>→</span>
+        </a>
+      </div>
     </>
   );
 }
