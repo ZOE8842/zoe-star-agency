@@ -112,36 +112,24 @@ function SignupForm() {
     setLoading(false);
   }
 
-  const editionMarker = (() => {
-    const d = new Date();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const y = String(d.getFullYear()).slice(-2);
-    return `Edit. ${m}/${y}`;
-  })();
-
   return (
     <>
       <div className="atelier-atmosphere" />
       <div className="atelier-grain" />
-      <div className="atelier-vignette" />
 
-      <main className="relative z-10 min-h-screen flex items-center justify-center px-6 py-20">
+      <main className="relative z-10 min-h-screen flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <Link href="/" className="block mb-12 mx-auto w-fit stagger-1">
-          <Logo variant="avatar" className="h-24 breathe" />
+        <Link href="/" className="block mb-10 mx-auto w-fit stagger-1">
+          <Logo variant="avatar" className="h-20 breathe" />
         </Link>
 
-        <p className="volume-marker text-center text-xs tracking-[0.3em] mb-6 stagger-1">
-          {editionMarker} · Aufnahme
-        </p>
+        <p className="eyebrow text-center mb-4 stagger-1">Creator-Anmeldung</p>
 
-        <h1 className="heading-display text-cream text-5xl md:text-6xl text-center leading-[1.0] mb-6 stagger-2">
-          Eine <span className="text-champagne italic">Geste.</span>
+        <h1 className="heading-display text-cream text-4xl md:text-5xl text-center leading-[1.05] mb-4 stagger-2">
+          Creator <span className="text-champagne italic">werden.</span>
         </h1>
 
-        <div className="hairline-divider w-32 mx-auto mb-6 stagger-2" />
-
-        <p className="text-cream/60 text-center text-base italic font-display mb-12 stagger-2">
+        <p className="text-cream/60 text-center text-sm md:text-base mb-10 stagger-2">
           Du wurdest persönlich eingeladen. Lege deinen Zugang an.
         </p>
 
@@ -317,8 +305,9 @@ function SignupForm() {
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
-            {loading ? "Creating account..." : "Create account"}
+          <button type="submit" disabled={loading} className="btn-cta w-full disabled:opacity-50">
+            {loading ? "Creating account…" : "Account erstellen"}
+            {!loading && <span className="btn-cta-arrow" aria-hidden>→</span>}
           </button>
 
           <p className="text-center text-cream/50 text-xs mt-6 italic font-display">

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { AvatarStack } from "@/components/AvatarStack";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -11,14 +12,6 @@ function greeting(): string {
   if (h < 18) return "Guten Tag";
   if (h < 22) return "Guten Abend";
   return "Späte Stunde";
-}
-
-function editionMarker(): string {
-  // Mai 2026 → Edit. 05/26
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const y = String(d.getFullYear()).slice(-2);
-  return `Edit. ${m}/${y}`;
 }
 
 export default async function DashboardPage() {
@@ -121,9 +114,9 @@ export default async function DashboardPage() {
   let featured: Featured;
   if (unreadCount > 0) {
     featured = {
-      eyebrow: "Heute · Inbox",
-      headline: unreadCount === 1 ? "Eine ungelesene Nachricht." : `${unreadCount} ungelesene Nachrichten.`,
-      tagline: "Es wartet etwas auf dich. Lies, was gemeint ist.",
+      eyebrow: "Inbox",
+      headline: unreadCount === 1 ? "1 ungelesene Nachricht" : `${unreadCount} ungelesene Nachrichten`,
+      tagline: "Es wartet etwas auf dich.",
       href: "/portal/inbox",
       cta: "Inbox öffnen",
       accent: String(unreadCount),
@@ -133,9 +126,9 @@ export default async function DashboardPage() {
     const dateStr = dt.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" });
     const timeStr = dt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
     featured = {
-      eyebrow: "Heute · Dein Termin",
+      eyebrow: "Dein Slot",
       headline: dateStr,
-      tagline: `${timeStr} Uhr — du bist eingetragen. Status: ${nextSlot.status}.`,
+      tagline: `${timeStr} Uhr · Status: ${nextSlot.status}`,
       href: "/portal/slots",
       cta: "Slot ansehen",
       accent: timeStr,
@@ -144,9 +137,9 @@ export default async function DashboardPage() {
     const dt = new Date(nextEvent.start_at);
     const dateStr = dt.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" });
     featured = {
-      eyebrow: "Bald · Event",
+      eyebrow: "Event",
       headline: nextEvent.title,
-      tagline: `${dateStr} · ${nextEvent.category}. Anmeldung möglich.`,
+      tagline: `${dateStr} · ${nextEvent.category}`,
       href: "/portal/events",
       cta: "Event ansehen",
       accent: "01",
@@ -154,11 +147,11 @@ export default async function DashboardPage() {
   } else {
     featured = {
       eyebrow: "Heute",
-      headline: "Stille.",
-      tagline: "Keine offenen Punkte. Setze einen Slot oder schau in die Events.",
+      headline: "Alles ruhig.",
+      tagline: "Keine offenen Punkte. Du kannst einen Slot eintragen oder Events ansehen.",
       href: "/portal/slots",
       cta: "Slot eintragen",
-      accent: "00",
+      accent: "—",
     };
   }
 
@@ -173,190 +166,177 @@ export default async function DashboardPage() {
         isManager={profile.role === "manager"}
       />
 
-      {/* ATMOSPHERE */}
+      {/* ATMOSPHERE — dezent */}
       <div className="atelier-atmosphere" />
       <div className="atelier-grain" />
-      <div className="atelier-vignette" />
 
-      <main className="container-luxe relative z-10 py-14 md:py-24 pb-24">
+      <main className="container-luxe relative z-10 py-10 md:py-16 pb-20">
 
-        {/* AKT I — COVER */}
-        <section className="relative mb-20 md:mb-32">
-          {/* Z-Watermark */}
+        {/* HERO — kompakter, klar, mit Trust */}
+        <section className="relative mb-12 md:mb-16">
+          {/* Z-Watermark dezent rechts */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/zoe_monogram_v3.svg"
             alt=""
-            className="atelier-watermark hidden md:block"
-            style={{ top: "-40px", right: "-60px", width: "420px" }}
+            className="absolute pointer-events-none select-none opacity-[0.045] hidden md:block"
+            style={{ top: "-30px", right: "-60px", width: "360px" }}
           />
 
-          <p className="volume-marker text-sm tracking-[0.25em] mb-6 md:mb-8 stagger-1">
-            {editionMarker()} · {new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
-          </p>
+          <p className="eyebrow mb-4 stagger-1">Dashboard · {greeting()}</p>
 
-          <div className="grid md:grid-cols-[1fr_auto] gap-8 md:gap-12 items-end">
-            <div className="min-w-0">
-              <h1 className="heading-display text-cream text-6xl md:text-8xl lg:text-9xl leading-[0.95] stagger-2">
-                {firstName}<span className="text-champagne">.</span>
+          <div className="flex items-center gap-5 md:gap-6 stagger-2">
+            {profile.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatar_url}
+                alt=""
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border border-champagne/40 shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-champagne/15 border border-champagne/40 flex items-center justify-center text-champagne text-2xl md:text-3xl font-display italic shrink-0">
+                {(profile.display_name || "?").slice(0, 1).toUpperCase()}
+              </div>
+            )}
+
+            <div className="min-w-0 flex-1">
+              <h1 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0]">
+                Hi, <span className="text-champagne">{firstName}.</span>
               </h1>
-              <p className="text-cream/65 text-lg md:text-xl italic font-display mt-5 md:mt-7 stagger-3">
-                {greeting()}, Stimme.
-              </p>
-              <div className="flex items-center gap-3 mt-6 stagger-4">
-                <span className="inline-block px-3 py-1 border border-champagne/40 text-champagne text-[10px] uppercase tracking-[0.3em]">
+              <div className="flex items-center gap-3 mt-3">
+                <span className="inline-block px-2.5 py-0.5 border border-champagne/40 text-champagne text-[10px] uppercase tracking-[0.25em]">
                   {profile.role}
                 </span>
-                <span className="text-cream/40 text-sm">@{profile.tiktok_username}</span>
+                <span className="text-cream/45 text-sm truncate">@{profile.tiktok_username}</span>
               </div>
             </div>
-
-            {/* Avatar overlap */}
-            <div className="shrink-0 stagger-3">
-              {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatar_url}
-                  alt=""
-                  className="w-24 h-24 md:w-36 md:h-36 rounded-full object-cover border border-champagne/40 shadow-2xl"
-                />
-              ) : (
-                <div className="w-24 h-24 md:w-36 md:h-36 rounded-full bg-champagne/10 border border-champagne/40 flex items-center justify-center text-champagne text-4xl md:text-6xl font-display italic shadow-2xl">
-                  {(profile.display_name || "?").slice(0, 1).toUpperCase()}
-                </div>
-              )}
-            </div>
           </div>
-
-          <div className="hairline-divider mt-12 md:mt-16 stagger-5" />
         </section>
 
-        {/* AKT II — TODAY */}
-        <section className="mb-20 md:mb-28">
-          <p className="eyebrow mb-6 md:mb-8">Heute</p>
-
-          <div className="grid md:grid-cols-3 gap-5 md:gap-6">
-            {/* Featured Card — span 2 */}
+        {/* TODAY — Featured + Side-Cards (kompakt) */}
+        <section className="mb-12 md:mb-16">
+          <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+            {/* Featured — span 2 */}
             <Link
               href={featured.href}
-              className="card-featured md:col-span-2 p-7 md:p-12 group transition-all duration-500 hover:bg-champagne/5"
+              className="card-featured md:col-span-2 p-7 md:p-10 group transition-all duration-500 hover:bg-champagne/5"
             >
-              <p className="eyebrow mb-6 md:mb-8">{featured.eyebrow}</p>
-
-              <p className="font-display italic text-champagne text-7xl md:text-9xl leading-[0.95] mb-4 md:mb-6">
+              <p className="eyebrow mb-5">{featured.eyebrow}</p>
+              <p className="font-display italic text-champagne text-6xl md:text-8xl leading-[0.9] mb-4 md:mb-5">
                 {featured.accent}
               </p>
-
-              <h2 className="font-display italic text-cream text-3xl md:text-5xl leading-tight mb-3 md:mb-5 max-w-[28ch]">
+              <h2 className="text-cream text-2xl md:text-3xl font-medium leading-snug mb-2">
                 {featured.headline}
               </h2>
-
-              <p className="text-cream/55 text-base md:text-lg leading-relaxed italic font-display max-w-[42ch] mb-8">
+              <p className="text-cream/60 text-sm md:text-base mb-7 max-w-[44ch]">
                 {featured.tagline}
               </p>
-
-              <span className="inline-flex items-center gap-3 text-champagne text-[11px] uppercase tracking-[0.3em] font-medium border-b border-champagne/40 pb-1 group-hover:border-champagne transition-colors">
+              <span className="btn-cta">
                 {featured.cta}
-                <span aria-hidden className="transition-transform duration-500 group-hover:translate-x-1">→</span>
+                <span className="btn-cta-arrow" aria-hidden>→</span>
               </span>
             </Link>
 
             {/* Side Cards stack */}
-            <div className="space-y-5 md:space-y-6">
-              <SideCard
-                href="/portal/slots"
-                eyebrow="Diese Woche"
-                value={weekSlots}
-                hint={weekSlots === 0 ? "Keine Slots geplant" : weekSlots === 1 ? "Slot geplant" : "Slots geplant"}
-              />
-              <SideCard
-                href="/portal/events"
-                eyebrow="Events offen"
-                value={upcomingEvents}
-                hint={upcomingEvents === 0 ? "—" : "Anmeldung möglich"}
-              />
-              <SideCard
-                href="/portal/support"
-                eyebrow="Tickets"
-                value={openTickets}
-                hint={openTickets === 0 ? "Alles ruhig" : "in Bearbeitung"}
-                muted={openTickets === 0}
-              />
+            <div className="space-y-4 md:space-y-5">
+              <SideCard href="/portal/slots" eyebrow="Diese Woche" value={weekSlots}
+                hint={weekSlots === 0 ? "Keine Slots" : weekSlots === 1 ? "Slot" : "Slots"} />
+              <SideCard href="/portal/events" eyebrow="Events" value={upcomingEvents}
+                hint={upcomingEvents === 0 ? "—" : "offen"} />
+              <SideCard href="/portal/support" eyebrow="Tickets" value={openTickets}
+                hint={openTickets === 0 ? "Keine offen" : "in Bearbeitung"}
+                muted={openTickets === 0} />
             </div>
           </div>
-
-          {/* Recent Messages — Editorial line-list */}
-          {recentMessages.length > 0 && (
-            <div className="mt-12 md:mt-16">
-              <div className="flex items-baseline justify-between mb-6">
-                <p className="eyebrow">Korrespondenz</p>
-                <Link href="/portal/inbox" className="text-cream/45 text-[10px] uppercase tracking-[0.25em] hover:text-champagne transition-colors">
-                  Alle →
-                </Link>
-              </div>
-              <ul>
-                {recentMessages.map((m) => (
-                  <li key={m.id} className="border-t border-champagne/10 last:border-b">
-                    <Link
-                      href="/portal/inbox"
-                      className="flex items-baseline justify-between gap-6 py-5 group hover:bg-champagne/[0.03] -mx-2 px-2 transition-colors"
-                    >
-                      <span className="font-display italic text-cream text-lg md:text-xl truncate group-hover:text-champagne transition-colors">
-                        {m.subject || "(ohne Betreff)"}
-                      </span>
-                      <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em] shrink-0">
-                        {new Date(m.sent_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </section>
 
-        {/* AKT III — WERKSTATT */}
-        <section className="mb-20 md:mb-24">
-          <p className="eyebrow mb-6 md:mb-8">Werkstatt</p>
-          <ul className="border-t border-champagne/15">
+        {/* RECENT MESSAGES — Editorial line-list (nur wenn welche da) */}
+        {recentMessages.length > 0 && (
+          <section className="mb-12 md:mb-16">
+            <div className="flex items-baseline justify-between mb-5 md:mb-6">
+              <p className="eyebrow">Letzte Nachrichten</p>
+              <Link href="/portal/inbox" className="text-cream/50 text-[11px] uppercase tracking-[0.25em] hover:text-champagne transition-colors">
+                Alle →
+              </Link>
+            </div>
+            <ul>
+              {recentMessages.map((m) => (
+                <li key={m.id} className="border-t border-champagne/10 last:border-b">
+                  <Link
+                    href="/portal/inbox"
+                    className="flex items-baseline justify-between gap-6 py-4 md:py-5 group hover:bg-champagne/[0.03] -mx-2 px-2 transition-colors"
+                  >
+                    <span className="text-cream text-base md:text-lg truncate group-hover:text-champagne transition-colors">
+                      {m.subject || "(ohne Betreff)"}
+                    </span>
+                    <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em] shrink-0">
+                      {new Date(m.sent_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* AKTIONEN — klare CTAs als Tile-Grid (nicht italic-Liste) */}
+        <section className="mb-12 md:mb-16">
+          <p className="eyebrow mb-5 md:mb-6">Aktionen</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
             {[
-              { href: "/portal/slots", label: "Slot eintragen", hint: "Live-Termin reservieren" },
-              { href: "/portal/inbox/compose", label: "Nachricht verfassen", hint: "An ZOE oder Manager" },
-              { href: "/portal/events", label: "Events ansehen", hint: "Offene Anmeldungen" },
-              { href: "/portal/downloads", label: "Downloads", hint: "Brand-Assets · Templates" },
-              { href: "/portal/support", label: "Support", hint: "Hilfe oder Anliegen" },
+              { href: "/portal/slots", label: "Slot eintragen" },
+              { href: "/portal/inbox/compose", label: "Nachricht senden" },
+              { href: "/portal/events", label: "Events" },
+              { href: "/portal/downloads", label: "Downloads" },
+              { href: "/portal/support", label: "Support" },
             ].map((item) => (
-              <li key={item.href} className="border-b border-champagne/15">
-                <Link
-                  href={item.href}
-                  className="group flex items-baseline justify-between gap-6 py-6 md:py-7 -mx-2 px-2 hover:bg-champagne/[0.03] transition-colors"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-display italic text-cream text-2xl md:text-3xl group-hover:text-champagne transition-colors">
-                      {item.label}
-                    </p>
-                    <p className="text-cream/40 text-xs md:text-sm mt-1 italic">{item.hint}</p>
-                  </div>
-                  <span aria-hidden className="text-champagne/60 text-2xl md:text-3xl transition-all duration-500 group-hover:text-champagne group-hover:translate-x-1">
-                    →
-                  </span>
-                </Link>
-              </li>
+              <Link
+                key={item.href}
+                href={item.href}
+                className="border border-champagne/15 hover:border-champagne hover:bg-champagne/5 p-5 md:p-6 transition-all duration-300 text-cream text-sm md:text-base font-medium min-h-[80px] inline-flex items-center justify-center text-center leading-tight"
+              >
+                {item.label}
+              </Link>
             ))}
-          </ul>
+          </div>
         </section>
 
-        {/* AKT IV — SETUP (nur wenn unvollständig) */}
-        {progressDone < progressItems.length && (
-          <section className="card-featured p-7 md:p-10 mb-8">
-            <div className="flex items-baseline justify-between mb-6">
-              <div>
-                <p className="eyebrow mb-2">Dein Setup</p>
-                <p className="font-display italic text-cream/55 text-sm md:text-base">Noch ein paar Schritte bis zur Bühne.</p>
-              </div>
-              <span className="text-champagne font-display italic text-3xl md:text-4xl">{progressPct}%</span>
+        {/* TRUST-LAYER — wer ist im Roster, was ist Phase */}
+        <section className="border-t border-champagne/10 pt-10 md:pt-12 mb-8">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <p className="eyebrow mb-3">ZOE Roster</p>
+              <p className="text-cream/70 text-sm md:text-base leading-relaxed mb-5 max-w-[44ch]">
+                Du bist Teil der ersten Welle der ZOE Star Agency. Boutique-Management aus Berlin. Hand-picked, persönlich, premium.
+              </p>
+              <AvatarStack size="md" caption="Roster im Aufbau · Phase 01" />
             </div>
-            <div className="h-px bg-champagne/15 mb-6 overflow-hidden">
+            <div className="grid grid-cols-2 gap-px bg-champagne/15">
+              <div className="bg-ink p-5">
+                <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mb-2">Phase</p>
+                <p className="font-display italic text-champagne text-3xl leading-none mb-1">01</p>
+                <p className="text-cream/40 text-xs">Soft-Launch · 2026</p>
+              </div>
+              <div className="bg-ink p-5">
+                <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mb-2">Standort</p>
+                <p className="font-display italic text-champagne text-3xl leading-none mb-1">Berlin</p>
+                <p className="text-cream/40 text-xs">Europe · DE</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SETUP — nur wenn unvollständig */}
+        {progressDone < progressItems.length && (
+          <section className="card-featured p-6 md:p-8 mt-10">
+            <div className="flex items-baseline justify-between mb-5">
+              <div>
+                <p className="eyebrow mb-1">Dein Setup</p>
+                <p className="text-cream/55 text-sm">Noch {progressItems.length - progressDone} Schritte bis fertig.</p>
+              </div>
+              <span className="text-champagne font-display italic text-3xl">{progressPct}%</span>
+            </div>
+            <div className="h-px bg-champagne/15 mb-5 overflow-hidden">
               <div className="h-full bg-champagne transition-all duration-700" style={{ width: `${progressPct}%` }} />
             </div>
             <ul className="space-y-1">
@@ -369,7 +349,7 @@ export default async function DashboardPage() {
                     <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ${p.done ? "border-champagne bg-champagne text-ink" : "border-champagne/30"}`}>
                       {p.done ? "✓" : ""}
                     </span>
-                    <span className={p.done ? "line-through italic" : "italic font-display"}>{p.label}</span>
+                    <span className={p.done ? "line-through" : ""}>{p.label}</span>
                   </Link>
                 </li>
               ))}
@@ -385,7 +365,7 @@ function SideCard({ href, eyebrow, value, hint, muted }: { href: string; eyebrow
   return (
     <Link
       href={href}
-      className={`group block border p-5 md:p-6 transition-all duration-500 ${
+      className={`group block border p-5 md:p-6 transition-all duration-300 ${
         muted
           ? "border-champagne/10 hover:border-champagne/30"
           : "border-champagne/20 hover:border-champagne hover:bg-champagne/5"
@@ -397,7 +377,7 @@ function SideCard({ href, eyebrow, value, hint, muted }: { href: string; eyebrow
       }`}>
         {value}
       </p>
-      <p className="text-cream/40 text-xs mt-3 italic">{hint}</p>
+      <p className="text-cream/45 text-xs mt-3">{hint}</p>
     </Link>
   );
 }

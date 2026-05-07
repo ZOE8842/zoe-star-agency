@@ -315,3 +315,63 @@
     animation: none !important;
   }
 }
+
+/* ============================================================
+   CREATOR HOUSE — Premium CTAs + Trust-Layer-Helpers
+   ============================================================ */
+
+/* Hide horizontal scroll-bar fuer mobile BrandRow */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Big CTA — fett, klar, mit Arrow-Shift */
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.875rem;
+  padding: 1.125rem 2.25rem;
+  background: rgb(201, 168, 106);
+  color: rgb(10, 10, 10);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgb(201, 168, 106);
+}
+
+.btn-cta:hover {
+  background: rgb(217, 187, 130);
+  border-color: rgb(217, 187, 130);
+}
+
+.btn-cta:hover .btn-cta-arrow {
+  transform: translateX(4px);
+}
+
+.btn-cta-arrow {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 1.125rem 2rem;
+  background: transparent;
+  color: rgb(244, 241, 231);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  transition: all 0.3s;
+  border: 1px solid rgba(244, 241, 231, 0.25);
+}
+
+.btn-cta-secondary:hover {
+  border-color: rgb(201, 168, 106);
+  color: rgb(201, 168, 106);
+}
