@@ -94,47 +94,45 @@ export function PublicNav() {
         </div>
       </header>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer — Premium */}
       <div
-        className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-500 ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="absolute inset-0 bg-ink/95 backdrop-blur-md" onClick={() => setOpen(false)} />
-        <div
-          className={`relative h-full flex flex-col pt-24 pb-10 px-6 overflow-y-auto transition-transform duration-300 ${
-            open ? "translate-y-0" : "-translate-y-4"
-          }`}
-        >
-          <nav className="flex flex-col gap-1 mb-12">
+        <div className="absolute inset-0 bg-ink/[0.97] backdrop-blur-2xl" onClick={() => setOpen(false)} />
+        <div className="relative h-full flex flex-col pt-32 pb-12 px-8 sm:px-12 overflow-y-auto">
+          <p
+            className="eyebrow mb-10 text-cream/40"
+            style={{ animation: open ? "hero-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both" : "none" }}
+          >
+            Navigation
+          </p>
+
+          <nav className="flex flex-col gap-2 mb-16">
             {NAV_ITEMS.map((it, i) => (
               <Link
                 key={it.href}
                 href={it.href}
                 onClick={() => setOpen(false)}
                 style={{
-                  animation: open ? `hero-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${0.08 + i * 0.06}s both` : "none",
+                  animation: open
+                    ? `hero-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${0.12 + i * 0.07}s both`
+                    : "none",
                 }}
-                className="font-display italic text-[40px] sm:text-5xl text-cream hover:text-champagne py-3 border-b border-cream/[0.05] transition-colors"
+                className="font-display italic text-[44px] sm:text-[56px] text-cream hover:text-champagne py-4 leading-none tracking-[-0.02em] transition-colors"
               >
                 {it.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3 mb-6">
-            <LanguageSwitch />
-            <ThemeToggle />
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/portal/login"
-              onClick={() => setOpen(false)}
-              className="btn-outline w-full justify-center"
-            >
-              Login
-            </Link>
+          <div
+            className="flex flex-col gap-3 mb-10"
+            style={{
+              animation: open ? "hero-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both" : "none",
+            }}
+          >
             <a
               href="https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756"
               target="_blank"
@@ -143,11 +141,27 @@ export function PublicNav() {
             >
               Als Creator bewerben
             </a>
+            <Link
+              href="/portal/login"
+              onClick={() => setOpen(false)}
+              className="btn-outline w-full justify-center"
+            >
+              Login
+            </Link>
           </div>
 
-          <p className="text-cream/40 text-[10px] uppercase tracking-[0.3em] mt-auto pt-12 text-center">
-            ZOE Star Agency · {new Date().getFullYear()}
-          </p>
+          <div
+            className="flex items-center gap-3 mt-auto pt-8 border-t border-cream/[0.05]"
+            style={{
+              animation: open ? "hero-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both" : "none",
+            }}
+          >
+            <LanguageSwitch />
+            <ThemeToggle />
+            <p className="ml-auto text-cream/30 text-[10px] uppercase tracking-[0.3em]">
+              ZOE · {new Date().getFullYear()}
+            </p>
+          </div>
         </div>
       </div>
     </>

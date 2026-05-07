@@ -91,26 +91,26 @@
   }
 }
 
-/* Logo-Atmen für Hero (slow breathe) */
+/* Cinematic Calm — Logo atmet kaum sichtbar (12s) */
 @keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 0.95; }
-  50% { transform: scale(1.04); opacity: 1; }
+  0%, 100% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.015); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .breathe {
-    animation: breathe 6s ease-in-out infinite;
+    animation: breathe 12s ease-in-out infinite;
   }
 }
 
-/* Hero-Wave: subtile vertikale Welle für Display-Headline */
+/* Hero-Rise — langsamer, weicher */
 @keyframes hero-rise {
-  from { opacity: 0; transform: translateY(28px); }
+  from { opacity: 0; transform: translateY(32px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .hero-rise {
-  animation: hero-rise 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: hero-rise 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
