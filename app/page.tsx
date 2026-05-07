@@ -8,13 +8,46 @@ import { Marquee } from "@/components/Marquee";
 import { GlassCard } from "@/components/GlassCard";
 import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
-import { PhoneMockup } from "@/components/PhoneMockup";
+import { CreatorShowcaseCard, type CreatorShowcase } from "@/components/CreatorShowcaseCard";
+import { FeaturedCreatorsStrip } from "@/components/FeaturedCreatorsStrip";
 import {
   TikTokIcon,
   InstagramIcon,
   MailIcon,
   ArrowExternalIcon,
 } from "@/components/SocialIcons";
+
+// Hardcoded Demo-Showcase fuer Phase A.
+// Phase B: ersetzt durch supabase-query auf "showcase_creators" (approved=true).
+const FEATURED_CREATORS: CreatorShowcase[] = [
+  {
+    displayName: "ZOE Star Agency",
+    category: "Match Night · Berlin",
+    platform: "tiktok",
+    href: "https://www.tiktok.com/@zoe.star.agency",
+    visual: "champagne",
+  },
+  {
+    displayName: "Nesip · ZOELANDO",
+    category: "Founder · Berlin",
+    platform: "tiktok",
+    href: "https://www.tiktok.com/@zoelandoo",
+    visual: "warm",
+  },
+  {
+    displayName: "ZOE Visuals",
+    category: "Editorial · 05/26",
+    platform: "instagram",
+    href: "https://www.instagram.com/starzagency_88",
+    visual: "cool",
+  },
+  {
+    displayName: "Pending Roster",
+    category: "Phase 01 · Aufbau",
+    platform: null,
+    visual: "ink",
+  },
+];
 
 const SOCIAL = {
   instagram: "https://www.instagram.com/starzagency_88",
@@ -127,48 +160,45 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT — Phone-Mockup dominant */}
+            {/* RIGHT — Showcase-Card-Stack (Editorial, KEIN TikTok-UI) */}
             <div className="lg:col-span-6 order-1 lg:order-2 relative">
-              <div className="relative max-w-[280px] md:max-w-[340px] mx-auto">
-                {/* Hauptphone */}
+              <div className="relative max-w-[300px] md:max-w-[360px] mx-auto">
+                {/* Hauptcard vorne */}
                 <div className="hero-rise relative z-20" style={{ animationDelay: "0.4s" }}>
-                  <PhoneMockup
-                    username="@zoe.star.agency"
+                  <CreatorShowcaseCard
                     displayName="ZOE Star Agency"
-                    caption="Premium Creator House · Berlin"
-                    likes="14.2K"
-                    comments="892"
-                    live
-                    visual="champagne"
+                    category="Match Night · Berlin"
+                    platform="tiktok"
                     href={SOCIAL.tiktokMain}
+                    visual="champagne"
                   />
                 </div>
 
-                {/* Phone hinten links — schwebend, peak-out */}
+                {/* Card hinten links — peak-out */}
                 <div
-                  className="hidden md:block absolute -left-[28%] top-[8%] w-[68%] z-10 hero-rise opacity-60"
+                  className="hidden md:block absolute -left-[26%] top-[7%] w-[66%] z-10 hero-rise opacity-65"
                   style={{ animationDelay: "0.6s" }}
                 >
-                  <PhoneMockup
-                    username="@zoelandoo"
-                    caption="Behind the scenes"
-                    likes="8.7K"
-                    comments="412"
+                  <CreatorShowcaseCard
+                    displayName="Nesip · ZOELANDO"
+                    category="Founder"
+                    platform="tiktok"
+                    href={SOCIAL.tiktokManager}
                     visual="warm"
                     rotation={-6}
                   />
                 </div>
 
-                {/* Phone hinten rechts — schwebend */}
+                {/* Card hinten rechts */}
                 <div
-                  className="hidden md:block absolute -right-[26%] top-[14%] w-[64%] z-10 hero-rise opacity-55"
+                  className="hidden md:block absolute -right-[24%] top-[12%] w-[62%] z-10 hero-rise opacity-60"
                   style={{ animationDelay: "0.75s" }}
                 >
-                  <PhoneMockup
-                    username="@starzagency_88"
-                    caption="Visual Archive"
-                    likes="5.3K"
-                    comments="218"
+                  <CreatorShowcaseCard
+                    displayName="ZOE Visuals"
+                    category="Editorial"
+                    platform="instagram"
+                    href={SOCIAL.instagram}
                     visual="cool"
                     rotation={5}
                   />
@@ -198,7 +228,8 @@ export default function HomePage() {
       </section>
 
       {/* ============================================================
-          WHAT'S LIVE — Horizontal Phone-Strip · TikTok-Energy
+          INSIDE ZOE — Featured Creators Showcase (Editorial)
+          KEIN TikTok-UI. Premium Card-Layout, Display-Name dominant.
           ============================================================ */}
       <section className="relative bg-ink-mesh py-20 md:py-28 overflow-hidden">
         {/* Section-Number "02" */}
@@ -213,9 +244,9 @@ export default function HomePage() {
         <div className="relative z-10 container-luxe mb-10 md:mb-14">
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
-              <LiveDot label="Aktiv" meta="TikTok · Instagram · LIVE" className="mb-4" />
+              <p className="eyebrow mb-4">Inside ZOE</p>
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
-                Was gerade <span className="text-champagne italic">passiert.</span>
+                Featured <span className="text-champagne italic">Creators.</span>
               </h2>
             </div>
             <a
@@ -230,56 +261,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Horizontal Phone-Strip — touch-scroll mobile, grid desktop */}
-        <div className="relative z-10">
-          <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-5 overflow-x-auto md:overflow-visible no-scrollbar px-6 md:px-12 pb-6">
-            <div className="shrink-0 w-[260px] md:w-auto">
-              <PhoneMockup
-                username="@zoe.star.agency"
-                displayName="ZOE Agency"
-                caption="Roster Drop · Phase 01"
-                likes="12.4K"
-                comments="847"
-                live
-                visual="champagne"
-                href={SOCIAL.tiktokMain}
-              />
-            </div>
-            <div className="shrink-0 w-[260px] md:w-auto">
-              <PhoneMockup
-                username="@zoelandoo"
-                displayName="Nesip · Founder"
-                caption="Berlin Studio · Behind the scenes"
-                likes="8.7K"
-                comments="412"
-                visual="warm"
-                href={SOCIAL.tiktokManager}
-              />
-            </div>
-            <div className="shrink-0 w-[260px] md:w-auto">
-              <PhoneMockup
-                username="@starzagency_88"
-                displayName="ZOE Visuals"
-                caption="Editorial Cover · 05/26"
-                likes="5.3K"
-                comments="218"
-                visual="cool"
-                href={SOCIAL.instagram}
-              />
-            </div>
-            <div className="shrink-0 w-[260px] md:w-auto">
-              <PhoneMockup
-                username="@zoe.star.agency"
-                displayName="ZOE Agency"
-                caption="Live Stream · Match Night"
-                likes="22.1K"
-                comments="1.4K"
-                live
-                visual="ink"
-                href={SOCIAL.tiktokMain}
-              />
-            </div>
-          </div>
+        <div className="relative z-10 container-luxe">
+          <FeaturedCreatorsStrip creators={FEATURED_CREATORS} />
         </div>
       </section>
 
