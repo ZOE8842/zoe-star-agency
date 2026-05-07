@@ -39,7 +39,7 @@ export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
   const site = input.siteUrl || "https://zoe-star.de";
   const greeting = input.recipientName?.trim()
     ? `An ${escapeHtml(input.recipientName.trim())},`
-    : "An eine ausgewaehlte Stimme,";
+    : "An eine ausgewählte Stimme,";
   const sender = input.senderName?.trim() || "ZOE Star Agency";
   const expiryHuman = formatExpiry(input.expiresAt);
   const signupUrl = `${site}/portal/signup?invite=${encodeURIComponent(input.inviteCode)}`;
@@ -49,7 +49,7 @@ export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
 
   const roleLine = input.intendedRole === "manager"
     ? "Manager-Zugang. Du betreust dein eigenes Roster, nicht das gesamte Haus."
-    : "Creator-Zugang. Du gehoerst zum inneren Kreis des Hauses.";
+    : "Creator-Zugang. Du gehörst zum inneren Kreis des Hauses.";
 
   const subject = "Eine Einladung — ZOE Star Agency";
 
@@ -62,7 +62,7 @@ export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
 </head>
 <body style="margin:0;padding:0;background:#0a0a0a;font-family:Georgia,'Times New Roman',serif;color:#f4ede0;-webkit-font-smoothing:antialiased;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
-    Du wurdest persoenlich zur ZOE Star Agency eingeladen. Dein Code: ${escapeHtml(input.inviteCode)}.
+    Du wurdest persönlich zur ZOE Star Agency eingeladen. Dein Code: ${escapeHtml(input.inviteCode)}.
   </div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;">
     <tr>
@@ -86,7 +86,7 @@ export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
               <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#f4ede0;">${greeting}</p>
               <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#e8dfc8;">
                 wir bauen kein Netzwerk. Wir bauen ein Haus.<br />
-                Und wir haben dir einen Schluessel reserviert.
+                Und wir haben dir einen Schlüssel reserviert.
               </p>
               ${personalBlock}
               <p style="margin:0 0 8px;font-size:15px;line-height:1.7;color:#e8dfc8;">
@@ -125,7 +125,7 @@ export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
           <tr>
             <td style="padding:0 0 32px;">
               <p style="margin:0;font-size:12px;color:#7a7163;line-height:1.6;font-style:italic;">
-                Der Code verfaellt am ${escapeHtml(expiryHuman)}.
+                Der Code verfällt am ${escapeHtml(expiryHuman)}.
               </p>
             </td>
           </tr>` : ""}
@@ -149,10 +149,10 @@ export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
   const text = [
     "ZOE Star Agency — An invitation.",
     "",
-    input.recipientName?.trim() ? `An ${input.recipientName.trim()},` : "An eine ausgewaehlte Stimme,",
+    input.recipientName?.trim() ? `An ${input.recipientName.trim()},` : "An eine ausgewählte Stimme,",
     "",
     "wir bauen kein Netzwerk. Wir bauen ein Haus.",
-    "Und wir haben dir einen Schluessel reserviert.",
+    "Und wir haben dir einen Schlüssel reserviert.",
     "",
     input.personalNote?.trim() ? input.personalNote.trim() : "",
     input.personalNote?.trim() ? "" : "",
@@ -162,7 +162,7 @@ export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
     "",
     `Account erstellen: ${signupUrl}`,
     "",
-    expiryHuman ? `Der Code verfaellt am ${expiryHuman}.` : "",
+    expiryHuman ? `Der Code verfällt am ${expiryHuman}.` : "",
     expiryHuman ? "" : "",
     "—",
     sender,
