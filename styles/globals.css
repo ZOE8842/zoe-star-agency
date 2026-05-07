@@ -542,3 +542,65 @@
 @media (min-width: 768px) {
   .sticky-cta-bar { display: none; }
 }
+
+/* ============================================================
+   STUDIO — Color-Story · Mixed-Type · Section-Tokens
+   ============================================================ */
+
+/* Color-Story Section-Backgrounds */
+.bg-cream-warm {
+  background: rgb(244, 241, 231);
+}
+
+.bg-cream-deep {
+  background: rgb(238, 233, 218);
+}
+
+.bg-ink-mesh {
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(201, 168, 106, 0.10), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(201, 168, 106, 0.05), transparent 60%),
+    rgb(10, 10, 10);
+}
+
+/* Mixed-Type Hero — Multi-Weight stack */
+.mixed-type-line-1 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 200;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+}
+
+.mixed-type-line-2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+}
+
+.mixed-type-line-3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+
+/* Section-Number Container — absolute positioned, contained */
+.section-number-bg {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+/* Smooth Color-Story-Transition zwischen Sections */
+.color-bridge-ink-to-cream {
+  background: linear-gradient(180deg, rgb(10, 10, 10) 0%, rgb(244, 241, 231) 100%);
+  height: 80px;
+}
+
+.color-bridge-cream-to-ink {
+  background: linear-gradient(180deg, rgb(244, 241, 231) 0%, rgb(10, 10, 10) 100%);
+  height: 80px;
+}

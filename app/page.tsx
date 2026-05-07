@@ -7,6 +7,7 @@ import { BrandRow } from "@/components/BrandRow";
 import { Marquee } from "@/components/Marquee";
 import { GlassCard } from "@/components/GlassCard";
 import { LiveDot } from "@/components/LiveDot";
+import { SectionNumber } from "@/components/SectionNumber";
 import {
   TikTokIcon,
   InstagramIcon,
@@ -30,156 +31,132 @@ export default function HomePage() {
       <Header />
 
       {/* ============================================================
-          HERO — VOLT · Premium Creator Energy
+          HERO V3 — STUDIO · Mixed-Type · Section-Number · Hero-Visual
           ============================================================ */}
-      <section className="relative min-h-screen flex items-center bg-ink overflow-hidden pb-24 md:pb-0">
-        {/* Multi-Stop Glow-Mesh — drift 22s */}
+      <section className="relative min-h-screen flex flex-col justify-end overflow-hidden bg-ink">
+        {/* Glow-Mesh stronger */}
         <div className="hero-glow-mesh" aria-hidden />
 
-        {/* Z-Watermark dezent */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/zoe_monogram_v3.svg"
-          alt=""
+        {/* Section-Number "01" — gigantic atmospheric layer */}
+        <div className="absolute pointer-events-none select-none -bottom-[10%] -right-[4%] md:-bottom-[18%] md:-right-[2%] z-0">
+          <SectionNumber
+            number="01"
+            rotation={-3}
+            className="text-[280px] sm:text-[440px] md:text-[640px] lg:text-[760px] xl:text-[860px]"
+          />
+        </div>
+
+        {/* Z-Avatar — Desktop angeschnitten rechts, Mobile als BG-Layer dezent */}
+        <div
           aria-hidden
-          className="absolute pointer-events-none select-none opacity-[0.045] hidden lg:block"
-          style={{ top: "8%", right: "-12%", width: "78vh" }}
-        />
+          className="absolute pointer-events-none select-none hero-rise"
+          style={{
+            animationDelay: "0.5s",
+            top: "8%",
+            right: "-30vw",
+            width: "85vw",
+            maxWidth: "780px",
+            opacity: 0.55,
+          }}
+        >
+          <Logo variant="avatar" className="w-full h-full breathe" />
+        </div>
 
-        <div className="container-luxe relative z-10 pt-32 pb-32 md:pt-36 md:pb-40 w-full">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        <div className="container-luxe relative z-10 w-full pt-28 pb-36 md:pt-40 md:pb-44">
 
-            {/* LEFT — Typo + Tagline + CTA */}
-            <div className="lg:col-span-7">
-              <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
-                <LiveDot label="Live now" meta="Berlin · 2026" />
-              </div>
+          {/* Top-Marker */}
+          <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
+            <LiveDot label="Live now" meta="Berlin · Edit. 01 · 2026" />
+          </div>
 
-              <h1 className="heading-display text-cream leading-[0.85] tracking-[-0.025em] mt-6 md:mt-8">
-                <span
-                  className="block text-[80px] sm:text-[128px] md:text-[152px] lg:text-[180px] xl:text-[200px] hero-rise"
-                  style={{ animationDelay: "0.2s" }}
-                >
-                  ZOE
-                </span>
-                <span
-                  className="block text-[22px] sm:text-[34px] md:text-[42px] lg:text-[48px] text-cream/65 hero-rise mt-2"
-                  style={{ animationDelay: "0.4s" }}
-                >
-                  Star Agency
-                </span>
-              </h1>
+          {/* MIXED-TYPE HEADLINE — staggered multi-weight */}
+          <h1 className="mt-8 md:mt-12 mb-2">
+            {/* Linie 1: sans-light groß */}
+            <span
+              className="block hero-rise mixed-type-line-1 text-cream/90 text-[64px] sm:text-[96px] md:text-[140px] lg:text-[164px]"
+              style={{ animationDelay: "0.2s" }}
+            >
+              Premium
+            </span>
+            {/* Linie 2: italic-display GROSS in Champagne */}
+            <span
+              className="block hero-rise mixed-type-line-2 text-champagne -mt-2 md:-mt-4 text-[80px] sm:text-[120px] md:text-[180px] lg:text-[210px]"
+              style={{ animationDelay: "0.35s" }}
+            >
+              Creator.
+            </span>
+          </h1>
 
-              {/* Mixed-Type Tagline — Sans + Italic-Display Akzent */}
-              <p
-                className="text-cream text-2xl sm:text-3xl md:text-4xl lg:text-[40px] leading-[1.1] tracking-[-0.01em] mt-10 md:mt-12 max-w-2xl font-light hero-rise"
-                style={{ animationDelay: "0.6s" }}
+          {/* Sub-Tagline mit Mixed-Type-Akzent */}
+          <p
+            className="hero-rise mixed-type-line-3 text-cream/75 text-[22px] sm:text-[30px] md:text-[40px] lg:text-[48px] mt-4 md:mt-8 max-w-3xl"
+            style={{ animationDelay: "0.55s" }}
+          >
+            Hand-picked.{" "}
+            <span className="font-display italic font-black text-champagne">Built different.</span>
+          </p>
+
+          {/* CTA + Mini-Chips */}
+          <div
+            className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center mt-12 md:mt-16 hero-rise"
+            style={{ animationDelay: "0.75s" }}
+          >
+            <a
+              href={APPLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-cta btn-shimmer"
+            >
+              Creator werden
+              <span className="btn-cta-arrow" aria-hidden>→</span>
+            </a>
+
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={SOCIAL.tiktokMain}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok ZOE Star Agency"
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/80 hover:text-champagne text-xs"
               >
-                Premium Creator.{" "}
-                <span className="font-display italic font-black text-champagne">Hand-picked.</span>
-                <br />
-                Built different.
-              </p>
-
-              <div
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-10 md:mt-12 hero-rise"
-                style={{ animationDelay: "0.85s" }}
+                <TikTokIcon className="w-3.5 h-3.5" />
+                <span>TikTok</span>
+              </a>
+              <a
+                href={SOCIAL.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/80 hover:text-champagne text-xs"
               >
-                <a
-                  href={APPLY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-cta btn-shimmer"
-                >
-                  Creator werden
-                  <span className="btn-cta-arrow" aria-hidden>→</span>
-                </a>
-                <Link href="/about" className="btn-cta-secondary">
-                  Mehr erfahren
-                </Link>
-              </div>
-
-              {/* Platform-Chips — minimal, Display-Name dominant */}
-              <div className="flex flex-wrap gap-2 mt-8 md:mt-10 hero-rise" style={{ animationDelay: "1.05s" }}>
-                <a
-                  href={SOCIAL.tiktokMain}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="TikTok ZOE Star Agency"
-                  className="group inline-flex items-center gap-2.5 px-4 py-2.5 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream hover:text-champagne text-sm"
-                >
-                  <TikTokIcon className="w-4 h-4" />
-                  <span>TikTok</span>
-                </a>
-                <a
-                  href={SOCIAL.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram ZOE Visuals"
-                  className="group inline-flex items-center gap-2.5 px-4 py-2.5 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream hover:text-champagne text-sm"
-                >
-                  <InstagramIcon className="w-4 h-4" />
-                  <span>Instagram</span>
-                </a>
-                <a
-                  href={`mailto:${SOCIAL.email}`}
-                  aria-label="Email Contact"
-                  className="group inline-flex items-center gap-2.5 px-4 py-2.5 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream hover:text-champagne text-sm"
-                >
-                  <MailIcon className="w-4 h-4" />
-                  <span>Contact</span>
-                </a>
-              </div>
-            </div>
-
-            {/* RIGHT — Glass-Card Stack mit Z-Avatar (Desktop only) */}
-            <div className="lg:col-span-5 hidden lg:block relative">
-              <div className="relative aspect-square w-full max-w-[440px] mx-auto">
-                {/* Z-Avatar Hauptelement */}
-                <div className="absolute inset-0 hero-rise" style={{ animationDelay: "0.5s" }}>
-                  <Logo variant="avatar" className="w-full h-full breathe" />
-                </div>
-
-                {/* Floating Tag 1 — top-right (Wrapper für hero-rise, inner GlassCard hat rotate) */}
-                <div className="absolute top-[8%] -right-[6%] hero-rise" style={{ animationDelay: "0.95s" }}>
-                  <GlassCard variant="strong" className="px-4 py-3" style={{ transform: "rotate(2deg)" }}>
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-cream/55 mb-1">Standort</p>
-                    <p className="font-display italic text-champagne text-xl leading-none">Berlin</p>
-                  </GlassCard>
-                </div>
-
-                {/* Floating Tag 2 — bottom-left */}
-                <div className="absolute bottom-[10%] -left-[8%] hero-rise" style={{ animationDelay: "1.1s" }}>
-                  <GlassCard variant="strong" className="px-4 py-3" style={{ transform: "rotate(-3deg)" }}>
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-cream/55 mb-1">Modell</p>
-                    <p className="font-display italic text-champagne text-xl leading-none">Boutique</p>
-                  </GlassCard>
-                </div>
-
-                {/* Floating Tag 3 — middle-right */}
-                <div className="absolute top-[48%] right-[-12%] hero-rise" style={{ animationDelay: "1.25s" }}>
-                  <GlassCard variant="strong" className="px-4 py-3" style={{ transform: "rotate(1deg)" }}>
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-cream/55 mb-1">Roster</p>
-                    <p className="font-display italic text-champagne text-xl leading-none">Hand-picked</p>
-                  </GlassCard>
-                </div>
-              </div>
+                <InstagramIcon className="w-3.5 h-3.5" />
+                <span>Instagram</span>
+              </a>
+              <a
+                href={`mailto:${SOCIAL.email}`}
+                aria-label="Email"
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/80 hover:text-champagne text-xs"
+              >
+                <MailIcon className="w-3.5 h-3.5" />
+                <span>Contact</span>
+              </a>
             </div>
           </div>
         </div>
 
         {/* Marquee — Hero-Bottom-Linie, full-width */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-champagne/15 py-5 bg-ink/60 backdrop-blur-sm hero-rise" style={{ animationDelay: "1.4s" }}>
+        <div
+          className="relative z-10 border-t border-champagne/15 py-4 md:py-5 bg-ink/70 backdrop-blur-sm hero-rise"
+          style={{ animationDelay: "1.0s" }}
+        >
           <Marquee
             items={[
-              <span key="a" className="font-display italic text-cream/85 text-xl md:text-2xl">Premium Creator House</span>,
+              <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">Premium Creator House</span>,
               <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Berlin · 2026</span>,
-              <span key="c" className="font-display italic text-cream/85 text-xl md:text-2xl">Boutique Management</span>,
+              <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">Boutique Management</span>,
               <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Hand-picked</span>,
-              <span key="e" className="font-display italic text-cream/85 text-xl md:text-2xl">Beauty · Fashion · Lifestyle</span>,
-              <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Tech · Food · Travel</span>,
-              <span key="g" className="font-display italic text-cream/85 text-xl md:text-2xl">Private Network</span>,
-              <span key="h" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Phase 01</span>,
+              <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">Private Network</span>,
+              <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Edit. 01 · Live now</span>,
             ]}
             separatorStyle="dot"
           />
