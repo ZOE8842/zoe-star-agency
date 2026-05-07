@@ -21,9 +21,17 @@ export default async function AdminPage() {
   const { data: profile } = await supabase
     .from("profiles").select("*").eq("id", user.id).single();
 
-  if (profile?.role !== "admin") redirect("/portal");
+  if (!profile || !["manager", "admin"].includes(profile.role)) redirect("/portal");
+  const isAdmin = profile.role === "admin";
 
   const now = new Date();
+
+  // Bei Manager: alle Creator-Queries auf manager_id = self scopen
+  const scopedProfiles = supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("role", "creator")
+    .eq("status", "active");
 
   const [
     totalUsersRes,
@@ -35,24 +43,37 @@ export default async function AdminPage() {
     recentInvitesRes,
     recentTicketsRes,
   ] = await Promise.all([
-    supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase.from("profiles").select("id", { count: "exact", head: true })
-      .eq("role", "creator").eq("status", "active"),
-    supabase.from("support_tickets").select("id", { count: "exact", head: true })
-      .in("status", ["open", "in_progress"]),
-    supabase.from("invites").select("id", { count: "exact", head: true })
-      .is("used_at", null),
+    isAdmin
+      ? supabase.from("profiles").select("id", { count: "exact", head: true })
+      : supabase.from("profiles").select("id", { count: "exact", head: true }).eq("manager_id", profile.id),
+    isAdmin ? scopedProfiles : scopedProfiles.eq("manager_id", profile.id),
+    isAdmin
+      ? supabase.from("support_tickets").select("id", { count: "exact", head: true })
+          .in("status", ["open", "in_progress"])
+      : Promise.resolve({ count: 0 }),
+    isAdmin
+      ? supabase.from("invites").select("id", { count: "exact", head: true }).is("used_at", null)
+      : Promise.resolve({ count: 0 }),
     supabase.from("events").select("id", { count: "exact", head: true })
       .eq("status", "open").gte("start_at", now.toISOString()),
-    supabase.from("profiles")
-      .select("id, display_name, tiktok_username, role, joined_at, avatar_url")
-      .order("joined_at", { ascending: false }).limit(5),
-    supabase.from("invites")
-      .select("id, code, intended_role, used_at, expires_at, created_at")
-      .order("created_at", { ascending: false }).limit(5),
-    supabase.from("support_tickets")
-      .select("id, subject, status, created_at, creator_id")
-      .order("created_at", { ascending: false }).limit(5),
+    isAdmin
+      ? supabase.from("profiles")
+          .select("id, display_name, tiktok_username, role, joined_at, avatar_url")
+          .order("joined_at", { ascending: false }).limit(5)
+      : supabase.from("profiles")
+          .select("id, display_name, tiktok_username, role, joined_at, avatar_url")
+          .eq("manager_id", profile.id)
+          .order("joined_at", { ascending: false }).limit(5),
+    isAdmin
+      ? supabase.from("invites")
+          .select("id, code, intended_role, used_at, expires_at, created_at")
+          .order("created_at", { ascending: false }).limit(5)
+      : Promise.resolve({ data: [] }),
+    isAdmin
+      ? supabase.from("support_tickets")
+          .select("id, subject, status, created_at, creator_id")
+          .order("created_at", { ascending: false }).limit(5)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const totalUsers = totalUsersRes.count ?? 0;
@@ -71,42 +92,59 @@ export default async function AdminPage() {
         displayName={profile.display_name}
         email={profile.email}
         avatarUrl={profile.avatar_url}
-        isAdmin
+        isAdmin={isAdmin}
+        isManager={!isAdmin}
       />
 
       <main className="container-luxe py-10 md:py-14">
         {/* WELCOME */}
         <section className="mb-12">
-          <p className="eyebrow mb-2">{greeting()} · Admin Console</p>
+          <p className="eyebrow mb-2">{greeting()} · {isAdmin ? "Admin Console" : "Manager Cockpit"}</p>
           <h1 className="heading-display text-3xl md:text-5xl leading-tight">
-            System <span className="text-champagne">overview.</span>
+            {isAdmin ? (
+              <>System <span className="text-champagne">overview.</span></>
+            ) : (
+              <>Mein <span className="text-champagne">Roster.</span></>
+            )}
           </h1>
         </section>
 
         {/* STATS */}
-        <section className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-12">
-          <Stat label="Users total" value={totalUsers} href="/portal/admin/users" />
+        <section className={`grid grid-cols-2 ${isAdmin ? "md:grid-cols-5" : "md:grid-cols-3"} gap-3 md:gap-4 mb-12`}>
+          <Stat
+            label={isAdmin ? "Users total" : "Mein Roster"}
+            value={totalUsers}
+            href="/portal/admin/users"
+          />
           <Stat label="Active Creators" value={activeCreators} href="/portal/admin/users" />
-          <Stat label="Open Invites" value={openInvites} href="/portal/admin/invites" highlight={openInvites > 0} />
+          {isAdmin && (
+            <Stat label="Open Invites" value={openInvites} href="/portal/admin/invites" highlight={openInvites > 0} />
+          )}
           <Stat label="Events offen" value={upcomingEvents} href="/portal/admin/events" />
-          <Stat label="Tickets offen" value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
+          {isAdmin && (
+            <Stat label="Tickets offen" value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
+          )}
         </section>
 
         {/* QUICK ACTIONS */}
         <section className="mb-12">
           <p className="eyebrow mb-4">Quick actions</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            <AdminTile href="/portal/admin/users" title="Users" hint="Rollen · Status · Sperren" />
-            <AdminTile href="/portal/admin/invites" title="Invites" hint="Codes generieren" />
-            <AdminTile href="/portal/admin/events" title="Events" hint="CRUD + Anmeldungen" />
-            <AdminTile href="/portal/admin/messages" title="Broadcasts" hint="Nachrichten an Gruppen" />
-            <AdminTile href="/portal/admin/downloads" title="Downloads" hint="Asset-Library" />
-            <AdminTile href="/portal/admin/analytics" title="Analytics" hint="Login · Aktivität" />
+            <AdminTile href="/portal/admin/users" title={isAdmin ? "Users" : "Roster"} hint={isAdmin ? "Rollen · Status · Sperren" : "Eigene Creator"} />
+            {isAdmin && (
+              <>
+                <AdminTile href="/portal/admin/invites" title="Invites" hint="Codes generieren" />
+                <AdminTile href="/portal/admin/messages" title="Broadcasts" hint="Nachrichten an Gruppen" />
+                <AdminTile href="/portal/admin/downloads" title="Downloads" hint="Asset-Library" />
+                <AdminTile href="/portal/admin/analytics" title="Analytics" hint="Login · Aktivität" />
+              </>
+            )}
+            <AdminTile href="/portal/admin/events" title="Events" hint={isAdmin ? "CRUD + Anmeldungen" : "Übersicht"} />
           </div>
         </section>
 
         {/* ACTIVITY FEEDS */}
-        <section className="grid md:grid-cols-2 gap-6 mb-8">
+        <section className={`grid ${isAdmin ? "md:grid-cols-2" : "md:grid-cols-1"} gap-6 mb-8`}>
           {/* Recent Signups */}
           <div className="border border-champagne/15 p-6">
             <div className="flex items-center justify-between mb-4">
@@ -140,7 +178,8 @@ export default async function AdminPage() {
             )}
           </div>
 
-          {/* Recent Invites */}
+          {/* Recent Invites — Admin-only */}
+          {isAdmin && (
           <div className="border border-champagne/15 p-6">
             <div className="flex items-center justify-between mb-4">
               <p className="eyebrow">Letzte Invites</p>
@@ -168,9 +207,11 @@ export default async function AdminPage() {
               </ul>
             )}
           </div>
+          )}
         </section>
 
-        {/* Recent Tickets (full-width) */}
+        {/* Recent Tickets (full-width) — Admin-only */}
+        {isAdmin && (
         <section className="border border-champagne/15 p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="eyebrow">Letzte Support-Tickets</p>
@@ -196,6 +237,7 @@ export default async function AdminPage() {
             </ul>
           )}
         </section>
+        )}
       </main>
     </>
   );

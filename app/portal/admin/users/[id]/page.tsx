@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { UserActions } from "./UserActions";
 import { CreatorNotes } from "./CreatorNotes";
@@ -11,7 +11,7 @@ export default async function CreatorDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase, profile: admin } = await requireAdmin();
+  const { supabase, profile: admin } = await requireManagerOrAdmin();
 
   const { data: user } = await supabase
     .from("profiles")
@@ -20,6 +20,11 @@ export default async function CreatorDetailPage({
     .maybeSingle();
 
   if (!user) notFound();
+
+  // Manager-Scoping: nur eigene Creator. Admin sieht alles.
+  if (admin.role !== "admin" && user.manager_id !== admin.id && user.id !== admin.id) {
+    notFound();
+  }
 
   // Stats parallel
   const now = new Date().toISOString();
@@ -178,17 +183,19 @@ export default async function CreatorDetailPage({
           </section>
         )}
 
-        {/* Aktionen */}
-        <section className="border-t border-cream/[0.05] pt-12">
-          <p className="eyebrow mb-8">Aktionen</p>
-          <UserActions
-            userId={user.id}
-            currentRole={user.role}
-            currentStatus={user.status}
-            currentManagerId={user.manager_id}
-            availableManagers={availableManagers}
-          />
-        </section>
+        {/* Aktionen — Admin-only */}
+        {admin.role === "admin" && (
+          <section className="border-t border-cream/[0.05] pt-12">
+            <p className="eyebrow mb-8">Aktionen</p>
+            <UserActions
+              userId={user.id}
+              currentRole={user.role}
+              currentStatus={user.status}
+              currentManagerId={user.manager_id}
+              availableManagers={availableManagers}
+            />
+          </section>
+        )}
 
         {/* Akte — interne Manager-Notes */}
         <section className="border-t border-cream/[0.05] pt-12 mt-16">

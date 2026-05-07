@@ -29,3 +29,14 @@ export async function requireAdmin() {
   if (auth.profile.role !== "admin") redirect("/portal");
   return auth;
 }
+
+// Manager + Admin duerfen auf Roster-/Akten-Bereiche zugreifen.
+// Manager bekommt automatisch Scope auf eigene Creator (manager_id = self).
+// Admin sieht alles.
+export async function requireManagerOrAdmin() {
+  const auth = await getAuthedProfile();
+  if (!["manager", "admin"].includes(auth.profile.role)) {
+    redirect("/portal");
+  }
+  return auth;
+}

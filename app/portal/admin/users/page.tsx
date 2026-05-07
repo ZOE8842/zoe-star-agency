@@ -1,24 +1,39 @@
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { UserRow } from "./UserRow";
 
 export default async function AdminUsersPage() {
-  const { supabase, profile } = await requireAdmin();
+  const { supabase, profile } = await requireManagerOrAdmin();
 
-  const { data: users } = await supabase
+  const isAdmin = profile.role === "admin";
+
+  let query = supabase
     .from("profiles")
     .select("id, email, tiktok_username, display_name, role, status, country, language, joined_at, last_active_at")
     .order("joined_at", { ascending: false });
+
+  // Manager: nur eigene Creator (manager_id = self)
+  if (!isAdmin) {
+    query = query.eq("manager_id", profile.id);
+  }
+
+  const { data: users } = await query;
 
   return (
     <>
       <PortalNav userId={profile.id}
         displayName={profile.display_name} email={profile.email}
-        avatarUrl={profile.avatar_url} isAdmin />
+        avatarUrl={profile.avatar_url}
+        isAdmin={isAdmin}
+        isManager={profile.role === "manager"} />
       <main className="container-luxe py-16">
-        <p className="eyebrow mb-3">Admin · Users</p>
+        <p className="eyebrow mb-3">{isAdmin ? "Roster · Alle" : "Mein Roster"}</p>
         <h1 className="heading-display text-4xl md:text-5xl mb-12">
-          User <span className="text-champagne">management.</span>
+          {isAdmin ? (
+            <>User <span className="text-champagne">management.</span></>
+          ) : (
+            <>Meine <span className="text-champagne">Creator.</span></>
+          )}
         </h1>
 
         <div className="border border-champagne/15 overflow-hidden">
