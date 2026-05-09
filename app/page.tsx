@@ -113,22 +113,22 @@ export default async function HomePage() {
             {/* LEFT — Headline + CTA */}
             <div className="lg:col-span-6 order-2 lg:order-1">
               <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
-                <LiveDot label="Live now" meta="Berlin · 2026" />
+                <LiveDot label="Aktiv" meta="Berlin · 2026" />
               </div>
 
-              {/* Mixed-Type Headline — kompakter, weniger dominant gegen Visual */}
+              {/* Mixed-Type Headline — komplett deutsch */}
               <h1 className="mt-6 md:mt-8 mb-4 leading-[0.92]">
                 <span
                   className="block hero-rise mixed-type-line-1 text-cream/90 text-[52px] sm:text-[72px] md:text-[88px] lg:text-[108px]"
                   style={{ animationDelay: "0.2s" }}
                 >
-                  Premium
+                  Boutique
                 </span>
                 <span
                   className="block hero-rise mixed-type-line-2 text-champagne -mt-1 md:-mt-2 text-[64px] sm:text-[88px] md:text-[112px] lg:text-[136px]"
                   style={{ animationDelay: "0.35s" }}
                 >
-                  Creator.
+                  Creator-Agentur.
                 </span>
               </h1>
 
@@ -136,8 +136,8 @@ export default async function HomePage() {
                 className="hero-rise mixed-type-line-3 text-cream/75 text-lg md:text-2xl lg:text-3xl mt-4 md:mt-6 max-w-xl"
                 style={{ animationDelay: "0.55s" }}
               >
-                Hand-picked.{" "}
-                <span className="font-display italic font-black text-champagne">Built different.</span>
+                Persönlich gewählt.{" "}
+                <span className="font-display italic font-black text-champagne">Aus Berlin.</span>
               </p>
 
               <div
@@ -150,7 +150,7 @@ export default async function HomePage() {
                   rel="noopener noreferrer"
                   className="btn-cta btn-shimmer"
                 >
-                  Creator werden
+                  Bewerben
                   <span className="btn-cta-arrow" aria-hidden>→</span>
                 </a>
               </div>
@@ -178,11 +178,11 @@ export default async function HomePage() {
                 </a>
                 <a
                   href={`mailto:${SOCIAL.email}`}
-                  aria-label="Email"
+                  aria-label="Kontakt"
                   className="inline-flex items-center gap-2 px-3 py-2 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/75 hover:text-champagne text-xs"
                 >
                   <MailIcon className="w-3.5 h-3.5" />
-                  <span>Contact</span>
+                  <span>Kontakt</span>
                 </a>
               </div>
             </div>
@@ -228,12 +228,12 @@ export default async function HomePage() {
         >
           <Marquee
             items={[
-              <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">Premium Creator House</span>,
+              <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">Boutique-Creator-Agentur</span>,
               <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Berlin · 2026</span>,
-              <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">Boutique Management</span>,
-              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Hand-picked</span>,
-              <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">Live now</span>,
-              <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Private Network</span>,
+              <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">Persönlich gewählt</span>,
+              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Privates Netzwerk</span>,
+              <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">TikTok · Live</span>,
+              <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Edit. 01 · Aktiv</span>,
             ]}
             separatorStyle="dot"
           />
@@ -241,8 +241,7 @@ export default async function HomePage() {
       </section>
 
       {/* ============================================================
-          INSIDE ZOE — Featured Creators Showcase (Editorial)
-          KEIN TikTok-UI. Premium Card-Layout, Display-Name dominant.
+          02 · ROSTER — Creator Showcase (Editorial, eigene Sprache)
           ============================================================ */}
       <section className="relative bg-ink-mesh py-20 md:py-28 overflow-hidden">
         {/* Section-Number "02" */}
@@ -257,9 +256,9 @@ export default async function HomePage() {
         <div className="relative z-10 container-luxe mb-10 md:mb-14">
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
-              <p className="eyebrow mb-4">Inside ZOE</p>
+              <p className="eyebrow mb-4">Aus dem Roster</p>
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
-                Featured <span className="text-champagne italic">Creators.</span>
+                Unsere <span className="text-champagne italic">Creator.</span>
               </h2>
             </div>
             <a
@@ -268,7 +267,7 @@ export default async function HomePage() {
               rel="noopener noreferrer"
               className="text-champagne text-[11px] uppercase tracking-[0.3em] hover:text-champagne-300 inline-flex items-center gap-2"
             >
-              Folge auf TikTok
+              Auf TikTok folgen
               <ArrowExternalIcon className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -296,7 +295,7 @@ export default async function HomePage() {
           {/* Header */}
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-end mb-14 md:mb-16">
             <MotionReveal>
-              <LiveDot label="Live now" meta="Berlin · 2026" className="mb-6" />
+              <LiveDot label="Aktiv" meta="Berlin · 2026" className="mb-6" />
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
                 Kein Netzwerk.{" "}
                 <span className="text-champagne italic">Ein Haus.</span>
@@ -304,7 +303,7 @@ export default async function HomePage() {
             </MotionReveal>
             <MotionReveal delay={0.1}>
               <p className="text-cream/65 text-lg leading-relaxed max-w-md md:justify-self-end">
-                Boutique-Management aus Berlin. Wir arbeiten mit ausgewählten Creator-Stimmen — persönlich, langfristig, exklusiv.
+                Boutique-Management aus Berlin. Wir arbeiten mit ausgewählten Creator — persönlich, langfristig, exklusiv.
               </p>
             </MotionReveal>
           </div>
@@ -313,10 +312,10 @@ export default async function HomePage() {
           <MotionReveal delay={0.15}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-14 md:mb-20">
               {[
-                { label: "Standort", value: "Berlin", hint: "Europe · DE" },
-                { label: "Year", value: "2026", hint: "Phase 01 · Live" },
-                { label: "Modell", value: "Boutique", hint: "Hand-picked Roster" },
-                { label: "Network", value: "Private", hint: "Invite-only Access" },
+                { label: "Standort", value: "Berlin", hint: "Europa · DE" },
+                { label: "Jahr", value: "2026", hint: "Phase 01 · Aktiv" },
+                { label: "Modell", value: "Boutique", hint: "Persönlich gewählt" },
+                { label: "Netzwerk", value: "Privat", hint: "Nur per Einladung" },
               ].map((s) => (
                 <GlassCard key={s.label} variant="default" className="p-5 md:p-7">
                   <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-3">{s.label}</p>
@@ -329,7 +328,7 @@ export default async function HomePage() {
 
           {/* Brand-Sektoren */}
           <MotionReveal delay={0.25}>
-            <BrandRow caption="Sektoren · Erste Kohorte" />
+            <BrandRow caption="Bereiche · Erste Welle" />
           </MotionReveal>
 
           {/* PLATFORM-ROW — Display-Name dominant, Username klein */}

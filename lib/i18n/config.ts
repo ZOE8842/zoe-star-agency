@@ -1,7 +1,8 @@
-// i18n-Architektur (Phase 1: UI-Switch + Default DE)
-// Phase 2 (spaeter): echte Translation-Files + next-intl-Integration
+// i18n-Architektur
+// Phase 1: UI-Switch + Default DE
+// Phase 2 (eigener Schub): echte Translation-Files + next-intl-Integration
 
-export const LOCALES = ["de", "en", "fr", "it", "es", "tr", "ro"] as const;
+export const LOCALES = ["de", "en", "fr", "tr"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "de";
@@ -10,23 +11,18 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   de: "Deutsch",
   en: "English",
   fr: "Français",
-  it: "Italiano",
-  es: "Español",
   tr: "Türkçe",
-  ro: "Română",
 };
 
 export const LOCALE_SHORT: Record<Locale, string> = {
   de: "DE",
   en: "EN",
   fr: "FR",
-  it: "IT",
-  es: "ES",
   tr: "TR",
-  ro: "RO",
 };
 
-// Welche Locales sind bereits voll uebersetzt? (Phase 1: nur DE)
+// Welche Locales sind bereits voll uebersetzt?
+// Aktuell nur DE — vollständige Übersetzungen für EN/FR/TR sind eigener Schub.
 export const AVAILABLE_LOCALES: Locale[] = ["de"];
 
 export function isLocaleAvailable(locale: Locale): boolean {

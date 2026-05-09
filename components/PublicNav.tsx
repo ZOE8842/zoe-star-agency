@@ -7,11 +7,11 @@ import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitch } from "./LanguageSwitch";
 
 const NAV_ITEMS = [
-  { href: "/agency", label: "Agency" },
-  { href: "/about", label: "Über uns" },
+  { href: "/", label: "Startseite" },
+  { href: "/agency", label: "Creator" },
   { href: "/kooperationen", label: "Kooperationen" },
-  { href: "/join", label: "Creator werden" },
-  { href: "/contact", label: "Kontakt" },
+  { href: "/about", label: "Über uns" },
+  { href: "/join", label: "Bewerbung" },
 ];
 
 export function PublicNav() {
@@ -64,7 +64,7 @@ export function PublicNav() {
               href="/portal/login"
               className="hidden md:inline-flex text-champagne text-[11px] uppercase tracking-[0.3em] hover:text-champagne-300 transition px-3 py-3 items-center min-h-[40px]"
             >
-              Login
+              Portal
             </Link>
 
             {/* Mobile Hamburger */}
@@ -146,7 +146,7 @@ export function PublicNav() {
               onClick={() => setOpen(false)}
               className="btn-outline w-full justify-center"
             >
-              Login
+              Portal
             </Link>
           </div>
 

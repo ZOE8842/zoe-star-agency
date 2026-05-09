@@ -82,7 +82,7 @@ function LoginForm() {
         disabled={loading}
         className="btn-cta w-full disabled:opacity-50 stagger-5"
       >
-        {loading ? "Sign in…" : "Sign in"}
+        {loading ? "Einloggen…" : "Einloggen"}
         {!loading && <span className="btn-cta-arrow" aria-hidden>→</span>}
       </button>
     </form>
@@ -105,7 +105,7 @@ export default function LoginPage() {
           <p className="eyebrow text-center mb-4 stagger-1">Login</p>
 
           <h1 className="heading-display text-cream text-4xl md:text-5xl text-center leading-[1.05] mb-4 stagger-2">
-            Welcome <span className="text-champagne italic">back.</span>
+            Willkommen <span className="text-champagne italic">zurück.</span>
           </h1>
 
           <p className="text-cream/60 text-center text-sm md:text-base mb-10 stagger-2">
@@ -127,7 +127,7 @@ export default function LoginPage() {
               href="/portal/signup"
               className="text-champagne hover:text-champagne-300 transition-colors uppercase tracking-[0.2em] text-[10px]"
             >
-              Invite einlösen →
+              Einladung einlösen →
             </Link>
           </div>
 
