@@ -47,28 +47,16 @@ async function fetchFeaturedCreators(): Promise<CreatorShowcase[]> {
   });
 }
 
-// Fallback wenn DB leer (Soft-Launch-Phase): klare Platzhalter-Cards
+// Fallback wenn DB leer: NUR Agency selbst, keine erfundenen Creator-Profile.
+// Echte Creator erscheinen erst wenn Member-Bereich live ist und Admin
+// echte Showcase-Bilder approved hat.
 const FALLBACK_CARDS: CreatorShowcase[] = [
   {
     displayName: "ZOE Star Agency",
-    category: "Berlin · Phase 01",
+    category: "TikTok Elite Agency Club · Berlin",
     platform: "tiktok",
     href: "https://www.tiktok.com/@zoe.star.agency",
     visual: "champagne",
-  },
-  {
-    displayName: "Nesip · ZOELANDO",
-    category: "Founder",
-    platform: "tiktok",
-    href: "https://www.tiktok.com/@zoelandoo",
-    visual: "warm",
-  },
-  {
-    displayName: "ZOE Visuals",
-    category: "Editorial",
-    platform: "instagram",
-    href: "https://www.instagram.com/starzagency_88",
-    visual: "cool",
   },
 ];
 
@@ -113,22 +101,22 @@ export default async function HomePage() {
             {/* LEFT — Headline + CTA */}
             <div className="lg:col-span-6 order-2 lg:order-1">
               <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
-                <LiveDot label="Aktiv" meta="Berlin · 2026" />
+                <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · 2026" />
               </div>
 
-              {/* Mixed-Type Headline — komplett deutsch */}
+              {/* Mixed-Type Headline — TikTok Elite Identity */}
               <h1 className="mt-6 md:mt-8 mb-4 leading-[0.92]">
                 <span
                   className="block hero-rise mixed-type-line-1 text-cream/90 text-[52px] sm:text-[72px] md:text-[88px] lg:text-[108px]"
                   style={{ animationDelay: "0.2s" }}
                 >
-                  Boutique
+                  TikTok
                 </span>
                 <span
                   className="block hero-rise mixed-type-line-2 text-champagne -mt-1 md:-mt-2 text-[64px] sm:text-[88px] md:text-[112px] lg:text-[136px]"
                   style={{ animationDelay: "0.35s" }}
                 >
-                  Creator-Agentur.
+                  Elite-Agentur.
                 </span>
               </h1>
 
@@ -136,7 +124,7 @@ export default async function HomePage() {
                 className="hero-rise mixed-type-line-3 text-cream/75 text-lg md:text-2xl lg:text-3xl mt-4 md:mt-6 max-w-xl"
                 style={{ animationDelay: "0.55s" }}
               >
-                Persönlich gewählt.{" "}
+                LIVE Creator. Persönlich betreut.{" "}
                 <span className="font-display italic font-black text-champagne">Aus Berlin.</span>
               </p>
 
@@ -187,35 +175,40 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT — Showcase-Card-Stack (Editorial, KEIN TikTok-UI) */}
+            {/* RIGHT — Agency-Card + Elite-Badge (KEINE erfundenen Creator) */}
             <div className="lg:col-span-6 order-1 lg:order-2 relative">
               <div className="relative max-w-[300px] md:max-w-[360px] mx-auto">
-                {/* Hauptcard vorne */}
                 {hero[0] && (
                   <div className="hero-rise relative z-20" style={{ animationDelay: "0.4s" }}>
                     <CreatorShowcaseCard {...hero[0]} visual="champagne" />
                   </div>
                 )}
 
-                {/* Card hinten links — peak-out */}
-                {hero[1] && (
-                  <div
-                    className="hidden md:block absolute -left-[26%] top-[7%] w-[66%] z-10 hero-rise opacity-65"
-                    style={{ animationDelay: "0.6s" }}
-                  >
-                    <CreatorShowcaseCard {...hero[1]} visual="warm" rotation={-6} />
+                {/* Elite-Badge top-right floating */}
+                <div
+                  className="hidden md:block absolute -top-3 -right-6 z-30 hero-rise"
+                  style={{ animationDelay: "0.7s", transform: "rotate(4deg)" }}
+                >
+                  <div className="glass-card-strong px-4 py-3 max-w-[180px]">
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-champagne mb-1">Status</p>
+                    <p className="font-display italic text-cream text-base leading-tight">
+                      TikTok Elite Agency Club Deutschland
+                    </p>
                   </div>
-                )}
+                </div>
 
-                {/* Card hinten rechts */}
-                {hero[2] && (
-                  <div
-                    className="hidden md:block absolute -right-[24%] top-[12%] w-[62%] z-10 hero-rise opacity-60"
-                    style={{ animationDelay: "0.75s" }}
-                  >
-                    <CreatorShowcaseCard {...hero[2]} visual="cool" rotation={5} />
+                {/* LIVE-Focus Badge bottom-left floating */}
+                <div
+                  className="hidden md:block absolute -bottom-4 -left-8 z-30 hero-rise"
+                  style={{ animationDelay: "0.85s", transform: "rotate(-3deg)" }}
+                >
+                  <div className="glass-card-strong px-4 py-3">
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-champagne mb-1">Fokus</p>
+                    <p className="font-display italic text-cream text-base leading-tight">
+                      TikTok LIVE
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -228,11 +221,11 @@ export default async function HomePage() {
         >
           <Marquee
             items={[
-              <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">Boutique-Creator-Agentur</span>,
-              <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Berlin · 2026</span>,
-              <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">Persönlich gewählt</span>,
-              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Privates Netzwerk</span>,
-              <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">TikTok · Live</span>,
+              <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">TikTok Elite Agency Club</span>,
+              <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Deutschland · 2026</span>,
+              <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">LIVE Creator Management</span>,
+              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Persönlich · Berlin</span>,
+              <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">Creator-Aufbau</span>,
               <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Edit. 01 · Aktiv</span>,
             ]}
             separatorStyle="dot"
@@ -241,10 +234,10 @@ export default async function HomePage() {
       </section>
 
       {/* ============================================================
-          02 · ROSTER — Creator Showcase (Editorial, eigene Sprache)
+          02 · ROSTER — Creator Showcase (echte Bilder erst nach
+          Member-Bereich-Launch; bis dahin reduziert + ehrlicher Stand)
           ============================================================ */}
       <section className="relative bg-ink-mesh py-20 md:py-28 overflow-hidden">
-        {/* Section-Number "02" */}
         <div className="absolute pointer-events-none select-none -top-[8%] -right-[4%] z-0">
           <SectionNumber
             number="02"
@@ -256,7 +249,7 @@ export default async function HomePage() {
         <div className="relative z-10 container-luxe mb-10 md:mb-14">
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
-              <p className="eyebrow mb-4">Aus dem Roster</p>
+              <p className="eyebrow mb-4">Roster · Phase 01</p>
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
                 Unsere <span className="text-champagne italic">Creator.</span>
               </h2>
@@ -274,7 +267,32 @@ export default async function HomePage() {
         </div>
 
         <div className="relative z-10 container-luxe">
-          <FeaturedCreatorsStrip creators={featured} />
+          {fetched.length > 0 ? (
+            <FeaturedCreatorsStrip creators={featured} />
+          ) : (
+            <div className="grid md:grid-cols-12 gap-8 md:gap-12 items-center">
+              <div className="md:col-span-7">
+                <p className="text-cream/65 text-lg md:text-xl leading-relaxed max-w-xl mb-6">
+                  Unser Roster wird gerade aufgebaut. Sobald die ersten Creator approved sind, erscheinen sie hier mit Bild und TikTok-Link.
+                </p>
+                <p className="text-cream/45 text-sm leading-relaxed max-w-xl mb-8">
+                  Du bist Creator und willst dabei sein? Bewirb dich direkt — wir schauen uns jede Bewerbung persönlich an.
+                </p>
+                <a
+                  href={APPLY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-cta btn-shimmer"
+                >
+                  Bewerben
+                  <span className="btn-cta-arrow" aria-hidden>→</span>
+                </a>
+              </div>
+              <div className="md:col-span-5 md:max-w-[280px] md:ml-auto w-full">
+                <CreatorShowcaseCard {...featured[0]} visual="champagne" />
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -295,7 +313,7 @@ export default async function HomePage() {
           {/* Header */}
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-end mb-14 md:mb-16">
             <MotionReveal>
-              <LiveDot label="Aktiv" meta="Berlin · 2026" className="mb-6" />
+              <LiveDot label="Elite Agency Club" meta="Deutschland · 2026" className="mb-6" />
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
                 Kein Netzwerk.{" "}
                 <span className="text-champagne italic">Ein Haus.</span>
@@ -303,7 +321,7 @@ export default async function HomePage() {
             </MotionReveal>
             <MotionReveal delay={0.1}>
               <p className="text-cream/65 text-lg leading-relaxed max-w-md md:justify-self-end">
-                Boutique-Management aus Berlin. Wir arbeiten mit ausgewählten Creator — persönlich, langfristig, exklusiv.
+                Persönliches Creator-Management aus Berlin. Fokus auf TikTok LIVE — langfristig, exklusiv, mit echtem Aufbau-Plan.
               </p>
             </MotionReveal>
           </div>
@@ -313,8 +331,8 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-14 md:mb-20">
               {[
                 { label: "Standort", value: "Berlin", hint: "Europa · DE" },
-                { label: "Jahr", value: "2026", hint: "Phase 01 · Aktiv" },
-                { label: "Modell", value: "Boutique", hint: "Persönlich gewählt" },
+                { label: "Status", value: "Elite", hint: "TikTok Agency Club" },
+                { label: "Fokus", value: "LIVE", hint: "Creator-Aufbau" },
                 { label: "Netzwerk", value: "Privat", hint: "Nur per Einladung" },
               ].map((s) => (
                 <GlassCard key={s.label} variant="default" className="p-5 md:p-7">
@@ -455,15 +473,15 @@ export default async function HomePage() {
               </MotionReveal>
               <MotionReveal delay={0.08}>
                 <h2 className="leading-[0.95] tracking-[-0.02em] font-display italic text-ink text-[44px] sm:text-[60px] md:text-[80px]">
-                  Boutique.<br />
-                  <span className="text-ink/70">Kuratiert.</span>
+                  Elite.<br />
+                  <span className="text-ink/70">Persönlich.</span>
                 </h2>
               </MotionReveal>
             </div>
             <div className="md:col-span-7 md:pt-12">
               <MotionReveal delay={0.15}>
                 <p className="text-ink/65 text-base md:text-lg leading-relaxed max-w-xl">
-                  Wir nehmen nur Creator auf, hinter denen wir stehen. Editorial in der Tonalität, persönlich im Umgang, langfristig im Aufbau.
+                  Wir nehmen nur Creator auf, hinter denen wir stehen. Fokus auf TikTok LIVE, persönlich im Umgang, langfristig im Aufbau.
                 </p>
               </MotionReveal>
             </div>
@@ -472,9 +490,9 @@ export default async function HomePage() {
           {/* 3 horizontal stripes statt zentrierter 3-col-grid */}
           <div className="border-t border-ink/15">
             {[
-              { label: "Tonalität", value: "Editorial. Reduziert. Premium.", hint: "Magazin statt Meme." },
-              { label: "Roster", value: "Hand-picked. Niemals Masse.", hint: "Qualität vor Volumen." },
-              { label: "Standort", value: "Süddeutschland · Europe.", hint: "EU-Hosting, DSGVO-konform." },
+              { label: "Fokus", value: "TikTok LIVE & Creator-Aufbau.", hint: "Das machen wir jeden Tag." },
+              { label: "Roster", value: "Persönlich gewählt. Niemals Masse.", hint: "Qualität vor Volumen." },
+              { label: "Standort", value: "Berlin · Deutschland.", hint: "EU-Hosting, DSGVO-konform." },
             ].map((s, i) => (
               <MotionReveal key={s.label} delay={i * 0.08}>
                 <div className="border-b border-ink/15 py-7 md:py-9 grid md:grid-cols-12 gap-6 items-baseline">
