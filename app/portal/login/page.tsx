@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
-import { AvatarStack } from "@/components/AvatarStack";
 
 function LoginForm() {
   const router = useRouter();
@@ -54,7 +53,7 @@ function LoginForm() {
 
       <div className="stagger-4">
         <label htmlFor="password" className="block text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-2">
-          Password
+          Passwort
         </label>
         <input
           id="password"
@@ -67,7 +66,7 @@ function LoginForm() {
           autoComplete="current-password"
         />
         <p className="text-cream/40 text-xs mt-2">
-          Nicht dein TikTok-Passwort — dein dediziertes ZOE-Portal-Passwort.
+          Nutze dein persönliches ZOE-Portal-Passwort.
         </p>
       </div>
 
@@ -89,6 +88,14 @@ function LoginForm() {
   );
 }
 
+const FEATURES = [
+  "LIVE-Slots",
+  "Creator-Inbox",
+  "Event-System",
+  "Analytics",
+  "Management",
+];
+
 export default function LoginPage() {
   return (
     <>
@@ -99,7 +106,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
 
           <Link href="/" className="block mb-10 mx-auto w-fit stagger-1">
-            <Logo variant="avatar" className="h-20 breathe" />
+            <Logo variant="avatar" className="h-24 md:h-24 breathe" />
           </Link>
 
           <p className="eyebrow text-center mb-4 stagger-1">Login</p>
@@ -109,17 +116,18 @@ export default function LoginPage() {
           </h1>
 
           <p className="text-cream/60 text-center text-sm md:text-base mb-10 stagger-2">
-            Premium-Zugang für Creator.
+            Zugang zum TikTok LIVE Creator Portal.
           </p>
 
           <Suspense fallback={<div className="text-cream/40 text-sm text-center">Lade…</div>}>
             <LoginForm />
           </Suspense>
 
-          <div className="flex justify-between items-center mt-8 text-xs">
+          {/* Sub-Links — kompakter, sekundärer */}
+          <div className="flex justify-between items-center mt-10 text-xs">
             <Link
               href="/portal/forgot-password"
-              className="text-cream/55 hover:text-champagne transition-colors"
+              className="text-cream/45 hover:text-champagne transition-colors text-[11px]"
             >
               Passwort vergessen?
             </Link>
@@ -127,20 +135,36 @@ export default function LoginPage() {
               href="/portal/signup"
               className="text-champagne hover:text-champagne-300 transition-colors uppercase tracking-[0.2em] text-[10px]"
             >
-              Einladung einlösen →
+              Creator-Zugang aktivieren →
             </Link>
           </div>
 
-          {/* Trust below the fold */}
+          {/* Feature-Leiste — was kann das Portal */}
           <div className="mt-14 pt-8 border-t border-champagne/10">
-            <AvatarStack size="sm" caption="TikTok Elite Agency Club Deutschland · Phase 01" />
+            <p className="eyebrow text-center mb-5">Im Portal</p>
+            <ul className="flex flex-wrap justify-center gap-x-3 gap-y-2 text-cream/55 text-[11px]">
+              {FEATURES.map((f, i) => (
+                <li key={f} className="inline-flex items-center gap-2">
+                  <span className="text-champagne/60">✓</span>
+                  <span>{f}</span>
+                  {i < FEATURES.length - 1 && (
+                    <span className="text-champagne/25 ml-1" aria-hidden>·</span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
+
+          {/* Status-Marker — keine Phase, klare Identität */}
+          <p className="text-cream/40 text-[10px] uppercase tracking-[0.3em] text-center mt-10">
+            TikTok Elite Agency Club Deutschland
+          </p>
 
           <Link
             href="/"
-            className="block text-center mt-12 text-cream/35 text-[10px] uppercase tracking-[0.3em] hover:text-champagne transition-colors"
+            className="block text-center mt-8 text-cream/35 text-[10px] uppercase tracking-[0.3em] hover:text-champagne transition-colors"
           >
-            ← Zurück zur Site
+            ← Zur Website
           </Link>
         </div>
       </main>
