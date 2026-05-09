@@ -53,7 +53,7 @@ async function fetchFeaturedCreators(): Promise<CreatorShowcase[]> {
 const FALLBACK_CARDS: CreatorShowcase[] = [
   {
     displayName: "ZOE Star Agency",
-    category: "TikTok Elite Agency Club · Berlin",
+    category: "TikTok Elite Agency Club Deutschland",
     platform: "tiktok",
     href: "https://www.tiktok.com/@zoe.star.agency",
     visual: "champagne",
@@ -125,7 +125,7 @@ export default async function HomePage() {
                 style={{ animationDelay: "0.55s" }}
               >
                 LIVE Creator. Persönlich betreut.{" "}
-                <span className="font-display italic font-black text-champagne">Aus Berlin.</span>
+                <span className="font-display italic font-black text-champagne">Deutschland.</span>
               </p>
 
               <div
@@ -224,7 +224,7 @@ export default async function HomePage() {
               <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">TikTok Elite Agency Club</span>,
               <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Deutschland · 2026</span>,
               <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">LIVE Creator Management</span>,
-              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Persönlich · Berlin</span>,
+              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Persönlich · Direkt</span>,
               <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">Creator-Aufbau</span>,
               <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Edit. 01 · Aktiv</span>,
             ]}
@@ -321,7 +321,7 @@ export default async function HomePage() {
             </MotionReveal>
             <MotionReveal delay={0.1}>
               <p className="text-cream/65 text-lg leading-relaxed max-w-md md:justify-self-end">
-                Persönliches Creator-Management aus Berlin. Fokus auf TikTok LIVE — langfristig, exklusiv, mit echtem Aufbau-Plan.
+                Persönliches Creator-Management aus Deutschland. Fokus auf TikTok LIVE — langfristig, exklusiv, mit echtem Aufbau-Plan.
               </p>
             </MotionReveal>
           </div>
@@ -330,7 +330,7 @@ export default async function HomePage() {
           <MotionReveal delay={0.15}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-14 md:mb-20">
               {[
-                { label: "Standort", value: "Berlin", hint: "Europa · DE" },
+                { label: "Standort", value: "Deutschland", hint: "EU · DSGVO" },
                 { label: "Status", value: "Elite", hint: "TikTok Agency Club" },
                 { label: "Fokus", value: "LIVE", hint: "Creator-Aufbau" },
                 { label: "Netzwerk", value: "Privat", hint: "Nur per Einladung" },
@@ -492,7 +492,7 @@ export default async function HomePage() {
             {[
               { label: "Fokus", value: "TikTok LIVE & Creator-Aufbau.", hint: "Das machen wir jeden Tag." },
               { label: "Roster", value: "Persönlich gewählt. Niemals Masse.", hint: "Qualität vor Volumen." },
-              { label: "Standort", value: "Berlin · Deutschland.", hint: "EU-Hosting, DSGVO-konform." },
+              { label: "Standort", value: "Deutschland · EU.", hint: "EU-Hosting, DSGVO-konform." },
             ].map((s, i) => (
               <MotionReveal key={s.label} delay={i * 0.08}>
                 <div className="border-b border-ink/15 py-7 md:py-9 grid md:grid-cols-12 gap-6 items-baseline">

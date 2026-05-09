@@ -133,7 +133,7 @@ export default function LoginPage() {
 
           {/* Trust below the fold */}
           <div className="mt-14 pt-8 border-t border-champagne/10">
-            <AvatarStack size="sm" caption="Roster im Aufbau · Phase 01 · Berlin" />
+            <AvatarStack size="sm" caption="TikTok Elite Agency Club Deutschland · Phase 01" />
           </div>
 
           <Link

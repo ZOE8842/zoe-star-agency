@@ -121,7 +121,7 @@ export function ShowcaseEditor({ initial }: { initial: ShowcaseRow | null }) {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="w-full bg-transparent border border-champagne/30 px-4 py-3 text-cream placeholder-cream/30 focus:border-champagne focus:outline-none"
-            placeholder="z.B. Beauty · Creator / Match Night · Berlin"
+            placeholder="z.B. Beauty · Creator / LIVE · Match Night"
           />
         </div>
 
