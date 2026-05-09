@@ -87,8 +87,8 @@ export default function AboutPage() {
                 },
                 {
                   label: "Standort",
-                  value: "Deutschland · Global ausgerichtet.",
-                  hint: "DSGVO-konform, EU-Hosting. Sprachen DE / EN.",
+                  value: "Deutschland.",
+                  hint: "Persönliche Betreuung im deutschsprachigen Raum.",
                 },
               ].map((s, i) => (
                 <MotionReveal key={s.label} delay={i * 0.08}>

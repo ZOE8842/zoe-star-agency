@@ -16,7 +16,7 @@ interface StatsRowProps {
 const DEFAULT_STATS: Stat[] = [
   { label: "Phase", value: "01", hint: "Soft-Launch · 2026" },
   { label: "Roster", value: "Aufbau", hint: "Erste Welle" },
-  { label: "Standort", value: "Deutschland", hint: "EU · DSGVO" },
+  { label: "Standort", value: "Deutschland", hint: "Creator-Management" },
   { label: "Modell", value: "Boutique", hint: "Hand-picked" },
 ];
 

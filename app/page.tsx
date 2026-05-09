@@ -356,7 +356,7 @@ export default async function HomePage() {
           <MotionReveal delay={0.15}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-14 md:mb-20">
               {[
-                { label: "Standort", value: "Deutschland", hint: "EU · DSGVO" },
+                { label: "Standort", value: "Deutschland", hint: "Creator-Management" },
                 { label: "Status", value: "Elite", hint: "TikTok Agency Club" },
                 { label: "Fokus", value: "LIVE", hint: "Creator-Aufbau" },
                 { label: "Netzwerk", value: "Privat", hint: "Nur per Einladung" },
@@ -376,11 +376,11 @@ export default async function HomePage() {
               caption="Was wir machen"
               items={[
                 "TikTok LIVE",
-                "LIVE Entertainment",
+                "Creator-Aufbau",
                 "Community-Aufbau",
                 "LIVE Battles",
-                "Creator-Management",
-                "Social Commerce",
+                "LIVE Events",
+                "TikTok Rankings",
               ]}
             />
           </MotionReveal>
@@ -527,8 +527,8 @@ export default async function HomePage() {
           <div className="border-t border-ink/15">
             {[
               { label: "Fokus", value: "TikTok LIVE & Creator-Aufbau.", hint: "Das machen wir jeden Tag." },
-              { label: "Roster", value: "Persönlich gewählt. Niemals Masse.", hint: "Qualität vor Volumen." },
-              { label: "Standort", value: "Deutschland · EU.", hint: "EU-Hosting, DSGVO-konform." },
+              { label: "Roster", value: "Kein Massen-Management. Direkte Betreuung.", hint: "Statt anonymer Agentur." },
+              { label: "Standort", value: "Deutschland.", hint: "Persönliche Betreuung im DACH-Raum." },
             ].map((s, i) => (
               <MotionReveal key={s.label} delay={i * 0.08}>
                 <div className="border-b border-ink/15 py-7 md:py-9 grid md:grid-cols-12 gap-6 items-baseline">

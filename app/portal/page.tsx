@@ -320,7 +320,7 @@ export default async function DashboardPage() {
               <div className="bg-ink p-5">
                 <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mb-2">Standort</p>
                 <p className="font-display italic text-champagne text-3xl leading-none mb-1">DE</p>
-                <p className="text-cream/40 text-xs">EU · DSGVO</p>
+                <p className="text-cream/40 text-xs">Creator-Management</p>
               </div>
             </div>
           </div>
