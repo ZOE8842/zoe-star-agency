@@ -25,7 +25,11 @@ export default function ContactPage() {
 
         <ContactForm />
 
-        <div className="mt-16 pt-10 border-t border-champagne/15 text-cream/60 text-sm">
+        <p className="text-cream/45 text-xs mt-6 italic">
+          Alle Anfragen werden vertraulich behandelt.
+        </p>
+
+        <div className="mt-12 pt-10 border-t border-champagne/15 text-cream/60 text-sm">
           <p>
             Direkt per Mail:{" "}
             <a

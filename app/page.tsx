@@ -380,7 +380,7 @@ export default async function HomePage() {
                 "Community-Aufbau",
                 "LIVE Battles",
                 "LIVE Events",
-                "TikTok Rankings",
+                "Creator Management",
               ]}
             />
           </MotionReveal>
@@ -396,7 +396,7 @@ export default async function HomePage() {
                   href={SOCIAL.tiktokMain}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group glass-card flex items-center gap-5 px-5 py-6 md:px-7 md:py-7 hover:border-champagne hover:bg-champagne/[0.04] transition-all duration-300 cursor-pointer"
+                  className="group glass-card flex items-center gap-4 px-5 py-5 md:px-6 md:py-5 hover:border-champagne hover:bg-champagne/[0.04] transition-all duration-300 cursor-pointer"
                 >
                   <span className="w-12 h-12 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
                     <TikTokIcon className="w-5 h-5" />
@@ -415,7 +415,7 @@ export default async function HomePage() {
                   href={SOCIAL.tiktokManager}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group glass-card flex items-center gap-5 px-5 py-6 md:px-7 md:py-7 hover:border-champagne hover:bg-champagne/[0.04] transition-all duration-300 cursor-pointer"
+                  className="group glass-card flex items-center gap-4 px-5 py-5 md:px-6 md:py-5 hover:border-champagne hover:bg-champagne/[0.04] transition-all duration-300 cursor-pointer"
                 >
                   <span className="w-12 h-12 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
                     <TikTokIcon className="w-5 h-5" />
@@ -423,7 +423,7 @@ export default async function HomePage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-1">TikTok · Management</p>
                     <p className="text-cream group-hover:text-champagne font-display italic text-xl md:text-2xl leading-tight transition-colors">
-                      Nesip · ZOE⭐
+                      ZOE⭐ Agency
                     </p>
                     <p className="text-cream/35 text-[11px] mt-0.5 truncate">tiktok.com/@zoelandoo</p>
                   </div>
@@ -434,7 +434,7 @@ export default async function HomePage() {
                   href={SOCIAL.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group glass-card flex items-center gap-5 px-5 py-6 md:px-7 md:py-7 hover:border-champagne hover:bg-champagne/[0.04] transition-all duration-300 cursor-pointer"
+                  className="group glass-card flex items-center gap-4 px-5 py-5 md:px-6 md:py-5 hover:border-champagne hover:bg-champagne/[0.04] transition-all duration-300 cursor-pointer"
                 >
                   <span className="w-12 h-12 rounded-full bg-champagne/8 border border-champagne/30 flex items-center justify-center text-champagne shrink-0 group-hover:bg-champagne/15 transition-colors">
                     <InstagramIcon className="w-5 h-5" />
