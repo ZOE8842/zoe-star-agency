@@ -20,14 +20,14 @@ export default function ContactPage() {
         </h1>
         <p className="text-cream/70 text-base leading-relaxed mb-12 max-w-xl">
           Creator-Anfrage, Brand-Kooperation oder etwas anderes? Schreib uns —
-          wir antworten innerhalb von 1–3 Werktagen.
+          Antwort meist innerhalb von 24–48 Stunden.
         </p>
 
         <ContactForm />
 
-        <div className="mt-16 pt-10 border-t border-champagne/15 text-cream/60 text-sm space-y-2">
+        <div className="mt-16 pt-10 border-t border-champagne/15 text-cream/60 text-sm">
           <p>
-            Direkt-Email:{" "}
+            Direkt per Mail:{" "}
             <a
               href="mailto:info@zoe-star.de"
               className="text-champagne hover:underline"
@@ -35,8 +35,9 @@ export default function ContactPage() {
               info@zoe-star.de
             </a>
           </p>
-          <p className="text-cream/40 text-xs leading-relaxed pt-3">
-            ZOE Star Agency · c/o SourceArt · Tuttlingerstraße 45 · 78333 Stockach · Deutschland
+          <p className="text-cream/40 text-xs mt-3">
+            Postanschrift findest du im{" "}
+            <a href="/legal/impressum" className="text-champagne/70 hover:text-champagne">Impressum</a>.
           </p>
         </div>
       </main>

@@ -10,6 +10,7 @@ interface Body {
   name: string;
   email: string;
   tiktok?: string;
+  role?: string;
   topic: string;
   message: string;
   company?: string; // Honeypot
@@ -85,10 +86,20 @@ export async function POST(req: NextRequest) {
   }
 
   const topicLabel: Record<string, string> = {
-    creator: "Creator-Anfrage",
+    creator: "Creator-Bewerbung",
     brand: "Brand-Kooperation",
+    event: "Event / Kampagne",
+    management: "Management-Anfrage",
+    other: "Allgemeine Anfrage",
     press: "Presse / Media",
     support: "Support / Fragen",
+  };
+
+  const roleLabel: Record<string, string> = {
+    creator: "Creator",
+    brand: "Marke",
+    agency: "Agentur",
+    management: "Management",
     other: "Sonstiges",
   };
 
@@ -98,6 +109,7 @@ export async function POST(req: NextRequest) {
       <tr><td style="padding:6px 12px;color:#888;">Name</td><td style="padding:6px 12px;"><strong>${escapeHtml(body.name)}</strong></td></tr>
       <tr><td style="padding:6px 12px;color:#888;">Email</td><td style="padding:6px 12px;"><a href="mailto:${escapeHtml(body.email)}">${escapeHtml(body.email)}</a></td></tr>
       ${body.tiktok ? `<tr><td style="padding:6px 12px;color:#888;">TikTok</td><td style="padding:6px 12px;">@${escapeHtml(body.tiktok)}</td></tr>` : ""}
+      ${body.role ? `<tr><td style="padding:6px 12px;color:#888;">Rolle</td><td style="padding:6px 12px;"><strong>${escapeHtml(roleLabel[body.role] || body.role)}</strong></td></tr>` : ""}
       <tr><td style="padding:6px 12px;color:#888;">Anliegen</td><td style="padding:6px 12px;">${escapeHtml(topicLabel[body.topic] || body.topic)}</td></tr>
       <tr><td style="padding:6px 12px;color:#888;">IP</td><td style="padding:6px 12px;font-family:monospace;font-size:11px;">${escapeHtml(ip)}</td></tr>
     </table>

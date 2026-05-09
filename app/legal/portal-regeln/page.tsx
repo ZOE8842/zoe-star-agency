@@ -1,74 +1,72 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Portal-Regeln",
-  description: "Verbindliche Regeln für die Nutzung des Creator-Portals",
+  title: "Zusammenarbeit & Standards",
+  description: "Hinweise zur Zusammenarbeit im ZOE-Portal — partnerschaftlich, vertraulich, professionell.",
 };
 
 export default function PortalRegelnPage() {
   return (
     <article className="prose-luxe">
       <p className="eyebrow mb-4">Legal</p>
-      <h1 className="heading-display text-4xl md:text-5xl mb-12 text-cream">Portal-Regeln</h1>
+      <h1 className="heading-display text-4xl md:text-5xl mb-12 text-cream">
+        Zusammenarbeit &amp; Standards
+      </h1>
 
       <p className="text-cream/70 text-sm mb-10 leading-relaxed">
-        Diese Regeln gelten verbindlich für alle Creator im ZOE-Portal. Sie ergänzen die AGB und sichern faire Zusammenarbeit, professionelle Standards und ein hochwertiges Brand-Erlebnis.
+        Diese Hinweise helfen dabei, die Zusammenarbeit zwischen Creator und ZOE⭐ Star Agency strukturiert, professionell und vertraulich zu halten. Sie ergänzen die AGB und schaffen die Basis für eine partnerschaftliche, langfristige Zusammenarbeit.
       </p>
 
-      <Section number="01" title="Live-Disziplin">
+      <Section number="01" title="LIVE-Planung &amp; Kommunikation">
         <ul className="list-disc list-outside ml-5 space-y-2">
-          <li>Slot-Anmeldungen sind verbindlich</li>
-          <li>Reschedule mind. 6 h vor Start (Inbox + Slot-Update)</li>
-          <li>Bei No-Show ohne Absage: Eintrag im System, ggf. Slot-Sperre für 72 h</li>
-          <li>20-Stunden-Regel über 8 Tage einhalten</li>
+          <li>Wir planen LIVE-Slots gemeinsam und respektieren beidseitig zugesagte Zeiten</li>
+          <li>Bei Änderungen frühzeitig Bescheid geben — am besten direkt in der Portal-Inbox</li>
+          <li>Manager-Kommunikation läuft über die Inbox, damit nichts verloren geht</li>
+          <li>Pflicht-Nachrichten möglichst zeitnah bestätigen, damit gemeinsam geplant werden kann</li>
         </ul>
       </Section>
 
-      <Section number="02" title="Kommunikation">
+      <Section number="02" title="Content &amp; Plattform">
         <ul className="list-disc list-outside ml-5 space-y-2">
-          <li>Pflicht-Nachrichten innerhalb 12 h bestätigen</li>
-          <li>Manager-Kommunikation in der Inbox · keine privaten DMs</li>
-          <li>Bei Problemen: Support-Ticket öffnen statt direkt anrufen</li>
-          <li>Keine Drama-Calls oder öffentliche Konflikte mit anderen Creatorn</li>
+          <li>Wir achten gemeinsam auf die TikTok-Community-Richtlinien</li>
+          <li>Hochwertige LIVE-Erlebnisse: respektvoller Umgang mit Match-Partnern, Gästen und Community</li>
+          <li>Brand-Vorgaben (Logo, Hashtags, Tonalität) bei Kampagnen einhalten</li>
+          <li>Bei Unsicherheiten lieber kurz beim Manager rückfragen</li>
         </ul>
       </Section>
 
-      <Section number="03" title="Content-Standards">
+      <Section number="03" title="Account-Sicherheit">
         <ul className="list-disc list-outside ml-5 space-y-2">
-          <li>TikTok TOS einhalten · keine Adult/Suggestive-Inhalte</li>
-          <li>Keine externen Plattform-Werbung im Live (kein Insta/Discord-Spam)</li>
-          <li>Brand-Standards beachten — Logo, Hashtags wo gefordert</li>
-          <li>Gäste & Match-Partner mit Respekt behandeln</li>
-        </ul>
-      </Section>
-
-      <Section number="04" title="Account-Sicherheit">
-        <ul className="list-disc list-outside ml-5 space-y-2">
-          <li>Eigenes Portal-Passwort — niemals identisch mit TikTok</li>
+          <li>Dediziertes Portal-Passwort verwenden — niemals identisch mit TikTok</li>
           <li>Passwort nicht weitergeben — auch nicht an Manager</li>
           <li>Bei Verdacht auf Kompromittierung sofort melden</li>
           <li>Wir fragen niemals nach deinem Passwort</li>
         </ul>
       </Section>
 
-      <Section number="05" title="Daten und Privacy">
-        <ul className="list-disc list-outside ml-5 space-y-2">
-          <li>Keine Daten anderer Creator weitergeben (Stats, Verträge, etc.)</li>
+      <Section number="04" title="Vertraulichkeit &amp; Vertrauen">
+        <p className="mb-3">
+          Interne Informationen, Creator-Daten, Vergütungen und Gespräche behandeln wir grundsätzlich vertraulich.
+        </p>
+        <p className="mb-3">
+          Das erwarten wir auch von allen Creator, Partnern und externen Beteiligten.
+        </p>
+        <ul className="list-disc list-outside ml-5 space-y-2 mt-4">
+          <li>Daten anderer Creator (Stats, Verträge, Vergütungen) bleiben intern</li>
           <li>Screenshots aus dem Portal nicht öffentlich teilen</li>
-          <li>Diskussionen über Vergütungen NUR mit ZOE Management</li>
+          <li>Themen rund um Vergütung direkt mit dem Management besprechen</li>
         </ul>
       </Section>
 
-      <Section number="06" title="Bei Verstößen">
-        <ul className="list-disc list-outside ml-5 space-y-2">
-          <li>1. Verstoß: Hinweis durch Manager</li>
-          <li>2. Verstoß: dokumentierte Verwarnung</li>
-          <li>3. Verstoß: Slot-Pause oder Account-Deaktivierung</li>
-          <li>Schwerer Verstoß (Beleidigung · illegale Inhalte): sofortige Sperrung</li>
-        </ul>
+      <Section number="05" title="Bei Problemen">
+        <p>
+          Bei schweren oder wiederholten Problemen behalten wir uns vor, die Zusammenarbeit einzuschränken oder zu beenden. Im Normalfall sprechen wir Themen aber direkt und persönlich mit dir an, bevor es so weit kommt.
+        </p>
       </Section>
 
-      <p className="text-cream/40 text-xs mt-12">Stand: 6. Mai 2026 · Mit Anmeldung im Portal akzeptierst du diese Regeln.</p>
+      <p className="text-cream/40 text-xs mt-12">
+        Stand: 9. Mai 2026 · Mit Anmeldung im Portal bestätigst du diese Standards.
+      </p>
     </article>
   );
 }

@@ -13,13 +13,6 @@ export default function AGBPage() {
         Allgemeine Geschäftsbedingungen
       </h1>
 
-      <div className="border border-champagne/40 bg-champagne/5 px-5 py-4 mb-12">
-        <p className="text-champagne text-[10px] uppercase tracking-[0.25em] font-semibold mb-1">⚠ Entwurf · Anwalt-Prüfung empfohlen</p>
-        <p className="text-cream/70 text-sm">
-          Diese AGB sind ein Entwurf. Vor finaler Live-Schaltung Prüfung durch eine:n Anwält:in für Vertragsrecht / Medienrecht empfohlen.
-        </p>
-      </div>
-
       <section className="mb-10 pb-8 border-b border-champagne/15">
         <p className="eyebrow mb-3">Anbieter</p>
         <p className="text-cream/80 leading-relaxed">

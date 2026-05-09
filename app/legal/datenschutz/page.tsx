@@ -79,7 +79,7 @@ export default function DatenschutzPage() {
           <li>Datenübertragbarkeit (Art. 20)</li>
           <li>Widerspruch gegen Verarbeitung (Art. 21)</li>
           <li>Widerruf erteilter Einwilligungen mit Wirkung für die Zukunft</li>
-          <li>Beschwerde bei einer Aufsichtsbehörde (z. B. Berliner Beauftragte für Datenschutz)</li>
+          <li>Beschwerde bei der zuständigen Datenschutz-Aufsichtsbehörde</li>
         </ul>
         <p className="mt-4">
           Anfragen an: <a href="mailto:info@zoe-star.de" className="text-champagne hover:underline">info@zoe-star.de</a>

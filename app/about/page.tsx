@@ -3,103 +3,152 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
+import { LiveDot } from "@/components/LiveDot";
+import { SectionNumber } from "@/components/SectionNumber";
 
 export const metadata: Metadata = {
   title: "Über uns",
   description:
-    "ZOE Star Agency — eine Boutique-Agentur für Premium-Creator. Wir bauen langfristige Marken statt kurzfristiger Trends.",
+    "ZOE⭐ STAR AGENCY — Teil des TikTok Elite Agency Club Deutschland. Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung.",
 };
 
 export default function AboutPage() {
   return (
     <>
       <Header />
-      <main className="bg-ink">
-        <section className="container-luxe pt-32 md:pt-40 pb-20">
-          <MotionReveal>
-            <p className="eyebrow mb-5">Über uns</p>
-          </MotionReveal>
-          <MotionReveal delay={0.1}>
-            <h1 className="heading-display text-4xl md:text-7xl text-cream mb-6 leading-[0.95] max-w-4xl">
-              Eine Bühne für <span className="text-champagne">Premium-Talent</span>.
-            </h1>
-          </MotionReveal>
-          <MotionReveal delay={0.2}>
-            <p className="text-cream/70 text-lg md:text-2xl leading-relaxed max-w-3xl">
-              ZOE Star Agency ist eine Boutique-Agentur. Wir betreuen ausgewählte
-              Creator persönlich, statt einen anonymen Massen-Roster zu führen.
-            </p>
-          </MotionReveal>
-        </section>
+      <main className="bg-ink relative overflow-hidden">
 
-        <section className="container-luxe pb-20">
-          <div className="grid md:grid-cols-2 gap-12 max-w-5xl">
+        {/* HERO */}
+        <section className="relative overflow-hidden border-b border-champagne/10">
+          <div className="hero-glow-mesh" aria-hidden />
+          <div className="absolute pointer-events-none select-none -bottom-[10%] -right-[4%] z-0">
+            <SectionNumber number="01" rotation={3} className="text-[260px] md:text-[480px] lg:text-[600px]" />
+          </div>
+
+          <div className="container-luxe relative z-10 pt-32 md:pt-40 pb-20 md:pb-28">
             <MotionReveal>
-              <div>
-                <p className="eyebrow mb-4">Vision</p>
-                <h2 className="font-display italic text-2xl md:text-3xl text-cream mb-4 leading-tight">
-                  Karriere statt Trend.
-                </h2>
-                <p className="text-cream/70 text-base leading-relaxed">
-                  TikTok ist mehr als der nächste Hit. Wir denken in Jahren, nicht in
-                  Wochen. Unsere Creator entwickeln Marken, die auch nach dem
-                  nächsten Algorithmus-Update noch tragen.
-                </p>
-              </div>
+              <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · 2026" className="mb-6 md:mb-8" />
             </MotionReveal>
-
-            <MotionReveal delay={0.1}>
-              <div>
-                <p className="eyebrow mb-4">Approach</p>
-                <h2 className="font-display italic text-2xl md:text-3xl text-cream mb-4 leading-tight">
-                  Redaktionell &amp; persönlich.
-                </h2>
-                <p className="text-cream/70 text-base leading-relaxed">
-                  Premium-Creator brauchen Premium-Betreuung. Direkter Draht zum
-                  Manager, klare Strategie, faire Verträge — und ein Portal,
-                  das wirklich funktioniert.
-                </p>
-              </div>
+            <MotionReveal delay={0.08}>
+              <h1 className="leading-[0.92] tracking-[-0.025em] max-w-5xl">
+                <span className="block mixed-type-line-1 text-cream/90 text-[44px] sm:text-[64px] md:text-[88px] lg:text-[108px]">
+                  TikTok LIVE
+                </span>
+                <span className="block mixed-type-line-2 text-champagne -mt-1 text-[52px] sm:text-[76px] md:text-[104px] lg:text-[124px]">
+                  Creator Management.
+                </span>
+              </h1>
             </MotionReveal>
-
-            <MotionReveal delay={0.2}>
-              <div>
-                <p className="eyebrow mb-4">Brand</p>
-                <h2 className="font-display italic text-2xl md:text-3xl text-cream mb-4 leading-tight">
-                  Schwarz · Champagne · Cream.
-                </h2>
-                <p className="text-cream/70 text-base leading-relaxed">
-                  Unsere Brand-Identität ist editorial. Reduzierte Farb-Palette.
-                  Geometrische Klarheit. Wir bauen Marken, die sich anfühlen wie
-                  ein Magazin-Cover, nicht wie ein TikTok-Filter.
-                </p>
-              </div>
-            </MotionReveal>
-
-            <MotionReveal delay={0.3}>
-              <div>
-                <p className="eyebrow mb-4">Standort</p>
-                <h2 className="font-display italic text-2xl md:text-3xl text-cream mb-4 leading-tight">
-                  Deutschland · Global.
-                </h2>
-                <p className="text-cream/70 text-base leading-relaxed">
-                  Hauptsitz: Süddeutschland. Wir arbeiten DSGVO-konform, mit
-                  EU-Hosting und EU-Mailing. Creator-Roster international,
-                  Sprachen aktuell DE/EN.
-                </p>
-              </div>
+            <MotionReveal delay={0.18}>
+              <p className="text-cream/70 text-base md:text-xl leading-relaxed max-w-2xl mt-7 md:mt-10">
+                ZOE⭐ STAR AGENCY ist Teil des <span className="text-champagne">TikTok Elite Agency Club Deutschland</span> mit Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung.
+              </p>
             </MotionReveal>
           </div>
         </section>
 
-        <section className="container-luxe pb-20">
-          <div className="border-t border-champagne/10 pt-16 max-w-3xl mx-auto text-center">
-            <p className="eyebrow mb-6">Fragen?</p>
-            <h2 className="heading-display text-3xl md:text-5xl text-cream mb-6 leading-tight">
-              Lass uns <span className="text-champagne">reden</span>.
-            </h2>
-            <Link href="/contact" className="btn-outline">Kontakt aufnehmen</Link>
+        {/* PRINZIP / VISION / APPROACH / STANDORT — 4 stripes statt cards */}
+        <section className="relative py-20 md:py-28 overflow-hidden border-b border-champagne/10">
+          <div className="absolute pointer-events-none select-none -top-[6%] -left-[4%] z-0">
+            <SectionNumber number="02" rotation={-2} className="text-[260px] md:text-[480px] lg:text-[600px]" />
           </div>
+
+          <div className="container-luxe relative z-10">
+            <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-12 md:mb-16 items-end">
+              <div className="md:col-span-7">
+                <MotionReveal>
+                  <p className="eyebrow mb-5">Was uns ausmacht</p>
+                </MotionReveal>
+                <MotionReveal delay={0.08}>
+                  <h2 className="leading-[0.92] tracking-[-0.02em]">
+                    <span className="block mixed-type-line-1 text-cream/90 text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px]">Vier Prinzipien.</span>
+                    <span className="block mixed-type-line-2 text-champagne -mt-1 text-[48px] sm:text-[72px] md:text-[96px] lg:text-[112px]">Eine Agentur.</span>
+                  </h2>
+                </MotionReveal>
+              </div>
+            </div>
+
+            <div className="border-t border-champagne/15">
+              {[
+                {
+                  label: "Prinzip",
+                  value: "Langfristiger Creator-Aufbau statt kurzfristiger Hypes.",
+                  hint: "Wir denken in Jahren, nicht in Wochen.",
+                },
+                {
+                  label: "Fokus",
+                  value: "TikTok LIVE. Match-/Battle-Strategien. Community-Aufbau.",
+                  hint: "Genau das, was auf der Plattform jetzt funktioniert.",
+                },
+                {
+                  label: "Approach",
+                  value: "Direkt. Persönlich. Langfristig.",
+                  hint: "Direkter Draht zum Management. Keine anonyme Betreuung.",
+                },
+                {
+                  label: "Standort",
+                  value: "Deutschland · Global ausgerichtet.",
+                  hint: "DSGVO-konform, EU-Hosting. Sprachen DE / EN.",
+                },
+              ].map((s, i) => (
+                <MotionReveal key={s.label} delay={i * 0.08}>
+                  <div className="border-b border-champagne/15 py-7 md:py-9 grid md:grid-cols-12 gap-6 items-baseline">
+                    <p className="md:col-span-3 eyebrow">{s.label}</p>
+                    <p className="md:col-span-6 font-display italic text-cream text-2xl md:text-3xl leading-snug">{s.value}</p>
+                    <p className="md:col-span-3 text-cream/55 text-sm md:text-base">{s.hint}</p>
+                  </div>
+                </MotionReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Stats — Erinnerung an aktive Realität */}
+        <section className="relative bg-ink-mesh py-16 md:py-24 overflow-hidden border-b border-champagne/10">
+          <div className="container-luxe">
+            <MotionReveal>
+              <p className="eyebrow mb-8 md:mb-10">Aktivität · April 2026</p>
+            </MotionReveal>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15">
+              {[
+                { value: "53+", label: "Aktive Creator:innen" },
+                { value: "2.797+", label: "LIVE-Std. / Monat" },
+                { value: "1.930+", label: "Livestreams im April" },
+                { value: "52 Std.", label: "Ø LIVE-Zeit" },
+              ].map((s) => (
+                <div key={s.label} className="bg-ink p-6 md:p-8">
+                  <p className="font-display italic font-black text-champagne text-3xl md:text-4xl lg:text-5xl leading-none mb-3 tracking-[-0.02em]">
+                    {s.value}
+                  </p>
+                  <p className="text-cream/65 text-xs md:text-sm leading-tight">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Roster-Auswahl-Statement */}
+        <section className="container-luxe py-20 md:py-28">
+          <MotionReveal>
+            <div className="grid md:grid-cols-12 gap-10">
+              <div className="md:col-span-7">
+                <p className="eyebrow mb-5">Wir wählen bewusst</p>
+                <h2 className="leading-[0.95] tracking-[-0.02em] mb-6">
+                  <span className="block mixed-type-line-1 text-cream/90 text-[36px] sm:text-[52px] md:text-[68px]">Kein Massen-Roster.</span>
+                  <span className="block mixed-type-line-2 text-champagne -mt-1 text-[44px] sm:text-[60px] md:text-[80px]">Keine anonyme Betreuung.</span>
+                </h2>
+                <p className="text-cream/65 text-base md:text-lg leading-relaxed max-w-xl">
+                  Wir nehmen nur Creator auf, hinter denen wir stehen. Persönliche Begleitung, klare Strategie, faire Verträge — und ein Portal, das wirklich funktioniert.
+                </p>
+              </div>
+              <div className="md:col-span-5 flex md:justify-end items-end">
+                <Link href="/contact" className="btn-cta btn-shimmer">
+                  Kontakt aufnehmen
+                  <span className="btn-cta-arrow" aria-hidden>→</span>
+                </Link>
+              </div>
+            </div>
+          </MotionReveal>
         </section>
       </main>
       <Footer />

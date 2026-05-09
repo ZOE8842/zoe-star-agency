@@ -3,10 +3,18 @@
 import { useState } from "react";
 
 const TOPICS = [
-  { value: "creator", label: "Creator-Anfrage" },
+  { value: "creator", label: "Creator-Bewerbung" },
   { value: "brand", label: "Brand-Kooperation" },
-  { value: "press", label: "Presse / Media" },
-  { value: "support", label: "Support / Fragen" },
+  { value: "event", label: "Event / Kampagne" },
+  { value: "management", label: "Management-Anfrage" },
+  { value: "other", label: "Allgemeine Anfrage" },
+];
+
+const ROLES = [
+  { value: "creator", label: "Creator" },
+  { value: "brand", label: "Marke" },
+  { value: "agency", label: "Agentur" },
+  { value: "management", label: "Management" },
   { value: "other", label: "Sonstiges" },
 ];
 
@@ -15,6 +23,7 @@ export function ContactForm() {
     name: "",
     email: "",
     tiktok: "",
+    role: "creator",
     topic: "creator",
     message: "",
     company: "", // Honeypot — bleibt leer
@@ -61,7 +70,7 @@ export function ContactForm() {
           Danke für deine Nachricht.
         </h2>
         <p className="text-cream/70 text-sm leading-relaxed">
-          Wir melden uns innerhalb von 1–3 Werktagen unter <strong>{form.email}</strong>.
+          Wir melden uns meist innerhalb von 24–48 Stunden unter <strong>{form.email}</strong>.
         </p>
       </div>
     );
@@ -126,20 +135,37 @@ export function ContactForm() {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="topic" className="eyebrow block mb-2">Anliegen</label>
-        <select
-          id="topic"
-          value={form.topic}
-          onChange={(e) => setForm({ ...form, topic: e.target.value })}
-          className="w-full bg-ink border border-champagne/30 px-4 py-3 text-cream focus:border-champagne focus:outline-none text-base"
-        >
-          {TOPICS.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="role" className="eyebrow block mb-2">Ich bin</label>
+          <select
+            id="role"
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            className="w-full bg-ink border border-champagne/30 px-4 py-3 text-cream focus:border-champagne focus:outline-none text-base"
+          >
+            {ROLES.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="topic" className="eyebrow block mb-2">Anliegen</label>
+          <select
+            id="topic"
+            value={form.topic}
+            onChange={(e) => setForm({ ...form, topic: e.target.value })}
+            className="w-full bg-ink border border-champagne/30 px-4 py-3 text-cream focus:border-champagne focus:outline-none text-base"
+          >
+            {TOPICS.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div>
