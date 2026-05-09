@@ -234,6 +234,32 @@ export default async function HomePage() {
       </section>
 
       {/* ============================================================
+          QUICK-STATS — direkt nach Hero, echte Backstage-Daten.
+          Verkauft sofort: hier passiert wirklich etwas.
+          ============================================================ */}
+      <section className="bg-ink border-t border-champagne/10 relative overflow-hidden">
+        <div className="container-luxe relative z-10 py-12 md:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15">
+            {[
+              { value: "53+", label: "Aktive Creator:innen" },
+              { value: "2.797+", label: "LIVE-Std. / Monat" },
+              { value: "1.930+", label: "Livestreams im April" },
+              { value: "Elite", label: "TikTok Agency Club DE" },
+            ].map((s) => (
+              <div key={s.label} className="bg-ink p-6 md:p-8">
+                <p className="font-display italic font-black text-champagne text-4xl md:text-5xl lg:text-6xl leading-none mb-3 md:mb-4 tracking-[-0.02em]">
+                  {s.value}
+                </p>
+                <p className="text-cream/65 text-xs md:text-sm leading-tight">
+                  {s.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
           02 · ROSTER — Creator Showcase (echte Bilder erst nach
           Member-Bereich-Launch; bis dahin reduziert + ehrlicher Stand)
           ============================================================ */}
@@ -315,8 +341,8 @@ export default async function HomePage() {
             <MotionReveal>
               <LiveDot label="Elite Agency Club" meta="Deutschland · 2026" className="mb-6" />
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
-                Kein Netzwerk.{" "}
-                <span className="text-champagne italic">Ein Haus.</span>
+                Deutschlands{" "}
+                <span className="text-champagne italic">Elite Agency Club.</span>
               </h2>
             </MotionReveal>
             <MotionReveal delay={0.1}>
@@ -344,9 +370,19 @@ export default async function HomePage() {
             </div>
           </MotionReveal>
 
-          {/* Brand-Sektoren */}
+          {/* Bereiche — TikTok-LIVE-spezifisch */}
           <MotionReveal delay={0.25}>
-            <BrandRow caption="Bereiche · Erste Welle" />
+            <BrandRow
+              caption="Was wir machen"
+              items={[
+                "TikTok LIVE",
+                "LIVE Entertainment",
+                "Community-Aufbau",
+                "LIVE Battles",
+                "Creator-Management",
+                "Social Commerce",
+              ]}
+            />
           </MotionReveal>
 
           {/* PLATFORM-ROW — Display-Name dominant, Username klein */}
@@ -385,9 +421,9 @@ export default async function HomePage() {
                     <TikTokIcon className="w-5 h-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-1">TikTok · Founder</p>
+                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-1">TikTok · Management</p>
                     <p className="text-cream group-hover:text-champagne font-display italic text-xl md:text-2xl leading-tight transition-colors">
-                      Nesip · ZOELANDO
+                      Nesip · ZOE⭐
                     </p>
                     <p className="text-cream/35 text-[11px] mt-0.5 truncate">tiktok.com/@zoelandoo</p>
                   </div>
@@ -406,7 +442,7 @@ export default async function HomePage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-cream/45 text-[10px] uppercase tracking-[0.28em] mb-1">Instagram</p>
                     <p className="text-cream group-hover:text-champagne font-display italic text-xl md:text-2xl leading-tight transition-colors">
-                      ZOE Visuals
+                      ZOE⭐ Star Agency
                     </p>
                     <p className="text-cream/35 text-[11px] mt-0.5 truncate">instagram.com/starzagency_88</p>
                   </div>
@@ -447,9 +483,9 @@ export default async function HomePage() {
             <div className="md:col-span-4 flex md:justify-end">
               <MotionReveal delay={0.25}>
                 <div className="border-l border-champagne/30 pl-5 max-w-xs">
-                  <p className="eyebrow mb-3">Maxime</p>
+                  <p className="eyebrow mb-3">Unser Prinzip</p>
                   <p className="font-display italic text-cream text-xl md:text-2xl leading-snug">
-                    Wir glauben an die langsame Linie.
+                    Langfristiger Creator-Aufbau statt kurzfristiger Hypes.
                   </p>
                 </div>
               </MotionReveal>

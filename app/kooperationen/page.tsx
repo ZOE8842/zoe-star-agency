@@ -7,6 +7,7 @@ import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
 import { Marquee } from "@/components/Marquee";
 import { MailIcon, ArrowExternalIcon } from "@/components/SocialIcons";
+import { CooperationForm } from "@/components/CooperationForm";
 
 export const metadata: Metadata = {
   title: "Kooperationen — TikTok LIVE Reichweite",
@@ -33,8 +34,22 @@ const SERVICES = [
 ];
 
 const SECTORS = [
-  "Brands", "Apps", "Livestream-Produkte", "Gaming",
-  "Beauty", "Lifestyle", "Fashion", "Entertainment",
+  "Brands",
+  "Getränke",
+  "Food & Snacks",
+  "Beauty",
+  "Supplements",
+  "Fashion",
+  "Schmuck & Accessoires",
+  "Gaming",
+  "Entertainment",
+  "Apps",
+  "Livestream-Produkte",
+  "Tech-Produkte",
+  "Creator-Tools",
+  "Lifestyle",
+  "E-Commerce",
+  "Events",
 ];
 
 export default function KooperationenPage() {
@@ -85,7 +100,7 @@ export default function KooperationenPage() {
               className="flex flex-col sm:flex-row gap-4 mt-10 md:mt-12 hero-rise"
               style={{ animationDelay: "0.75s" }}
             >
-              <a href="mailto:info@zoe-star.de?subject=Kooperationsanfrage" className="btn-cta btn-shimmer">
+              <a href="#anfrage" className="btn-cta btn-shimmer">
                 Kooperation anfragen
                 <span className="btn-cta-arrow" aria-hidden>→</span>
               </a>
@@ -239,7 +254,7 @@ export default function KooperationenPage() {
               <div className="md:col-span-5 md:pt-12">
                 <MotionReveal delay={0.15}>
                   <p className="text-ink/65 text-base md:text-lg leading-relaxed">
-                    Wir arbeiten mit Marken und Produkten, deren Zielgruppe auf TikTok aktiv ist und Community-Aktionen sieht.
+                    ZOE⭐ STAR AGENCY verbindet Marken mit aktiven TikTok LIVE Communities und langfristiger Creator-Aktivität.
                   </p>
                 </MotionReveal>
               </div>
@@ -261,65 +276,48 @@ export default function KooperationenPage() {
         </section>
 
         {/* ============================================================
-            05 · KONTAKT — kurz, modern, schnell
+            05 · KOOPERATION ANFRAGEN — echtes Formular
             ============================================================ */}
-        <section className="relative bg-ink py-24 md:py-36 overflow-hidden">
+        <section id="anfrage" className="relative bg-ink py-24 md:py-36 overflow-hidden">
           <div className="hero-glow-mesh" aria-hidden />
           <div className="absolute pointer-events-none select-none -bottom-[12%] -left-[4%] z-0">
             <SectionNumber number="05" rotation={-3} className="text-[300px] md:text-[560px] lg:text-[700px]" />
           </div>
 
           <div className="container-luxe relative z-10">
-            <div className="grid md:grid-cols-12 gap-10 md:gap-12 items-end">
-              <div className="md:col-span-8">
+            <div className="grid lg:grid-cols-12 gap-10 lg:gap-14">
+              <div className="lg:col-span-5">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">Kontakt</p>
+                  <p className="eyebrow mb-5">Kooperation anfragen</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
-                    <span className="block mixed-type-line-1 text-cream/90 text-[44px] sm:text-[64px] md:text-[88px] lg:text-[108px]">Direkter Draht</span>
-                    <span className="block mixed-type-line-2 text-champagne -mt-1 text-[52px] sm:text-[80px] md:text-[108px] lg:text-[128px]">zur Agency.</span>
+                    <span className="block mixed-type-line-1 text-cream/90 text-[40px] sm:text-[60px] md:text-[72px]">Direkter Draht</span>
+                    <span className="block mixed-type-line-2 text-champagne -mt-1 text-[48px] sm:text-[68px] md:text-[84px]">zur Agency.</span>
                   </h2>
                 </MotionReveal>
                 <MotionReveal delay={0.18}>
-                  <p className="text-cream/65 text-base md:text-lg mt-7 max-w-xl leading-relaxed">
-                    Für genaue Zahlen, Kampagnen oder Creator-Anfragen — direkt per Mail oder Formular.
+                  <p className="text-cream/65 text-base md:text-lg mt-7 max-w-md leading-relaxed">
+                    Für detaillierte LIVE-Daten, Mediadaten oder spezifische Kampagnen-Konzepte: kurz das Formular ausfüllen — wir melden uns innerhalb von 24–48 Std.
                   </p>
                 </MotionReveal>
-                <MotionReveal delay={0.25}>
-                  <div className="flex flex-col sm:flex-row gap-4 mt-8 md:mt-10">
-                    <a
-                      href="mailto:info@zoe-star.de?subject=Kooperationsanfrage"
-                      className="btn-cta btn-shimmer"
-                    >
-                      Anfrage per Mail
-                      <span className="btn-cta-arrow" aria-hidden>→</span>
-                    </a>
-                    <Link href="/contact" className="btn-cta-secondary">
-                      Zum Kontaktformular
-                    </Link>
-                  </div>
-                </MotionReveal>
-              </div>
-              <div className="md:col-span-4">
-                <MotionReveal delay={0.3}>
-                  <div className="border-l border-champagne/30 pl-5">
-                    <p className="eyebrow mb-3">Reaktion</p>
-                    <p className="font-display italic text-cream text-xl md:text-2xl leading-snug mb-2">
-                      Innerhalb 48 Std.
-                    </p>
-                    <p className="text-cream/45 text-xs leading-relaxed">
-                      Mit konkretem Vorschlag und Reporting-Sample auf Anfrage.
-                    </p>
+                <MotionReveal delay={0.28}>
+                  <div className="mt-10 border-l border-champagne/30 pl-5">
+                    <p className="eyebrow mb-3">Direkt</p>
                     <a
                       href="mailto:info@zoe-star.de"
-                      className="inline-flex items-center gap-2 mt-5 text-champagne text-sm hover:text-champagne-300 transition-colors"
+                      className="inline-flex items-center gap-2 text-champagne text-sm hover:text-champagne-300 transition-colors"
                     >
                       <MailIcon className="w-4 h-4" />
                       info@zoe-star.de
                       <ArrowExternalIcon className="w-3 h-3" />
                     </a>
                   </div>
+                </MotionReveal>
+              </div>
+              <div className="lg:col-span-7">
+                <MotionReveal delay={0.15}>
+                  <CooperationForm />
                 </MotionReveal>
               </div>
             </div>
