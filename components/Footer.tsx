@@ -79,7 +79,7 @@ export function Footer() {
             © {new Date().getFullYear()} ZOE⭐ Star Agency
           </p>
           <p className="text-cream/30 text-[10px] uppercase tracking-[0.28em]">
-            Made in Germany · TikTok LIVE
+            TikTok LIVE Creator Management
           </p>
         </div>
       </div>

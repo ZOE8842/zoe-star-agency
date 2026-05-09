@@ -202,7 +202,7 @@ export default async function HomePage() {
         <div className="relative z-10 container-luxe mb-10 md:mb-14">
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
-              <p className="eyebrow mb-4">Roster · Phase 01</p>
+              <p className="eyebrow mb-4">Roster</p>
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
                 Unsere <span className="text-champagne italic">Creator.</span>
               </h2>

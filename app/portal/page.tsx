@@ -309,7 +309,7 @@ export default async function DashboardPage() {
               <p className="text-cream/70 text-sm md:text-base leading-relaxed mb-5 max-w-[44ch]">
                 Du bist Teil der ersten Welle der ZOE Star Agency. TikTok Elite Agency Club Deutschland. Persönliches Creator-Management mit LIVE-Fokus.
               </p>
-              <AvatarStack size="md" caption="Roster im Aufbau · Phase 01" />
+              <AvatarStack size="md" caption="Roster im Aufbau" />
             </div>
             <div className="grid grid-cols-2 gap-px bg-champagne/15">
               <div className="bg-ink p-5">

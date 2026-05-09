@@ -177,7 +177,7 @@ export default function KooperationenPage() {
 
             <MotionReveal delay={0.4}>
               <p className="text-cream/40 text-xs md:text-sm mt-8 max-w-2xl italic">
-                Aggregate Werte. Keine Creator-spezifischen Daten. Genaue Reporting-Daten pro Kampagne auf Anfrage.
+                Aggregate LIVE-Daten aus TikTok Backstage · April 2026. Detaillierte Insights und Reporting pro Kampagne auf Anfrage.
               </p>
             </MotionReveal>
           </div>
