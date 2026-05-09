@@ -14,7 +14,6 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import {
   TikTokIcon,
   InstagramIcon,
-  MailIcon,
   ArrowExternalIcon,
 } from "@/components/SocialIcons";
 
@@ -73,181 +72,91 @@ const APPLY_URL =
 export default async function HomePage() {
   const fetched = await fetchFeaturedCreators();
   const featured = fetched.length > 0 ? fetched : FALLBACK_CARDS;
-  // Hero-Stack zieht die ersten 3
-  const hero = featured.slice(0, 3);
   return (
     <>
       <Header />
 
       {/* ============================================================
-          HERO V4 — MEDIA-FIRST · Phone-Mockup dominiert
+          HERO V6 — STRUKTUR · STATS · KEIN EINZELBILD
+          Klar wie eine Agency-Plattform, nicht wie Influencer-Profil.
           ============================================================ */}
-      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-ink">
-        {/* Glow-Mesh */}
+      <section className="relative overflow-hidden bg-ink">
         <div className="hero-glow-mesh" aria-hidden />
 
-        {/* Section-Number "01" — atmospheric */}
-        <div className="absolute pointer-events-none select-none -bottom-[12%] -left-[6%] md:-bottom-[18%] md:-left-[4%] z-0">
+        {/* Section-Number "01" atmospheric */}
+        <div className="absolute pointer-events-none select-none -bottom-[10%] -right-[4%] md:-bottom-[14%] md:-right-[2%] z-0">
           <SectionNumber
             number="01"
-            rotation={-4}
-            className="text-[280px] md:text-[600px] lg:text-[760px]"
+            rotation={-3}
+            className="text-[260px] md:text-[520px] lg:text-[680px]"
           />
         </div>
 
-        <div className="container-luxe relative z-10 w-full pt-28 pb-12 md:pt-32 md:pb-12">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        <div className="container-luxe relative z-10 w-full pt-28 pb-10 md:pt-36 md:pb-14">
 
-            {/* LEFT — Headline + CTA */}
-            <div className="lg:col-span-6 order-2 lg:order-1">
-              <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
-                <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · 2026" />
-              </div>
-
-              {/* Mixed-Type Headline — TikTok Elite Identity */}
-              <h1 className="mt-6 md:mt-8 mb-4 leading-[0.92]">
-                <span
-                  className="block hero-rise mixed-type-line-1 text-cream/90 text-[52px] sm:text-[72px] md:text-[88px] lg:text-[108px]"
-                  style={{ animationDelay: "0.2s" }}
-                >
-                  TikTok
-                </span>
-                <span
-                  className="block hero-rise mixed-type-line-2 text-champagne -mt-1 md:-mt-2 text-[64px] sm:text-[88px] md:text-[112px] lg:text-[136px]"
-                  style={{ animationDelay: "0.35s" }}
-                >
-                  Elite-Agentur.
-                </span>
-              </h1>
-
-              <p
-                className="hero-rise mixed-type-line-3 text-cream/75 text-lg md:text-2xl lg:text-3xl mt-4 md:mt-6 max-w-xl"
-                style={{ animationDelay: "0.55s" }}
-              >
-                LIVE Creator. Persönlich betreut.{" "}
-                <span className="font-display italic font-black text-champagne">Deutschland.</span>
-              </p>
-
-              <div
-                className="flex flex-col sm:flex-row gap-4 mt-8 md:mt-10 hero-rise"
-                style={{ animationDelay: "0.75s" }}
-              >
-                <a
-                  href={APPLY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-cta btn-shimmer"
-                >
-                  Bewerben
-                  <span className="btn-cta-arrow" aria-hidden>→</span>
-                </a>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mt-6 hero-rise" style={{ animationDelay: "0.9s" }}>
-                <a
-                  href={SOCIAL.tiktokMain}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="TikTok"
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/75 hover:text-champagne text-xs"
-                >
-                  <TikTokIcon className="w-3.5 h-3.5" />
-                  <span>TikTok</span>
-                </a>
-                <a
-                  href={SOCIAL.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/75 hover:text-champagne text-xs"
-                >
-                  <InstagramIcon className="w-3.5 h-3.5" />
-                  <span>Instagram</span>
-                </a>
-                <a
-                  href={`mailto:${SOCIAL.email}`}
-                  aria-label="Kontakt"
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-champagne/20 hover:border-champagne hover:bg-champagne/5 transition-all text-cream/75 hover:text-champagne text-xs"
-                >
-                  <MailIcon className="w-3.5 h-3.5" />
-                  <span>Kontakt</span>
-                </a>
-              </div>
-            </div>
-
-            {/* RIGHT — Agency-Card + Elite-Badge (KEINE erfundenen Creator) */}
-            <div className="lg:col-span-6 order-1 lg:order-2 relative">
-              <div className="relative max-w-[300px] md:max-w-[360px] mx-auto">
-                {hero[0] && (
-                  <div className="hero-rise relative z-20" style={{ animationDelay: "0.4s" }}>
-                    <CreatorShowcaseCard {...hero[0]} visual="champagne" />
-                  </div>
-                )}
-
-                {/* Elite-Badge top-right floating */}
-                <div
-                  className="hidden md:block absolute -top-3 -right-6 z-30 hero-rise"
-                  style={{ animationDelay: "0.7s", transform: "rotate(4deg)" }}
-                >
-                  <div className="glass-card-strong px-4 py-3 max-w-[180px]">
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-champagne mb-1">Status</p>
-                    <p className="font-display italic text-cream text-base leading-tight">
-                      TikTok Elite Agency Club Deutschland
-                    </p>
-                  </div>
-                </div>
-
-                {/* LIVE-Focus Badge bottom-left floating */}
-                <div
-                  className="hidden md:block absolute -bottom-4 -left-8 z-30 hero-rise"
-                  style={{ animationDelay: "0.85s", transform: "rotate(-3deg)" }}
-                >
-                  <div className="glass-card-strong px-4 py-3">
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-champagne mb-1">Fokus</p>
-                    <p className="font-display italic text-cream text-base leading-tight">
-                      TikTok LIVE
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* TOP-Marker */}
+          <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
+            <p className="text-champagne text-[10px] uppercase tracking-[0.32em] font-medium">
+              TikTok Elite Agency Club Deutschland
+            </p>
           </div>
-        </div>
 
-        {/* Marquee — Hero-Bottom-Linie */}
-        <div
-          className="relative z-10 border-t border-champagne/15 py-4 bg-ink/70 backdrop-blur-sm hero-rise mt-auto"
-          style={{ animationDelay: "1.0s" }}
-        >
-          <Marquee
-            items={[
-              <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">TikTok Elite Agency Club</span>,
-              <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Deutschland · 2026</span>,
-              <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">LIVE Creator Management</span>,
-              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Persönlich · Direkt</span>,
-              <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">Creator-Aufbau</span>,
-              <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Edit. 01 · Aktiv</span>,
-            ]}
-            separatorStyle="dot"
-          />
-        </div>
-      </section>
+          {/* HEADLINE — links-aligned, dominant */}
+          <h1 className="mt-6 md:mt-8 leading-[0.92] tracking-[-0.025em] max-w-5xl">
+            <span
+              className="block hero-rise mixed-type-line-1 text-cream/90 text-[52px] sm:text-[76px] md:text-[104px] lg:text-[128px]"
+              style={{ animationDelay: "0.2s" }}
+            >
+              TikTok LIVE
+            </span>
+            <span
+              className="block hero-rise mixed-type-line-2 text-champagne -mt-1 md:-mt-2 text-[60px] sm:text-[88px] md:text-[120px] lg:text-[148px]"
+              style={{ animationDelay: "0.35s" }}
+            >
+              Creator Management.
+            </span>
+          </h1>
 
-      {/* ============================================================
-          QUICK-STATS — direkt nach Hero, echte Backstage-Daten.
-          Verkauft sofort: hier passiert wirklich etwas.
-          ============================================================ */}
-      <section className="bg-ink border-t border-champagne/10 relative overflow-hidden">
-        <div className="container-luxe relative z-10 py-12 md:py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15">
+          {/* SUBLINE */}
+          <p
+            className="hero-rise text-cream/70 text-lg md:text-2xl mt-7 md:mt-10 max-w-2xl leading-relaxed"
+            style={{ animationDelay: "0.5s" }}
+          >
+            Wir betreuen Creator langfristig — mit Fokus auf LIVE, Community und Wachstum.
+          </p>
+
+          {/* CTAs — primary + secondary */}
+          <div
+            className="flex flex-col sm:flex-row gap-4 mt-8 md:mt-12 hero-rise"
+            style={{ animationDelay: "0.7s" }}
+          >
+            <a
+              href={APPLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-cta btn-shimmer"
+            >
+              Bewerben
+              <span className="btn-cta-arrow" aria-hidden>→</span>
+            </a>
+            <Link href="/kooperationen" className="btn-cta-secondary">
+              Kooperationen
+            </Link>
+          </div>
+
+          {/* QUICK-STATS direkt im Hero */}
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15 mt-12 md:mt-16 hero-rise"
+            style={{ animationDelay: "0.9s" }}
+          >
             {[
-              { value: "53+", label: "Aktive Creator:innen" },
+              { value: "53+", label: "Aktive Creator" },
               { value: "2.797+", label: "LIVE-Std. / Monat" },
-              { value: "1.930+", label: "Livestreams im April" },
-              { value: "Elite", label: "TikTok Agency Club DE" },
+              { value: "1.930+", label: "Streams im April" },
+              { value: "TikTok LIVE", label: "Deutschland" },
             ].map((s) => (
-              <div key={s.label} className="bg-ink p-6 md:p-8">
-                <p className="font-display italic font-black text-champagne text-4xl md:text-5xl lg:text-6xl leading-none mb-3 md:mb-4 tracking-[-0.02em]">
+              <div key={s.label} className="bg-ink p-5 md:p-7">
+                <p className="font-display italic font-black text-champagne text-3xl md:text-4xl lg:text-5xl leading-none mb-2 md:mb-3 tracking-[-0.02em]">
                   {s.value}
                 </p>
                 <p className="text-cream/65 text-xs md:text-sm leading-tight">
@@ -256,6 +165,24 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Marquee — Hero-Bottom */}
+        <div
+          className="relative z-10 border-t border-champagne/15 py-4 bg-ink/70 backdrop-blur-sm hero-rise"
+          style={{ animationDelay: "1.0s" }}
+        >
+          <Marquee
+            items={[
+              <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">TikTok LIVE</span>,
+              <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Community</span>,
+              <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">Rankings</span>,
+              <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Events</span>,
+              <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">LIVE Battles</span>,
+              <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Creator Management</span>,
+            ]}
+            separatorStyle="dot"
+          />
         </div>
       </section>
 
