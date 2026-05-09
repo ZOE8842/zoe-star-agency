@@ -401,146 +401,192 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* I — BELIEVE · Manifest, editorial */}
-      <section className="bg-ink py-40 md:py-64">
-        <div className="container-luxe">
-          <div className="max-w-5xl mx-auto">
-            <MotionReveal>
-              <p className="eyebrow mb-16 text-center">I · Believe</p>
-            </MotionReveal>
-            <MotionReveal delay={0.1}>
-              <p className="font-display italic text-cream text-[32px] sm:text-[48px] md:text-[64px] lg:text-[76px] leading-[1.05] text-center max-w-5xl mx-auto tracking-[-0.015em]">
-                Wir glauben an Substanz statt Reichweite.<br />
-                <span className="text-cream/60">An Tonalität statt Trend.</span><br />
-                <span className="text-champagne">An Karriere statt Spike.</span>
-              </p>
-            </MotionReveal>
-          </div>
+      {/* ============================================================
+          03 · BELIEVE — asymmetrisches Manifest mit Section-Number
+          ============================================================ */}
+      <section className="relative bg-ink overflow-hidden py-24 md:py-36 border-t border-champagne/10">
+        <div className="absolute pointer-events-none select-none -top-[8%] -left-[4%] z-0">
+          <SectionNumber number="03" rotation={-2} className="text-[260px] md:text-[480px] lg:text-[600px]" />
         </div>
-      </section>
-
-      {/* II — ARE · warm, menschlich, Cream-Tausch */}
-      <section className="bg-cream text-ink py-40 md:py-64">
-        <div className="container-luxe">
-          <div className="max-w-5xl mx-auto">
-            <MotionReveal>
-              <p className="text-[11px] uppercase tracking-[0.3em] text-ink/50 mb-16 text-center">
-                II · Are
-              </p>
-            </MotionReveal>
-            <MotionReveal delay={0.1}>
-              <h2 className="font-display italic text-ink text-[36px] sm:text-[52px] md:text-[68px] leading-[1.05] text-center max-w-4xl mx-auto mb-24 tracking-[-0.015em]">
-                Eine Boutique-Agentur.<br />Persönlich. Kuratiert.
-              </h2>
-            </MotionReveal>
-            <div className="grid md:grid-cols-3 gap-16 md:gap-12">
+        <div className="container-luxe relative z-10">
+          <div className="grid md:grid-cols-12 gap-10 md:gap-12 items-end">
+            <div className="md:col-span-8">
               <MotionReveal>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-ink/50 mb-5">Tonalität</p>
-                <p className="text-ink/70 text-base leading-relaxed">
-                  Editorial. Reduziert. Premium. Wir denken in Magazinen, nicht in Memes.
+                <p className="eyebrow mb-5">I · Believe</p>
+              </MotionReveal>
+              <MotionReveal delay={0.08}>
+                <h2 className="leading-[0.92] tracking-[-0.025em]">
+                  <span className="block mixed-type-line-1 text-cream/85 text-[44px] sm:text-[64px] md:text-[88px] lg:text-[108px]">Substanz</span>
+                  <span className="block mixed-type-line-2 text-cream -mt-1 text-[52px] sm:text-[72px] md:text-[100px] lg:text-[124px]">statt Reichweite.</span>
+                </h2>
+              </MotionReveal>
+              <MotionReveal delay={0.18}>
+                <p className="text-cream/60 text-base md:text-lg mt-7 max-w-xl leading-relaxed">
+                  Tonalität statt Trend.{" "}
+                  <span className="font-display italic text-champagne">Karriere statt Spike.</span>
                 </p>
               </MotionReveal>
-              <MotionReveal delay={0.1}>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-ink/50 mb-5">Roster</p>
-                <p className="text-ink/70 text-base leading-relaxed">
-                  Kein Massen-Roster. Wir nehmen nur Creator auf, hinter denen wir stehen.
-                </p>
-              </MotionReveal>
-              <MotionReveal delay={0.2}>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-ink/50 mb-5">Standort</p>
-                <p className="text-ink/70 text-base leading-relaxed">
-                  Süddeutschland. EU-Hosting, EU-Mailing, DSGVO-konform. Global ausgerichtet.
-                </p>
+            </div>
+            <div className="md:col-span-4 flex md:justify-end">
+              <MotionReveal delay={0.25}>
+                <div className="border-l border-champagne/30 pl-5 max-w-xs">
+                  <p className="eyebrow mb-3">Maxime</p>
+                  <p className="font-display italic text-cream text-xl md:text-2xl leading-snug">
+                    Wir glauben an die langsame Linie.
+                  </p>
+                </div>
               </MotionReveal>
             </div>
           </div>
         </div>
       </section>
 
-      {/* III — BUILD · architectural precision */}
-      <section className="bg-ink py-40 md:py-64">
-        <div className="container-luxe">
-          <div className="max-w-6xl mx-auto">
-            <MotionReveal>
-              <p className="eyebrow mb-16 text-center">III · Build</p>
-            </MotionReveal>
-            <MotionReveal delay={0.1}>
-              <h2 className="font-display italic text-cream text-[36px] sm:text-[52px] md:text-[68px] leading-[1.05] text-center max-w-3xl mx-auto mb-24 tracking-[-0.015em]">
-                Vier Säulen.<br />Eine Marke.
-              </h2>
-            </MotionReveal>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-cream/[0.06]">
-              {[
-                { num: "01", title: "Agency", desc: "Creator-Management & Talent-Repräsentation." },
-                { num: "02", title: "Media", desc: "Brand-Kampagnen & Content-Produktion." },
-                { num: "03", title: "Events", desc: "Live-Formate & Ranking-Shows." },
-                { num: "04", title: "Studio", desc: "Original IP & Format-Entwicklung." },
-              ].map((c, i) => (
-                <MotionReveal key={c.num} delay={i * 0.06}>
-                  <div className="bg-ink p-10 md:p-14 h-full transition-all duration-700 hover:bg-cream/[0.025]">
-                    <p className="text-cream/35 text-[10px] uppercase tracking-[0.3em] mb-12">{c.num}</p>
-                    <h3 className="font-display italic text-cream text-3xl md:text-4xl mb-6 leading-tight">
-                      {c.title}
-                    </h3>
-                    <p className="text-cream/55 text-sm md:text-base leading-relaxed">{c.desc}</p>
-                  </div>
-                </MotionReveal>
-              ))}
+      {/* ============================================================
+          04 · ARE — Cream-Tausch, asymmetrisch mit Stat-Stripes
+          ============================================================ */}
+      <section className="relative bg-cream-warm text-ink overflow-hidden py-24 md:py-36">
+        <div className="absolute pointer-events-none select-none -top-[6%] -right-[2%] z-0">
+          <SectionNumber number="04" rotation={3} variant="cream" className="text-[260px] md:text-[480px] lg:text-[600px]" />
+        </div>
+        <div className="container-luxe relative z-10">
+          <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-14 md:mb-16">
+            <div className="md:col-span-5">
+              <MotionReveal>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-ink/55 mb-5">II · Are</p>
+              </MotionReveal>
+              <MotionReveal delay={0.08}>
+                <h2 className="leading-[0.95] tracking-[-0.02em] font-display italic text-ink text-[44px] sm:text-[60px] md:text-[80px]">
+                  Boutique.<br />
+                  <span className="text-ink/70">Kuratiert.</span>
+                </h2>
+              </MotionReveal>
             </div>
+            <div className="md:col-span-7 md:pt-12">
+              <MotionReveal delay={0.15}>
+                <p className="text-ink/65 text-base md:text-lg leading-relaxed max-w-xl">
+                  Wir nehmen nur Creator auf, hinter denen wir stehen. Editorial in der Tonalität, persönlich im Umgang, langfristig im Aufbau.
+                </p>
+              </MotionReveal>
+            </div>
+          </div>
+
+          {/* 3 horizontal stripes statt zentrierter 3-col-grid */}
+          <div className="border-t border-ink/15">
+            {[
+              { label: "Tonalität", value: "Editorial. Reduziert. Premium.", hint: "Magazin statt Meme." },
+              { label: "Roster", value: "Hand-picked. Niemals Masse.", hint: "Qualität vor Volumen." },
+              { label: "Standort", value: "Süddeutschland · Europe.", hint: "EU-Hosting, DSGVO-konform." },
+            ].map((s, i) => (
+              <MotionReveal key={s.label} delay={i * 0.08}>
+                <div className="border-b border-ink/15 py-7 md:py-9 grid md:grid-cols-12 gap-6 items-baseline">
+                  <p className="md:col-span-3 text-[10px] uppercase tracking-[0.3em] text-ink/55">{s.label}</p>
+                  <p className="md:col-span-6 font-display italic text-ink text-2xl md:text-3xl leading-snug">{s.value}</p>
+                  <p className="md:col-span-3 text-ink/55 text-sm md:text-base">{s.hint}</p>
+                </div>
+              </MotionReveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* IV — JOIN · prestige, invitation */}
-      <section className="bg-ink py-40 md:py-64">
-        <div className="container-luxe">
-          <div className="max-w-5xl mx-auto text-center">
-            <MotionReveal>
-              <p className="eyebrow mb-16">IV · Join</p>
-            </MotionReveal>
-            <MotionReveal delay={0.1}>
-              <h2 className="font-display italic text-cream text-[44px] sm:text-[72px] md:text-[104px] lg:text-[128px] leading-[0.9] tracking-[-0.025em] mb-16">
-                Bereit für die<br />
-                <span className="text-champagne">nächste Stufe</span>?
-              </h2>
-            </MotionReveal>
-            <MotionReveal delay={0.2}>
-              <p className="text-cream/55 text-base md:text-xl leading-relaxed max-w-xl mx-auto mb-16 font-light">
-                Bewerbung läuft direkt über den offiziellen TikTok-Agency-Link.
-              </p>
-            </MotionReveal>
-            <MotionReveal delay={0.3}>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                  Jetzt bewerben
-                </a>
-                <Link href="/contact" className="btn-outline">
-                  Lieber persönlich? Kontakt
-                </Link>
-              </div>
-            </MotionReveal>
+      {/* ============================================================
+          05 · BUILD — vier Säulen mit Section-Number-Anker
+          ============================================================ */}
+      <section className="relative bg-ink overflow-hidden py-24 md:py-36">
+        <div className="absolute pointer-events-none select-none -bottom-[8%] -left-[2%] z-0">
+          <SectionNumber number="05" rotation={-3} className="text-[260px] md:text-[480px] lg:text-[600px]" />
+        </div>
+        <div className="container-luxe relative z-10">
+          <div className="grid md:grid-cols-12 gap-10 md:gap-12 mb-14 md:mb-16 items-end">
+            <div className="md:col-span-7">
+              <MotionReveal>
+                <p className="eyebrow mb-5">III · Build</p>
+              </MotionReveal>
+              <MotionReveal delay={0.08}>
+                <h2 className="leading-[0.92] tracking-[-0.02em]">
+                  <span className="block mixed-type-line-1 text-cream/85 text-[44px] sm:text-[64px] md:text-[88px] lg:text-[100px]">Vier Säulen.</span>
+                  <span className="block mixed-type-line-2 text-champagne -mt-1 text-[52px] sm:text-[72px] md:text-[100px] lg:text-[120px]">Eine Marke.</span>
+                </h2>
+              </MotionReveal>
+            </div>
+            <div className="md:col-span-5">
+              <MotionReveal delay={0.15}>
+                <p className="text-cream/55 text-base md:text-lg leading-relaxed max-w-md md:ml-auto">
+                  Agency, Media, Events, Studio. Vier Bereiche, ein Team, ein Anspruch.
+                </p>
+              </MotionReveal>
+            </div>
           </div>
 
-          {/* Direct Contact — minimal, editorial */}
-          <div className="mt-40 pt-16 border-t border-cream/[0.06] max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-end justify-between gap-8">
-            <div>
-              <p className="text-cream/35 text-[10px] uppercase tracking-[0.3em] mb-4">
-                Direkter Kontakt
-              </p>
-              <a
-                href="mailto:info@zoe-star.de"
-                className="font-display italic text-cream text-3xl md:text-5xl link-underline hover:text-champagne transition-colors leading-none"
-              >
-                info@zoe-star.de
-              </a>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-champagne/15">
+            {[
+              { num: "01", title: "Agency", desc: "Creator-Management & Talent-Repräsentation." },
+              { num: "02", title: "Media", desc: "Brand-Kampagnen & Content-Produktion." },
+              { num: "03", title: "Events", desc: "Live-Formate & Ranking-Shows." },
+              { num: "04", title: "Studio", desc: "Original IP & Format-Entwicklung." },
+            ].map((c, i) => (
+              <MotionReveal key={c.num} delay={i * 0.06}>
+                <div className="bg-ink p-8 md:p-10 h-full card-lift transition-all duration-500 hover:bg-champagne/[0.04]">
+                  <p className="text-champagne text-[10px] uppercase tracking-[0.3em] mb-8">{c.num}</p>
+                  <h3 className="font-display italic text-cream text-2xl md:text-3xl mb-4 leading-tight">
+                    {c.title}
+                  </h3>
+                  <p className="text-cream/55 text-sm leading-relaxed">{c.desc}</p>
+                </div>
+              </MotionReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          06 · JOIN — asymmetrische Einladung
+          ============================================================ */}
+      <section className="relative bg-ink overflow-hidden py-24 md:py-36 border-t border-champagne/10">
+        <div className="hero-glow-mesh" aria-hidden />
+        <div className="absolute pointer-events-none select-none -bottom-[14%] -right-[6%] z-0">
+          <SectionNumber number="06" rotation={4} className="text-[300px] md:text-[560px] lg:text-[720px]" />
+        </div>
+        <div className="container-luxe relative z-10">
+          <div className="grid md:grid-cols-12 gap-10 md:gap-12 items-end">
+            <div className="md:col-span-8">
+              <MotionReveal>
+                <p className="eyebrow mb-6">IV · Join</p>
+              </MotionReveal>
+              <MotionReveal delay={0.08}>
+                <h2 className="leading-[0.9] tracking-[-0.025em]">
+                  <span className="block mixed-type-line-1 text-cream/85 text-[52px] sm:text-[72px] md:text-[100px] lg:text-[124px]">Bereit für die</span>
+                  <span className="block mixed-type-line-2 text-champagne -mt-1 text-[64px] sm:text-[88px] md:text-[120px] lg:text-[148px]">nächste Stufe?</span>
+                </h2>
+              </MotionReveal>
+              <MotionReveal delay={0.18}>
+                <p className="text-cream/60 text-base md:text-lg mt-7 max-w-xl leading-relaxed">
+                  Bewerbung läuft direkt über den offiziellen TikTok-Agency-Link.
+                </p>
+              </MotionReveal>
+              <MotionReveal delay={0.25}>
+                <div className="flex flex-col sm:flex-row gap-4 mt-8 md:mt-10">
+                  <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" className="btn-cta btn-shimmer">
+                    Jetzt bewerben
+                    <span className="btn-cta-arrow" aria-hidden>→</span>
+                  </a>
+                  <Link href="/contact" className="btn-cta-secondary">
+                    Lieber persönlich? Kontakt
+                  </Link>
+                </div>
+              </MotionReveal>
             </div>
-            <Link
-              href="/contact"
-              className="text-cream/60 text-[11px] uppercase tracking-[0.3em] link-underline hover:text-cream transition-colors"
-            >
-              Kontaktformular →
-            </Link>
+            <div className="md:col-span-4">
+              <MotionReveal delay={0.3}>
+                <div className="border-l border-champagne/30 pl-5">
+                  <p className="eyebrow mb-3">Direkter Kontakt</p>
+                  <p className="font-display italic text-cream text-xl md:text-2xl leading-snug mb-2">
+                    info@zoe-star.de
+                  </p>
+                  <p className="text-cream/45 text-xs">Antwort innerhalb 48h</p>
+                </div>
+              </MotionReveal>
+            </div>
           </div>
         </div>
       </section>
