@@ -30,6 +30,7 @@ export default async function DashboardPage() {
     recentMessagesRes,
     nextEventRes,
     pendingCodeRes,
+    activePushRes,
   ] = await Promise.all([
     supabase
       .from("messages")
@@ -68,6 +69,13 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("tiktok_push_requests")
+      .select("status")
+      .eq("profile_id", profile.id)
+      .order("week_start_monday", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const unreadCount = unreadRes.count ?? 0;
@@ -76,6 +84,7 @@ export default async function DashboardPage() {
   const recentMessages = recentMessagesRes.data ?? [];
   const nextEvent = nextEventRes.data;
   const pendingCode = pendingCodeRes.data;
+  const latestPushStatus = activePushRes.data?.status as string | undefined;
 
   // Setup-Progress (5 Schritte)
   const profileComplete = !!(profile.display_name && profile.tiktok_username && profile.country && profile.language);
@@ -229,7 +238,24 @@ export default async function DashboardPage() {
 
             {/* Side Cards stack */}
             <div className="space-y-4 md:space-y-5">
-              <ServiceLink href="/portal/services" eyebrow="Services" label="TikTok Push & mehr" hint="In Vorbereitung" />
+              <ServiceLink
+                href="/portal/services/tiktok-push"
+                eyebrow="TikTok Push"
+                label={
+                  latestPushStatus === "selected"
+                    ? "Ausgewaehlt"
+                    : latestPushStatus === "submitted" || latestPushStatus === "reviewed"
+                    ? "Eingereicht"
+                    : "Wunschzeit eintragen"
+                }
+                hint={
+                  latestPushStatus === "selected"
+                    ? "Naechste Woche"
+                    : latestPushStatus === "submitted" || latestPushStatus === "reviewed"
+                    ? "Pruefung laeuft"
+                    : "Naechste Woche"
+                }
+              />
               <SideCard href="/portal/events" eyebrow="Events" value={upcomingEvents}
                 hint={upcomingEvents === 0 ? "—" : "offen"} />
               <SideCard href="/portal/support" eyebrow="Support" value={openTickets}
