@@ -4,7 +4,9 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AvatarStack } from "@/components/AvatarStack";
 import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock";
-import { ZoeAppCodeBox } from "@/components/dashboard/ZoeAppCodeBox";
+// ZoeAppCodeBox bleibt im Repo (Component existiert), wird aber nicht mehr
+// im Dashboard gerendert. Backend-Routes /api/zoe-app/request-code +
+// zoe_app_connection_codes Tabelle bleiben als Legacy-Bridge intern.
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -29,7 +31,6 @@ export default async function DashboardPage() {
     openTicketsRes,
     recentMessagesRes,
     nextEventRes,
-    pendingCodeRes,
     activePushRes,
   ] = await Promise.all([
     supabase
@@ -61,15 +62,6 @@ export default async function DashboardPage() {
       .limit(1)
       .maybeSingle(),
     supabase
-      .from("zoe_app_connection_codes")
-      .select("code, expires_at")
-      .eq("profile_id", profile.id)
-      .eq("status", "pending")
-      .gt("expires_at", now.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
       .from("tiktok_push_requests")
       .select("status")
       .eq("profile_id", profile.id)
@@ -83,7 +75,6 @@ export default async function DashboardPage() {
   const openTickets = openTicketsRes.count ?? 0;
   const recentMessages = recentMessagesRes.data ?? [];
   const nextEvent = nextEventRes.data;
-  const pendingCode = pendingCodeRes.data;
   const latestPushStatus = activePushRes.data?.status as string | undefined;
 
   // Setup-Progress (5 Schritte)
@@ -206,11 +197,27 @@ export default async function DashboardPage() {
         {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
         <MonthlyMetricsBlock supabase={supabase} profileId={profile.id} />
 
-        {/* ZOE APP — Verbindungscode */}
-        <ZoeAppCodeBox
-          initial={pendingCode ? { code: pendingCode.code, expires_at: pendingCode.expires_at } : null}
-          tiktokUsername={profile.tiktok_username || ""}
-        />
+        {/* WEB-MODULE PREVIEW — native Plattform-Tools, kommen als Naechstes */}
+        <section className="mb-12 md:mb-16">
+          <p className="eyebrow mb-5 md:mb-6">Tools · in Vorbereitung</p>
+          <div className="grid gap-3 md:gap-4 md:grid-cols-3">
+            <PreviewCard
+              title="Account Analyse"
+              description="Analysiere deinen TikTok-Auftritt, Content und dein Profil direkt im ZOE Portal."
+              cta="Analyse starten"
+            />
+            <PreviewCard
+              title="LIVE Performance"
+              description="Auswertungen zu deinen LIVE-Daten, Zuschauerzahlen, Watchtime und Wachstum."
+              cta="LIVE pruefen"
+            />
+            <PreviewCard
+              title="Content Helfer"
+              description="Videos, Bilder und Content analysieren lassen und konkrete Verbesserungen erhalten."
+              cta="Content analysieren"
+            />
+          </div>
+        </section>
 
         {/* TODAY — Featured + Side-Cards (kompakt) */}
         <section className="mb-12 md:mb-16">
@@ -373,6 +380,27 @@ export default async function DashboardPage() {
         )}
       </main>
     </>
+  );
+}
+
+function PreviewCard({ title, description, cta }: { title: string; description: string; cta: string }) {
+  return (
+    <article className="border border-champagne/15 p-5 md:p-6 flex flex-col">
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <h3 className="font-display italic text-cream text-xl md:text-2xl leading-tight">
+          {title}
+        </h3>
+        <span className="shrink-0 px-2.5 py-0.5 text-[9px] uppercase tracking-[0.25em] border border-champagne/35 text-champagne/85">
+          In Vorbereitung
+        </span>
+      </div>
+      <p className="text-cream/65 text-sm leading-relaxed mb-5 flex-1">
+        {description}
+      </p>
+      <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em] cursor-not-allowed select-none">
+        {cta} →
+      </span>
+    </article>
   );
 }
 
