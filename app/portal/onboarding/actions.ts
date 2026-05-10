@@ -1,0 +1,119 @@
+"use server";
+
+// Onboarding-Server-Action — schreibt alle 7 Steps in einer Transaktion,
+// setzt onboarding_completed=true. Whitelist auf Felder, keine PII.
+
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+const ALLOWED_LANGUAGES = ["de", "en", "fr", "tr", "ar", "other"] as const;
+const ALLOWED_REGIONS = ["DE", "AT", "CH", "LI"] as const;
+const ALLOWED_LIVE_WINDOWS = ["tag", "abend", "nacht", "wochenende", "flex"] as const;
+const ALLOWED_GOALS = [
+  "community", "ranking", "brand_deals", "wachstum", "matches", "reichweite",
+] as const;
+
+export interface OnboardingInput {
+  display_name: string;
+  tiktok_username: string;
+  language: string;
+  region: string;
+  creator_category: string;
+  live_format: string;
+  live_window: string;
+  goals: string[];
+  telegram_username?: string;
+  instagram_username?: string;
+  bio?: string;
+  allow_website_showcase: boolean;
+  allow_partner_cooperations: boolean;
+}
+
+interface ActionResult {
+  ok: boolean;
+  error?: string;
+}
+
+function clean(v: string | undefined | null, max: number): string | null {
+  if (!v) return null;
+  const t = v.trim().slice(0, max);
+  return t.length === 0 ? null : t;
+}
+
+export async function upsertOnboarding(input: OnboardingInput): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Nicht eingeloggt." };
+
+  // --- Validation, weich aber konsequent ---
+  const display_name = clean(input.display_name, 80);
+  if (!display_name) return { ok: false, error: "Display-Name fehlt." };
+
+  const tiktok_username = clean(input.tiktok_username?.replace(/^@/, ""), 64);
+  if (!tiktok_username) return { ok: false, error: "TikTok Username fehlt." };
+
+  const language = ALLOWED_LANGUAGES.includes(input.language as never)
+    ? input.language : "de";
+
+  if (!ALLOWED_REGIONS.includes(input.region as never)) {
+    return { ok: false, error: "Region ungueltig." };
+  }
+  const region = input.region;
+
+  const creator_category = clean(input.creator_category, 60);
+  const live_format = clean(input.live_format, 60);
+
+  const live_window = ALLOWED_LIVE_WINDOWS.includes(input.live_window as never)
+    ? input.live_window : "flex";
+
+  // Goals: max 3, nur erlaubte Werte
+  const goals = (Array.isArray(input.goals) ? input.goals : [])
+    .filter((g) => ALLOWED_GOALS.includes(g as never))
+    .slice(0, 3);
+
+  const telegram_username = clean(input.telegram_username?.replace(/^@/, ""), 64);
+  const instagram_username = clean(input.instagram_username?.replace(/^@/, ""), 64);
+  const bio = clean(input.bio, 240);
+
+  // metadata jsonb merge — bestehende keys nicht zerstoeren
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("metadata")
+    .eq("id", user.id)
+    .single();
+
+  const prevMeta = (existingProfile?.metadata as Record<string, unknown>) || {};
+  const newMeta = {
+    ...prevMeta,
+    goals,
+    live_window,
+    ...(instagram_username ? { instagram_username } : {}),
+  };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      display_name,
+      tiktok_username,
+      language,
+      region,
+      creator_category,
+      live_format,
+      telegram_username,
+      bio,
+      allow_website_showcase: !!input.allow_website_showcase,
+      allow_partner_cooperations: !!input.allow_partner_cooperations,
+      metadata: newMeta,
+      onboarding_completed: true,
+      onboarding_completed_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+// Server-Action fuer den finalen Redirect (separater Aufruf)
+export async function finishOnboarding(): Promise<never> {
+  redirect("/portal");
+}
