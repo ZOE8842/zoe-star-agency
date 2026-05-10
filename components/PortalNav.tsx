@@ -4,15 +4,16 @@ import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { InboxIndicator } from "./InboxIndicator";
 
+// V3 Nav-Reduktion: Showcase ist Profil-Toggle (Profile-Reiter),
+// Support ist Card unter /portal/services. Top-Nav konzentriert auf
+// die 5 Kernmodule + Profil.
 const navItems = [
   { href: "/portal", label: "Dashboard" },
   { href: "/portal/inbox", label: "Inbox", indicator: true as const },
   { href: "/portal/events", label: "Events" },
   { href: "/portal/services", label: "Services" },
-  { href: "/portal/profile/showcase", label: "Showcase" },
-  { href: "/portal/downloads", label: "Downloads" },
+  { href: "/portal/downloads", label: "Ressourcen" },
   { href: "/portal/info", label: "Info" },
-  { href: "/portal/support", label: "Support" },
   { href: "/portal/profile", label: "Profile" },
 ];
 
