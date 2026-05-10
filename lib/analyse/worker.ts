@@ -23,9 +23,9 @@ import {
   getMonthlyMetrics,
   formatCreatorBlock,
   formatMonthlyBlock,
-  tiktokPublicStub,
-  backstageStub,
+  backstageBlock,
 } from "./data-sources";
+import { getTikTokPublic, formatTikTokBlock } from "./tiktok-public";
 
 interface ProcessResult {
   ok: boolean;
@@ -86,12 +86,29 @@ export async function processAccountAnalysis(
     const snap = await getCreatorSnapshot(supabase, locked.profile_id);
     if (!snap) throw new Error("Creator-Snapshot leer");
 
+    // TikTok-Public via Apify (cached 24h)
+    const tt = await getTikTokPublic(supabase, locked.target_tiktok_username, {
+      profile_id: locked.profile_id,
+    });
+
+    const sources: Array<{ name: string; ok: boolean; detail?: string }> = [
+      { name: "profile_snapshot", ok: true },
+    ];
+    let tiktokSection: string;
+    if (tt.ok && tt.profile) {
+      tiktokSection = formatTikTokBlock(tt.profile);
+      sources.push({ name: "tiktok_public", ok: true, detail: tt.source });
+    } else {
+      tiktokSection = `TIKTOK-PUBLIC: [nicht verfuegbar — ${tt.error || "Apify lieferte keine Daten"}]`;
+      sources.push({ name: "tiktok_public", ok: false, detail: tt.error });
+    }
+
     const userPrompt = [
       DATA_DISCLAIMER,
       "",
       formatCreatorBlock(snap, locked.target_tiktok_username),
       "",
-      tiktokPublicStub(locked.target_tiktok_username),
+      tiktokSection,
       "",
       locked.manual_note ? `HINWEIS-DES-CREATORS:\n"${locked.manual_note}"` : "HINWEIS-DES-CREATORS: [keiner]",
       "",
@@ -110,6 +127,8 @@ export async function processAccountAnalysis(
     const parsed = parseAccountResult(c.text);
     if (!parsed) throw new Error("JSON-Block im Report nicht gefunden / nicht valide");
 
+    const totalCost = c.cost_usd + (tt.cost_usd || 0);
+
     // 4) Result schreiben
     const { error: upErr } = await supabase
       .from("account_analyses")
@@ -119,10 +138,17 @@ export async function processAccountAnalysis(
         summary: parsed.summary ?? {},
         recommendations: parsed.recommendations ?? [],
         image_suggestions: parsed.image_suggestions ?? [],
-        raw_response: { text: c.text, in_tokens: c.in_tokens, out_tokens: c.out_tokens },
+        raw_response: {
+          text: c.text,
+          in_tokens: c.in_tokens,
+          out_tokens: c.out_tokens,
+          sources,
+          tiktok_fetched_at: tt.fetched_at,
+          tiktok_source: tt.source,
+        },
         ai_provider: "anthropic",
         ai_model: c.model,
-        cost_usd: c.cost_usd,
+        cost_usd: totalCost,
         completed_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -132,13 +158,31 @@ export async function processAccountAnalysis(
     // 5) Notification
     await notifyCreator(supabase, locked.profile_id, `/portal/analyse/account/${id}`, "Account-Analyse");
 
-    return { ok: true, id, status: "done", cost_usd: c.cost_usd };
+    // 6) Worker-Health
+    await supabase.from("data_source_health").insert({
+      source: "claude_worker",
+      kind: "account_analysis",
+      ok: true,
+      count_items: 1,
+      cost_usd: totalCost,
+      duration_ms: Date.now() - new Date(startedAt).getTime(),
+      payload: { analysis_id: id, sources },
+    });
+
+    return { ok: true, id, status: "done", cost_usd: totalCost };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase
       .from("account_analyses")
       .update({ status: "failed", error_message: msg.slice(0, 1000), completed_at: new Date().toISOString() })
       .eq("id", id);
+    await supabase.from("data_source_health").insert({
+      source: "claude_worker",
+      kind: "account_analysis",
+      ok: false,
+      error_message: msg.slice(0, 500),
+      payload: { analysis_id: id },
+    });
     return { ok: false, id, status: "failed", cost_usd: 0, error: msg };
   }
 }
@@ -176,6 +220,29 @@ export async function processLiveReport(
     if (!snap) throw new Error("Creator-Snapshot leer");
     const metrics = await getMonthlyMetrics(supabase, locked.profile_id, 3);
 
+    const sources: Array<{ name: string; ok: boolean; detail?: string }> = [
+      { name: "profile_snapshot", ok: true },
+      { name: "monthly_metrics", ok: metrics.length > 0, detail: `${metrics.length} months` },
+    ];
+
+    // Optional: TikTok-Public dazu damit der LIVE-Report Bio + Followers kennt
+    let tiktokSection = "";
+    let tiktokCost = 0;
+    let tiktokFetchedAt: string | null = null;
+    if (snap.tiktok_username) {
+      const tt = await getTikTokPublic(supabase, snap.tiktok_username, {
+        profile_id: locked.profile_id,
+      });
+      if (tt.ok && tt.profile) {
+        tiktokSection = formatTikTokBlock(tt.profile);
+        tiktokCost = tt.cost_usd || 0;
+        tiktokFetchedAt = tt.fetched_at;
+        sources.push({ name: "tiktok_public", ok: true, detail: tt.source });
+      } else {
+        sources.push({ name: "tiktok_public", ok: false, detail: tt.error });
+      }
+    }
+
     const userPrompt = [
       DATA_DISCLAIMER,
       "",
@@ -183,7 +250,9 @@ export async function processLiveReport(
       "",
       formatMonthlyBlock(metrics),
       "",
-      backstageStub(),
+      backstageBlock(metrics.length > 0),
+      "",
+      tiktokSection || "TIKTOK-PUBLIC: [optional · nicht abgefragt fuer diesen Report]",
       "",
       `ZEITRAUM-LABEL: "${locked.period_label}"` +
         (locked.period_start && locked.period_end
@@ -206,6 +275,8 @@ export async function processLiveReport(
     const parsed = parseLiveResult(c.text);
     if (!parsed) throw new Error("JSON-Block im Report nicht gefunden / nicht valide");
 
+    const totalCost = c.cost_usd + tiktokCost;
+
     const { error: upErr } = await supabase
       .from("live_performance_reports")
       .update({
@@ -214,10 +285,16 @@ export async function processLiveReport(
         summary: parsed.summary ?? {},
         recommendations: parsed.recommendations ?? [],
         weekly_plan: parsed.weekly_plan ?? [],
-        raw_response: { text: c.text, in_tokens: c.in_tokens, out_tokens: c.out_tokens },
+        raw_response: {
+          text: c.text,
+          in_tokens: c.in_tokens,
+          out_tokens: c.out_tokens,
+          sources,
+          tiktok_fetched_at: tiktokFetchedAt,
+        },
         ai_provider: "anthropic",
         ai_model: c.model,
-        cost_usd: c.cost_usd,
+        cost_usd: totalCost,
         completed_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -226,13 +303,30 @@ export async function processLiveReport(
 
     await notifyCreator(supabase, locked.profile_id, `/portal/analyse/live/${id}`, "LIVE-Performance");
 
-    return { ok: true, id, status: "done", cost_usd: c.cost_usd };
+    await supabase.from("data_source_health").insert({
+      source: "claude_worker",
+      kind: "live_performance",
+      ok: true,
+      count_items: 1,
+      cost_usd: totalCost,
+      duration_ms: Date.now() - new Date(startedAt).getTime(),
+      payload: { report_id: id, sources },
+    });
+
+    return { ok: true, id, status: "done", cost_usd: totalCost };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase
       .from("live_performance_reports")
       .update({ status: "failed", error_message: msg.slice(0, 1000), completed_at: new Date().toISOString() })
       .eq("id", id);
+    await supabase.from("data_source_health").insert({
+      source: "claude_worker",
+      kind: "live_performance",
+      ok: false,
+      error_message: msg.slice(0, 500),
+      payload: { report_id: id },
+    });
     return { ok: false, id, status: "failed", cost_usd: 0, error: msg };
   }
 }

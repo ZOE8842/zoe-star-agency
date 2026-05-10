@@ -141,6 +141,7 @@ export default async function AdminPage() {
                 <AdminTile href="/portal/admin/showcase" title="Showcase" hint="Creator-Cards · Approve" />
                 <AdminTile href="/portal/admin/analyse/account" title="Account Analyse" hint="Profil-Reviews · Queue" />
                 <AdminTile href="/portal/admin/analyse/live" title="LIVE Performance" hint="KPI-Reports · Queue" />
+                <AdminTile href="/portal/admin/analyse/health" title="Analyse Health" hint="Datenquellen · Errors · Cost" />
                 <AdminTile href="/portal/admin/messages" title="Broadcasts" hint="Nachrichten an Gruppen" />
                 <AdminTile href="/portal/admin/downloads" title="Downloads" hint="Asset-Library" />
                 <AdminTile href="/portal/admin/analytics" title="Analytics" hint="Login · Aktivität" />

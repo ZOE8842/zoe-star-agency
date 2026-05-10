@@ -45,6 +45,8 @@ export default async function AccountAnalyseDetail({ params }: Props) {
   const summary = (row.summary as Record<string, string> | null) ?? null;
   const recs = (row.recommendations as Array<{ title?: string; body?: string }> | null) ?? [];
   const imgSuggestions = (row.image_suggestions as Array<{ url?: string; note?: string }> | null) ?? [];
+  const raw = (row.raw_response as { sources?: Array<{ name: string; ok: boolean; detail?: string }>; tiktok_source?: string } | null) ?? null;
+  const sources = raw?.sources ?? [];
 
   return (
     <>
@@ -174,12 +176,32 @@ export default async function AccountAnalyseDetail({ params }: Props) {
               </section>
             )}
 
+            {sources.length > 0 && (
+              <section className="mt-8 mb-4 border-t border-champagne/10 pt-5">
+                <p className="eyebrow text-cream/40 mb-3">Datenquellen</p>
+                <ul className="space-y-1">
+                  {sources.map((s, i) => (
+                    <li key={i} className="text-cream/50 text-[10px] uppercase tracking-[0.25em] flex items-center gap-2">
+                      <span className={s.ok ? "text-champagne" : "text-red-300/70"}>
+                        {s.ok ? "✓" : "·"}
+                      </span>
+                      <span>{s.name.replace(/_/g, " ")}</span>
+                      {s.detail && <span className="text-cream/30 normal-case tracking-normal">— {s.detail}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {row.ai_provider && (
               <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
                 Analysiert via {row.ai_provider}
                 {row.ai_model && <> · {row.ai_model}</>}
                 {row.completed_at && (
                   <> · {new Date(row.completed_at).toLocaleDateString("de-DE")}</>
+                )}
+                {row.cost_usd && Number(row.cost_usd) > 0 && (
+                  <> · ${Number(row.cost_usd).toFixed(4)}</>
                 )}
               </p>
             )}

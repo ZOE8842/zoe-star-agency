@@ -113,12 +113,11 @@ export function formatMonthlyBlock(metrics: MonthlyMetric[]): string {
   return lines.join("\n");
 }
 
-// TikTok Public + Backstage = Stufe 2 (Apify + Excel-Sync).
-// Hier nur Stub mit klarer Lueckendokumentation.
-export function tiktokPublicStub(_username: string): string {
-  return "TIKTOK-PUBLIC: [nicht verfuegbar — Apify-Anbindung in V2-Stufe-2 geplant]";
-}
-
-export function backstageStub(): string {
-  return "BACKSTAGE-LIVE-PERFORMANCE: [nicht verfuegbar — Backstage-Excel-Sync in V2-Stufe-2 geplant]";
+// Backstage-Live-Daten kommen aus creator_monthly_metrics (Backstage-Sync).
+// Wenn dort nichts steht: Stub-Hinweis, damit Claude keine Zahlen erfindet.
+export function backstageBlock(metricsAvailable: boolean): string {
+  if (metricsAvailable) {
+    return "BACKSTAGE-LIVE-PERFORMANCE: Quelle = creator_monthly_metrics (Daily-Sync). Siehe Monats-Metriken oben.";
+  }
+  return "BACKSTAGE-LIVE-PERFORMANCE: [nicht verfuegbar — Daily-Sync hat noch keine Daten fuer diesen Creator gepusht]";
 }
