@@ -10,6 +10,7 @@ import { InboxIndicator } from "./InboxIndicator";
 const navItems = [
   { href: "/portal", label: "Dashboard" },
   { href: "/portal/inbox", label: "Inbox", indicator: true as const },
+  { href: "/portal/analyse", label: "Analyse" },
   { href: "/portal/events", label: "Events" },
   { href: "/portal/services", label: "Services" },
   { href: "/portal/academy", label: "Academy" },
