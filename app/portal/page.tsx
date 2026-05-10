@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AvatarStack } from "@/components/AvatarStack";
+import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock";
+import { ZoeAppCodeBox } from "@/components/dashboard/ZoeAppCodeBox";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -30,6 +32,7 @@ export default async function DashboardPage() {
     recentMessagesRes,
     nextSlotRes,
     nextEventRes,
+    pendingCodeRes,
   ] = await Promise.all([
     supabase
       .from("messages")
@@ -73,6 +76,15 @@ export default async function DashboardPage() {
       .order("start_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("zoe_app_connection_codes")
+      .select("code, expires_at")
+      .eq("profile_id", profile.id)
+      .eq("status", "pending")
+      .gt("expires_at", now.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const unreadCount = unreadRes.count ?? 0;
@@ -82,6 +94,7 @@ export default async function DashboardPage() {
   const recentMessages = recentMessagesRes.data ?? [];
   const nextSlot = nextSlotRes.data;
   const nextEvent = nextEventRes.data;
+  const pendingCode = pendingCodeRes.data;
 
   // Setup-Progress (5 Schritte)
   const profileComplete = !!(profile.display_name && profile.tiktok_username && profile.country && profile.language);
@@ -212,6 +225,15 @@ export default async function DashboardPage() {
             </div>
           </div>
         </section>
+
+        {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
+        <MonthlyMetricsBlock supabase={supabase} profileId={profile.id} />
+
+        {/* ZOE APP — Verbindungscode */}
+        <ZoeAppCodeBox
+          initial={pendingCode ? { code: pendingCode.code, expires_at: pendingCode.expires_at } : null}
+          tiktokUsername={profile.tiktok_username || ""}
+        />
 
         {/* TODAY — Featured + Side-Cards (kompakt) */}
         <section className="mb-12 md:mb-16">
