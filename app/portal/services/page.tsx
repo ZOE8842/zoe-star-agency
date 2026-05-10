@@ -29,14 +29,16 @@ const SERVICES: ServiceCard[] = [
     short: "Rueckruf vom Management",
     description:
       "Wenn du was besprechen willst — Rueckruf-Fenster waehlen, wir melden uns ueber den Kanal deiner Wahl.",
-    badge: "vorbereitung",
+    badge: "aktiv",
+    href: "/portal/services/phone-request",
   },
   {
     title: "LIVE-Abmeldung",
     short: "Krank, Technik, privat",
     description:
-      "Sauber abmelden wenn du nicht live gehen kannst. Grund + Zeitraum reichen — kein langer Brief noetig.",
-    badge: "vorbereitung",
+      "Sauber abmelden wenn du nicht LIVE gehen kannst. Grund + Zeitraum reichen — kein langer Brief noetig.",
+    badge: "aktiv",
+    href: "/portal/services/live-absence",
   },
   {
     title: "Big Match Partner",
@@ -53,10 +55,10 @@ const SERVICES: ServiceCard[] = [
     badge: "vorbereitung",
   },
   {
-    title: "Support",
-    short: "Echte Probleme, keine DMs",
+    title: "Problem melden",
+    short: "Account, LIVE, Technik, Sperren",
     description:
-      "Account-, LIVE- oder Portal-Probleme bekommen ein Ticket. Damit nichts in DMs verloren geht.",
+      "Echte Probleme bekommen einen Eintrag — damit nichts in DMs verloren geht. Wir antworten so schnell wie moeglich.",
     badge: "vorbereitung",
   },
 ];
