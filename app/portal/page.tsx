@@ -4,6 +4,7 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AvatarStack } from "@/components/AvatarStack";
 import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock";
+import { FollowPromptCard } from "@/components/dashboard/FollowPromptCard";
 // ZoeAppCodeBox bleibt im Repo (Component existiert), wird aber nicht mehr
 // im Dashboard gerendert. Backend-Routes /api/zoe-app/request-code +
 // zoe_app_connection_codes Tabelle bleiben als Legacy-Bridge intern.
@@ -196,6 +197,16 @@ export default async function DashboardPage() {
 
         {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
         <MonthlyMetricsBlock supabase={supabase} profileId={profile.id} />
+
+        {/* FOLLOW-PROMPT — verschwindet wenn alle 3 Kanaele markiert oder
+            wenn dismissed. Self-Report, kein Auto-Verify. */}
+        {!profile.follow_prompt_dismissed_at && (
+          <FollowPromptCard
+            followedInstagram={!!profile.followed_zoe_instagram}
+            followedTiktok={!!profile.followed_zoe_tiktok}
+            followedTelegram={!!profile.followed_zoe_telegram}
+          />
+        )}
 
         {/* TODAY — Featured + Side-Cards (kompakt) */}
         <section className="mb-12 md:mb-16">
