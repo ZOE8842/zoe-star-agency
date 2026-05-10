@@ -694,15 +694,17 @@
   --hero-scroll-y: 0;
 }
 
-/* Drift-Animation abschalten innerhalb parallax-root, sonst gewinnt
-   die @keyframes-animation gegen das transform und Parallax bleibt
-   wirkungslos. Andere Pages mit .hero-glow-mesh behalten den drift. */
+/* Tier-1 Background: hero-glow-mesh, Parallax 60px / 28px mobile.
+   Drift-keyframes deaktiviert (Konflikt mit transform), stattdessen
+   "Atemzug" via filter-keyframe — filter und transform sind
+   property-distinct und animieren konfliktfrei nebeneinander. */
 @media (prefers-reduced-motion: no-preference) {
   .hero-parallax-root .hero-glow-mesh {
-    animation: none;
+    animation: hero-mesh-breathe 28s ease-in-out infinite;
+    animation-play-state: var(--hero-anim-state, running);
     transform: translate3d(0, calc(var(--hero-scroll-y) * 60px), 0);
     transition: transform 60ms linear;
-    will-change: transform;
+    will-change: transform, filter;
   }
 }
 
@@ -710,4 +712,161 @@
   .hero-parallax-root .hero-glow-mesh {
     transform: translate3d(0, calc(var(--hero-scroll-y) * 28px), 0);
   }
+}
+
+@keyframes hero-mesh-breathe {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50%      { filter: brightness(1.06) saturate(1.04); }
+}
+
+/* ============================================================
+   HERO V8 — LIVE NETWORK ATMOSPHERE
+   "Ferne Lichter in einer Stadt bei Nacht" — keine Partikel,
+   keine SciFi-Dots. Soft-blurred Glows + diagonaler Light-Sweep.
+   Alle Layer respektieren prefers-reduced-motion + IntersectionObserver
+   pause via --hero-anim-state.
+   ============================================================ */
+
+/* Tier-2 Atmosphere-Mid: sweep + nodes, Parallax 30px / 14px mobile.
+   Liegt zwischen mesh und content, gibt 3-Tier-Tiefe. */
+.hero-atmosphere-mid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-parallax-root .hero-atmosphere-mid {
+    transform: translate3d(0, calc(var(--hero-scroll-y) * 30px), 0);
+    will-change: transform;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (max-width: 768px) {
+  .hero-parallax-root .hero-atmosphere-mid {
+    transform: translate3d(0, calc(var(--hero-scroll-y) * 14px), 0);
+  }
+}
+
+/* Cinematic Light Sweep: diagonale soft-light-Bewegung.
+   28s linear, opacity-fade-in/out an den Raendern, mix-blend-mode
+   screen damit es nur addiert, nie verdunkelt. */
+.hero-light-sweep {
+  position: absolute;
+  inset: -25% -15%;
+  background: radial-gradient(
+    ellipse 45% 32% at 50% 50%,
+    rgba(224, 196, 130, 0.085) 0%,
+    rgba(201, 168, 106, 0.035) 32%,
+    transparent 65%
+  );
+  transform: translateX(-115%) translateY(-12%) rotate(-8deg);
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-light-sweep {
+    animation: hero-light-sweep 28s cubic-bezier(0.55, 0.1, 0.45, 0.9) infinite;
+    animation-play-state: var(--hero-anim-state, running);
+  }
+}
+
+@keyframes hero-light-sweep {
+  0%   { transform: translateX(-115%) translateY(-12%) rotate(-8deg); opacity: 0; }
+  18%  { opacity: 0.85; }
+  50%  { transform: translateX(0%) translateY(0%) rotate(-8deg); opacity: 1; }
+  82%  { opacity: 0.85; }
+  100% { transform: translateX(115%) translateY(12%) rotate(-8deg); opacity: 0; }
+}
+
+/* Floating LIVE Nodes: ferne, soft-blurred Lichter — wie Fenster
+   in einer Nacht-Stadt. 6 Stueck, individuelle Pfade + Glows. */
+.hero-live-nodes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-live-node {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(224, 196, 130, 0.55) 0%,
+    rgba(201, 168, 106, 0.18) 45%,
+    rgba(201, 168, 106, 0) 75%
+  );
+  filter: blur(1.5px);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-live-node {
+    animation-name: live-node-drift, live-node-glow;
+    animation-iteration-count: infinite, infinite;
+    animation-direction: alternate, alternate;
+    animation-timing-function: ease-in-out, ease-in-out;
+    animation-play-state: var(--hero-anim-state, running),
+                          var(--hero-anim-state, running);
+  }
+}
+
+/* Mobile: nur 4 Nodes sichtbar (n-th 5+6 versteckt) — weniger fps-cost */
+@media (max-width: 640px) {
+  .hero-live-node:nth-child(5),
+  .hero-live-node:nth-child(6) {
+    display: none;
+  }
+}
+
+.hero-live-node:nth-child(1) {
+  width: 11px; height: 11px;
+  top: 24%; left: 14%;
+  animation-duration: 18s, 6.5s;
+  animation-delay: 0s, 0s;
+}
+.hero-live-node:nth-child(2) {
+  width: 7px; height: 7px;
+  top: 66%; left: 26%;
+  animation-duration: 22s, 7.5s;
+  animation-delay: -4s, -2s;
+}
+.hero-live-node:nth-child(3) {
+  width: 13px; height: 13px;
+  top: 38%; left: 78%;
+  animation-duration: 16s, 5.5s;
+  animation-delay: -2s, -1s;
+}
+.hero-live-node:nth-child(4) {
+  width: 8px; height: 8px;
+  top: 82%; left: 64%;
+  animation-duration: 20s, 8s;
+  animation-delay: -6s, -3s;
+}
+.hero-live-node:nth-child(5) {
+  width: 9px; height: 9px;
+  top: 14%; left: 56%;
+  animation-duration: 14s, 6.8s;
+  animation-delay: -8s, -4s;
+}
+.hero-live-node:nth-child(6) {
+  width: 6px; height: 6px;
+  top: 56%; left: 90%;
+  animation-duration: 19s, 7s;
+  animation-delay: -3s, -1.5s;
+}
+
+@keyframes live-node-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(36px, -28px, 0) scale(1.06); }
+}
+
+@keyframes live-node-glow {
+  from { opacity: 0.04; }
+  to   { opacity: 0.12; }
 }

@@ -1,10 +1,15 @@
 "use client";
 
-// HeroParallax — passiver Scroll-Listener, RAF-throttled.
-// Setzt --hero-scroll-y (0..1) auf dem Wrapper-Element waehrend der
-// Hero-Bereich im Viewport ist. CSS nutzt die Variable fuer dezente
-// Y-Translation auf .hero-glow-mesh. Mobile reduziert via media-query.
-// prefers-reduced-motion: kein Listener, keine Bewegung.
+// HeroParallax v8 — passiver Scroll-Listener, RAF-throttled +
+// IntersectionObserver fuer Battery-Pause wenn Hero out-of-view.
+//
+// Setzt drei CSS-Variablen auf dem Wrapper:
+//   --hero-scroll-y    0..1     Scroll-Progress (fuer Parallax-Tiers)
+//   --hero-anim-state  running|paused (atmosphere-Layer aus wenn unsichtbar)
+//
+// Mobile reduziert Parallax-Distanz via media-query in globals.css.
+// prefers-reduced-motion: gar kein Listener, gar keine Bewegung,
+// alle Atmosphere-Animationen via @media in CSS deaktiviert.
 
 import { useEffect, useRef, type ReactNode } from "react";
 
@@ -39,6 +44,23 @@ export function HeroParallax({ children }: HeroParallaxProps) {
       raf = window.requestAnimationFrame(update);
     };
 
+    // Battery-Saving: pausiert alle Atmosphere-Anims wenn Hero unsichtbar.
+    let observer: IntersectionObserver | null = null;
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            el.style.setProperty(
+              "--hero-anim-state",
+              entry.isIntersecting ? "running" : "paused",
+            );
+          }
+        },
+        { rootMargin: "0px", threshold: 0 },
+      );
+      observer.observe(el);
+    }
+
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
@@ -46,6 +68,7 @@ export function HeroParallax({ children }: HeroParallaxProps) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
+      if (observer) observer.disconnect();
     };
   }, []);
 

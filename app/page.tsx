@@ -84,7 +84,21 @@ export default async function HomePage() {
           ============================================================ */}
       <HeroParallax>
         <section className="relative overflow-hidden bg-ink">
+          {/* Tier-1 Background — mesh mit breath-filter + parallax 60px */}
           <div className="hero-glow-mesh" aria-hidden />
+
+          {/* Tier-2 Atmosphere-Mid — sweep + 6 floating nodes, parallax 30px */}
+          <div className="hero-atmosphere-mid" aria-hidden>
+            <div className="hero-light-sweep" />
+            <div className="hero-live-nodes">
+              <span className="hero-live-node" />
+              <span className="hero-live-node" />
+              <span className="hero-live-node" />
+              <span className="hero-live-node" />
+              <span className="hero-live-node" />
+              <span className="hero-live-node" />
+            </div>
+          </div>
 
           {/* Section-Number "01" atmospheric */}
           <div className="absolute pointer-events-none select-none -bottom-[10%] -right-[4%] md:-bottom-[14%] md:-right-[2%] z-0">
