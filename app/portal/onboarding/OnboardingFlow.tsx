@@ -376,27 +376,30 @@ function Step2Basis({
     <div>
       <p className="eyebrow mb-4">Schritt 1</p>
       <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-[1.1] tracking-[-0.01em] mb-10">
-        Wie sollen wir dich
+        Wie sieht dein
         <br />
-        <span className="text-champagne">im Network nennen?</span>
+        <span className="text-champagne">Name auf TikTok aus?</span>
       </h2>
 
       <div className="space-y-7">
-        <OnboardingField label="Display-Name">
+        <OnboardingField
+          label="TikTok Anzeigename"
+          hint="So wie er bei dir im LIVE oben steht."
+        >
           <OnboardingInput
             value={form.display_name}
             onChange={(v) => update("display_name", v)}
-            placeholder="Dein Creator-Name"
+            placeholder="z.B. Selin ⭐"
             autoFocus
             autoComplete="off"
           />
         </OnboardingField>
 
-        <OnboardingField label="TikTok Username" hint="ohne @">
+        <OnboardingField label="TikTok Username" hint="der technische @-Handle">
           <OnboardingInput
             value={form.tiktok_username}
             onChange={(v) => update("tiktok_username", v.replace(/^@+/, ""))}
-            placeholder="deinhandle"
+            placeholder="z.B. selin_livee"
             prefix="@"
             autoComplete="off"
           />
