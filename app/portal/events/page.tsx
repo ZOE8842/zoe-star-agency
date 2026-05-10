@@ -1,79 +1,239 @@
+import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 
-export default async function EventsPage() {
+export const dynamic = "force-dynamic";
+
+interface SearchProps {
+  searchParams: Promise<{ tab?: string }>;
+}
+
+interface EventRow {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  start_at: string;
+  end_at: string | null;
+  status: string;
+  cover_image_url: string | null;
+  source: string | null;
+  prize_description: string | null;
+  registration_url: string | null;
+  rules: string | null;
+  winners: Array<{ display_name?: string; rank?: number; note?: string }> | null;
+}
+
+export default async function EventsPage({ searchParams }: SearchProps) {
   const { supabase, profile } = await getAuthedProfile();
+  const sp = await searchParams;
+  const tab = sp.tab === "tiktok" ? "tiktok" : sp.tab === "past" ? "past" : "agency";
 
-  const { data: events } = await supabase
+  const now = new Date().toISOString();
+
+  let query = supabase
     .from("events")
-    .select("id, title, description, category, start_at, end_at, status, max_participants")
-    .in("status", ["open", "closed"])
-    .order("start_at", { ascending: true })
-    .limit(30);
+    .select(
+      "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners",
+    )
+    .in("status", ["open", "closed", "completed"])
+    .order("start_at", { ascending: tab === "past" ? false : true })
+    .limit(40);
 
-  // Eigene Signups holen
+  if (tab === "tiktok") {
+    query = query.eq("source", "tiktok").gte("end_at", now);
+  } else if (tab === "agency") {
+    query = query.or(`source.eq.agency,source.is.null`);
+    // upcoming + ongoing
+    query = query.gte("end_at", now);
+  } else {
+    // past — alle Events deren end_at vorbei
+    query = query.lt("end_at", now);
+  }
+
+  const { data: events } = await query;
+  const rows = (events as EventRow[]) ?? [];
+
   const { data: signups } = await supabase
     .from("event_signups")
     .select("event_id, status")
     .eq("creator_id", profile.id);
-
-  const signupMap = new Map((signups || []).map(s => [s.event_id, s.status]));
+  const signupMap = new Map((signups || []).map((s) => [s.event_id, s.status]));
 
   return (
     <>
       <PortalNav
         userId={profile.id}
         displayName={profile.display_name}
-        email={profile.email}
+        tiktokUsername={profile.tiktok_username}
         avatarUrl={profile.avatar_url}
         isAdmin={profile.role === "admin"}
         isManager={profile.role === "manager"}
       />
 
-      <main className="container-luxe py-16">
+      <main className="container-luxe py-12 md:py-16 max-w-3xl">
         <p className="eyebrow mb-3">Events</p>
-        <h1 className="heading-display text-4xl md:text-5xl mb-4">
-          Upcoming <span className="text-champagne">live formats.</span>
+        <h1 className="font-display italic text-cream text-4xl md:text-5xl leading-[1.05] tracking-[-0.02em] mb-4">
+          Was im <span className="text-champagne">Network passiert.</span>
         </h1>
-        <p className="text-cream/60 text-sm mb-12">Sign up for live events, battles, and ranking shows.</p>
+        <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-10 max-w-xl">
+          Offizielle TikTok-Events und unsere internen Agency-Events.
+          Vergangene Gewinner als Inspiration.
+        </p>
 
-        {(!events || events.length === 0) && (
-          <div className="border border-champagne/15 p-10 text-center">
-            <p className="text-cream/40 text-sm">No upcoming events.</p>
+        <div className="flex border-b border-champagne/15 mb-10 -mx-2 overflow-x-auto">
+          <TabLink href="/portal/events?tab=agency" active={tab === "agency"} label="Agency Events" />
+          <TabLink href="/portal/events?tab=tiktok" active={tab === "tiktok"} label="TikTok Events" />
+          <TabLink href="/portal/events?tab=past" active={tab === "past"} label="Vergangene · Gewinner" />
+        </div>
+
+        {rows.length === 0 && (
+          <div className="border border-champagne/15 p-8 md:p-10 text-center">
+            <p className="font-display italic text-cream/45 text-xl mb-2">
+              {tab === "past"
+                ? "Noch keine vergangenen Events."
+                : tab === "tiktok"
+                ? "Aktuell keine offiziellen TikTok-Events."
+                : "Aktuell keine Agency-Events."}
+            </p>
+            <p className="text-cream/35 text-sm">
+              {tab === "past"
+                ? "Sobald Events laufen + abgeschlossen sind, erscheinen Gewinner hier."
+                : "Sobald Management neue Events plant, erscheinen sie hier."}
+            </p>
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {events?.map((event) => {
-            const userSignup = signupMap.get(event.id);
-            const startDate = new Date(event.start_at);
+        <div className="grid gap-4 md:gap-5">
+          {rows.map((ev) => {
+            const userSignup = signupMap.get(ev.id);
+            const startDate = new Date(ev.start_at);
+            const endDate = ev.end_at ? new Date(ev.end_at) : null;
+            const isPast = endDate ? endDate < new Date() : false;
             return (
-              <div key={event.id} className="border border-champagne/15 p-8 hover:border-champagne transition-colors">
-                <div className="flex items-start justify-between mb-4">
-                  <span className="eyebrow">{event.category}</span>
-                  {userSignup && (
+              <article
+                key={ev.id}
+                className="border border-champagne/15 hover:border-champagne/30 transition-colors p-5 md:p-7"
+              >
+                {ev.cover_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={ev.cover_image_url}
+                    alt=""
+                    className="w-full aspect-[16/7] object-cover border border-champagne/10 mb-5"
+                  />
+                )}
+                <div className="flex items-baseline justify-between gap-3 mb-2 flex-wrap">
+                  <span className="text-cream/55 text-[11px] uppercase tracking-[0.25em]">
+                    {ev.source === "tiktok" ? "TikTok Event" : "Agency Event"}
+                    {ev.category && <> · {ev.category}</>}
+                  </span>
+                  {userSignup && !isPast && (
                     <span className="text-[10px] uppercase tracking-[0.25em] text-champagne">
-                      {userSignup === "confirmed" ? "✓ Confirmed" : userSignup}
+                      {userSignup === "confirmed" ? "Bestaetigt" : userSignup}
                     </span>
                   )}
                 </div>
-                <h3 className="font-display italic text-2xl text-cream mb-3">{event.title}</h3>
-                {event.description && (
-                  <p className="text-cream/60 text-sm mb-6 line-clamp-3">{event.description}</p>
+
+                <h2 className="font-display italic text-cream text-2xl md:text-3xl leading-tight mb-3">
+                  {ev.title}
+                </h2>
+
+                {ev.description && (
+                  <p className="text-cream/65 text-sm md:text-base leading-relaxed mb-4">
+                    {ev.description}
+                  </p>
                 )}
-                <div className="text-cream/40 text-[11px] uppercase tracking-[0.2em] mb-6">
+
+                <p className="text-cream/45 text-xs uppercase tracking-[0.2em] mb-4">
                   {startDate.toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })}
-                </div>
-                {!userSignup && event.status === "open" && (
-                  <form action={`/portal/events/${event.id}/signup`} method="post">
-                    <button className="btn-outline text-[10px] py-2.5 px-5">Sign up</button>
-                  </form>
+                  {endDate && (
+                    <>
+                      {" — "}
+                      {endDate.toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })}
+                    </>
+                  )}
+                </p>
+
+                {ev.prize_description && (
+                  <div className="border-l-2 border-champagne/40 pl-3 mb-4">
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">Gewinn</p>
+                    <p className="text-cream/75 text-sm">{ev.prize_description}</p>
+                  </div>
                 )}
-              </div>
+
+                {Array.isArray(ev.winners) && ev.winners.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-champagne/10">
+                    <p className="eyebrow mb-2">Gewinner</p>
+                    <ul className="space-y-1">
+                      {ev.winners.slice(0, 5).map((w, i) => (
+                        <li key={i} className="text-cream/75 text-sm">
+                          {w.rank && <span className="text-champagne mr-2">#{w.rank}</span>}
+                          {w.display_name || "—"}
+                          {w.note && <span className="text-cream/45 text-xs ml-2">{w.note}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-5 flex items-center gap-3 flex-wrap">
+                  {ev.source === "tiktok" && ev.registration_url && !isPast && (
+                    <a
+                      href={ev.registration_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-cta btn-shimmer"
+                    >
+                      Auf TikTok teilnehmen
+                      <span className="btn-cta-arrow" aria-hidden>↗</span>
+                    </a>
+                  )}
+                  {ev.source !== "tiktok" && !userSignup && ev.status === "open" && !isPast && (
+                    <form action={`/portal/events/${ev.id}/signup`} method="post">
+                      <button className="btn-cta btn-shimmer">
+                        Anmelden
+                        <span className="btn-cta-arrow" aria-hidden>→</span>
+                      </button>
+                    </form>
+                  )}
+                  {ev.rules && (
+                    <Link
+                      href={`/portal/events/${ev.id}`}
+                      className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]"
+                    >
+                      Regeln + Details →
+                    </Link>
+                  )}
+                </div>
+              </article>
             );
           })}
         </div>
+
+        {tab !== "past" && (
+          <p className="text-cream/35 text-xs mt-12 leading-relaxed">
+            Hinweis: Live-Rankings werden waehrend laufender Events nicht
+            oeffentlich angezeigt. Gewinner erscheinen nach Event-Ende
+            unter „Vergangene · Gewinner".
+          </p>
+        )}
       </main>
     </>
+  );
+}
+
+function TabLink({ href, active, label }: { href: string; active: boolean; label: string }) {
+  return (
+    <Link
+      href={href}
+      className={`px-3 py-3 text-[11px] uppercase tracking-[0.25em] transition-colors whitespace-nowrap ${
+        active
+          ? "text-champagne border-b-2 border-champagne -mb-px"
+          : "text-cream/45 hover:text-cream"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }
