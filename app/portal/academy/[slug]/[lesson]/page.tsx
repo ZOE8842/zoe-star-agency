@@ -4,6 +4,7 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { CATEGORIES } from "@/lib/academy/data";
 import { RenderBlocks } from "@/lib/academy/blocks";
+import { LessonCompleteToggle } from "@/components/academy/LessonCompleteToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +14,20 @@ interface Props {
 
 export default async function AcademyLessonPage({ params }: Props) {
   const { slug, lesson: lessonSlug } = await params;
-  const { profile } = await getAuthedProfile();
+  const { supabase, profile } = await getAuthedProfile();
   const category = CATEGORIES.find((c) => c.slug === slug);
   if (!category) notFound();
   const lesson = category.lessons.find((l) => l.slug === lessonSlug);
   if (!lesson) notFound();
+
+  const { data: progress } = await supabase
+    .from("academy_progress")
+    .select("id")
+    .eq("profile_id", profile.id)
+    .eq("category_slug", slug)
+    .eq("lesson_slug", lessonSlug)
+    .maybeSingle();
+  const isCompleted = !!progress;
 
   const idx = category.lessons.findIndex((l) => l.slug === lessonSlug);
   const prev = idx > 0 ? category.lessons[idx - 1] : null;
@@ -62,6 +72,14 @@ export default async function AcademyLessonPage({ params }: Props) {
         <article className="prose-zoe">
           <RenderBlocks blocks={lesson.blocks} />
         </article>
+
+        <div className="mt-10 pt-6 border-t border-champagne/10">
+          <LessonCompleteToggle
+            categorySlug={category.slug}
+            lessonSlug={lesson.slug}
+            initialCompleted={isCompleted}
+          />
+        </div>
 
         <nav className="mt-16 pt-8 border-t border-champagne/15 flex items-center justify-between gap-4">
           {prev ? (
