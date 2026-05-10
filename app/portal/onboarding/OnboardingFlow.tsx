@@ -579,7 +579,7 @@ function Step5Communication({
 
         <OnboardingField
           label="WhatsApp"
-          hint="Du kannst optional auch einen wa.me-Link statt deiner Nummer nutzen."
+          hint="Du kannst einen wa.me-Link nutzen. Wenn du eine Nummer angibst, ist sie fuer das ZOE Team sichtbar."
           optional
         >
           <OnboardingInput
