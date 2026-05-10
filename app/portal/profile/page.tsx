@@ -7,12 +7,15 @@ import { AvatarUploader } from "./AvatarUploader";
 export default async function ProfilePage() {
   const { profile } = await getAuthedProfile();
 
+  // Creator-ID aus uuid generiert, oeffentlich darstellbar (kein PII).
+  const creatorId = "ZOE-" + (profile.id.replace(/-/g, "").slice(0, 8).toUpperCase());
+
   return (
     <>
       <PortalNav
         userId={profile.id}
         displayName={profile.display_name}
-        email={profile.email}
+        tiktokUsername={profile.tiktok_username}
         avatarUrl={profile.avatar_url}
         isAdmin={profile.role === "admin"}
         isManager={profile.role === "manager"}
@@ -21,7 +24,7 @@ export default async function ProfilePage() {
       <main className="container-luxe py-12 md:py-16 max-w-2xl mx-auto">
         <p className="eyebrow mb-3">Profile</p>
         <h1 className="heading-display text-4xl md:text-5xl mb-12">
-          Your <span className="text-champagne">profile.</span>
+          Dein <span className="text-champagne italic">Profil.</span>
         </h1>
 
         <AvatarUploader currentUrl={profile.avatar_url} displayName={profile.display_name} />
@@ -29,10 +32,10 @@ export default async function ProfilePage() {
         <div className="border border-champagne/15 p-6 md:p-8 mb-6">
           <p className="eyebrow mb-3">Account</p>
           <dl className="space-y-3">
-            <Row label="Email" value={profile.email} />
-            <Row label="Role" value={profile.role} />
+            <Row label="Creator-ID" value={creatorId} />
+            <Row label="Rolle" value={profile.role} />
             <Row label="Status" value={profile.status} />
-            <Row label="Joined" value={new Date(profile.joined_at).toLocaleDateString("de-DE")} />
+            <Row label="Mitglied seit" value={new Date(profile.joined_at).toLocaleDateString("de-DE")} />
           </dl>
         </div>
 

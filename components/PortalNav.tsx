@@ -19,14 +19,18 @@ const navItems = [
 interface Props {
   userId?: string;
   displayName: string;
-  email: string;
+  /** @deprecated email wird nicht mehr in der UI angezeigt (V3 Datenschutz) */
+  email?: string;
+  tiktokUsername?: string | null;
   isAdmin?: boolean;
   isManager?: boolean;
   avatarUrl?: string | null;
 }
 
-export function PortalNav({ userId, displayName, email, isAdmin, isManager, avatarUrl }: Props) {
-  const initials = (displayName || email)
+export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isManager, avatarUrl }: Props) {
+  // V3-Datenschutz: keine Email-Initials. Fallback ist Display-Name oder
+  // TikTok-Username (kein PII).
+  const initials = (displayName || tiktokUsername || "")
     .split(/\s+/)
     .map((w) => w[0])
     .filter(Boolean)
@@ -43,7 +47,7 @@ export function PortalNav({ userId, displayName, email, isAdmin, isManager, avat
 
         <div className="flex items-center gap-4 shrink-0">
           <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[180px]">
-            {displayName || email}
+            {displayName || (tiktokUsername ? `@${tiktokUsername}` : "Creator")}
           </span>
           <ThemeToggle className="hidden sm:inline-flex" />
           <Link
