@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AttachmentList } from "@/components/AttachmentList";
+import { ReactionBar } from "@/components/inbox/ReactionBar";
 import { AcknowledgeButton } from "./AcknowledgeButton";
 import { ReplyForm } from "./ReplyForm";
 import { markRead } from "./actions";
@@ -132,6 +133,22 @@ export default async function MessageDetailPage({
   }];
   const replySubject = `Re: ${baseSubject}`;
 
+  // Reactions fuer aktuelle Message
+  const { data: reactionsRaw } = await supabase
+    .from("message_reactions")
+    .select("emoji, profile_id")
+    .eq("message_id", msg.id);
+  const reactionAggregate = new Map<string, { count: number; reacted_by_me: boolean }>();
+  for (const r of reactionsRaw ?? []) {
+    const cur = reactionAggregate.get(r.emoji) ?? { count: 0, reacted_by_me: false };
+    cur.count++;
+    if (r.profile_id === profile.id) cur.reacted_by_me = true;
+    reactionAggregate.set(r.emoji, cur);
+  }
+  const initialReactions = Array.from(reactionAggregate.entries()).map(
+    ([emoji, agg]) => ({ emoji, ...agg }),
+  );
+
   return (
     <>
       <PortalNav
@@ -192,6 +209,14 @@ export default async function MessageDetailPage({
                 {/* Attachments — nur beim aktuellen Item (msg.id) */}
                 {item.id === msg.id && msg.attachments && msg.attachments.length > 0 && (
                   <AttachmentList paths={msg.attachments} />
+                )}
+
+                {/* Reactions — V1 nur fuer aktuelles Item */}
+                {item.id === msg.id && (
+                  <ReactionBar
+                    messageId={msg.id}
+                    initialReactions={initialReactions}
+                  />
                 )}
               </div>
             );

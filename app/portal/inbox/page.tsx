@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { ActivityFeed } from "@/components/inbox/ActivityFeed";
+
+export const dynamic = "force-dynamic";
 
 const CATEGORY_LABEL: Record<string, string> = {
   broadcast: "Broadcast",
@@ -59,13 +62,15 @@ export default async function InboxPage({
       <PortalNav
         userId={profile.id}
         displayName={profile.display_name}
-        email={profile.email}
+        tiktokUsername={profile.tiktok_username}
         avatarUrl={profile.avatar_url}
         isAdmin={profile.role === "admin"}
         isManager={profile.role === "manager"}
       />
 
       <main className="container-luxe py-16 md:py-24 max-w-3xl mx-auto">
+        <ActivityFeed supabase={supabase} />
+        <div className="mt-12 mb-12 border-t border-champagne/10" />
         <div className="flex items-start justify-between gap-6 mb-4">
           <div>
             <p className="eyebrow mb-4">Postfach</p>
