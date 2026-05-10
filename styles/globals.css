@@ -604,3 +604,105 @@
   background: linear-gradient(180deg, rgb(244, 241, 231) 0%, rgb(10, 10, 10) 100%);
   height: 80px;
 }
+
+/* ============================================================
+   HERO V7 — STAR SPARKLE + GOLD LINE + SCROLL PARALLAX
+   CSS-only, GPU-accelerated, prefers-reduced-motion safe.
+   ============================================================ */
+
+/* ZOE-Stern als Inline-SVG — dezenter Pulse + Gold-Drop-Shadow */
+.zoe-star-glyph {
+  display: inline-block;
+  vertical-align: 0.05em;
+  width: 0.74em;
+  height: 0.74em;
+  margin: 0 0.06em;
+  color: #c9a86a;
+  filter: drop-shadow(0 0 6px rgba(201, 168, 106, 0.45));
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .zoe-star-glyph {
+    animation: zoe-star-pulse 4.6s ease-in-out infinite;
+  }
+}
+
+@keyframes zoe-star-pulse {
+  0%, 100% {
+    opacity: 0.92;
+    transform: scale(1);
+    filter: drop-shadow(0 0 5px rgba(201, 168, 106, 0.40));
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 11px rgba(224, 176, 98, 0.65));
+  }
+}
+
+/* Gold-Line zwischen Brandline und Subhead — weicher Reveal */
+.gold-line {
+  display: block;
+  height: 1px;
+  width: 100%;
+  max-width: 22rem;
+  margin: 0.8rem 0 0.6rem;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(201, 168, 106, 0.55) 22%,
+    rgba(224, 176, 98, 0.85) 50%,
+    rgba(201, 168, 106, 0.55) 78%,
+    transparent 100%
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gold-line {
+    animation: gold-line-reveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) 1.05s both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gold-line {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gold-line-reveal {
+  0%   { transform: scaleX(0); opacity: 0; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+/* Sub-Headline kleiner unter "ZOE Star Agency" */
+.hero-subhead {
+  display: block;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  color: rgb(245 232 213 / 0.78);
+}
+
+/* Hero-Parallax-Root — nutzt --hero-scroll-y (0..1).
+   Mesh shiftet langsamer als der Scroll, gibt dezente Tiefe.
+   Mobile halbiert, reduced-motion deaktiviert. */
+.hero-parallax-root {
+  --hero-scroll-y: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-parallax-root .hero-glow-mesh {
+    transform: translate3d(0, calc(var(--hero-scroll-y) * 60px), 0);
+    transition: transform 60ms linear;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (max-width: 768px) {
+  .hero-parallax-root .hero-glow-mesh {
+    transform: translate3d(0, calc(var(--hero-scroll-y) * 28px), 0);
+  }
+}
