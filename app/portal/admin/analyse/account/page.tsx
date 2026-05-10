@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { TriggerButton } from "../TriggerButton";
 
 export const dynamic = "force-dynamic";
 
@@ -104,14 +105,21 @@ export default async function AdminAccountAnalyseQueue() {
                   {new Date(r.created_at).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })}
                   {r.ai_provider && <> · {r.ai_provider}</>}
                   {r.ai_model && <> · {r.ai_model}</>}
-                  {r.cost_usd && Number(r.cost_usd) > 0 && <> · ${Number(r.cost_usd).toFixed(2)}</>}
+                  {r.cost_usd && Number(r.cost_usd) > 0 && <> · ${Number(r.cost_usd).toFixed(4)}</>}
                 </span>
-                <Link
-                  href={`/portal/analyse/account/${r.id}`}
-                  className="text-champagne hover:text-champagne-300"
-                >
-                  Oeffnen →
-                </Link>
+                <div className="flex items-center gap-3">
+                  <TriggerButton
+                    id={r.id}
+                    kind="account"
+                    disabled={["done", "reviewed"].includes(r.status)}
+                  />
+                  <Link
+                    href={`/portal/analyse/account/${r.id}`}
+                    className="text-champagne hover:text-champagne-300"
+                  >
+                    Oeffnen →
+                  </Link>
+                </div>
               </div>
             </li>
           ))}
