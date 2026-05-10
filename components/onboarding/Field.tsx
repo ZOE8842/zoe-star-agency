@@ -37,6 +37,7 @@ export function OnboardingField({ label, hint, error, optional, children }: Fiel
 }
 
 // Atomares Text-Input — border-bottom only, gold on focus.
+// Optionales icon (links) + prefix (z.B. "@") wechselseitig.
 interface TextInputProps {
   value: string;
   onChange: (v: string) => void;
@@ -47,14 +48,20 @@ interface TextInputProps {
   autoFocus?: boolean;
   inputMode?: "text" | "email" | "tel" | "url";
   autoComplete?: string;
+  icon?: React.ReactNode;
 }
 
 export function OnboardingInput({
   value, onChange, placeholder, prefix, type = "text",
-  maxLength, autoFocus, inputMode, autoComplete,
+  maxLength, autoFocus, inputMode, autoComplete, icon,
 }: TextInputProps) {
   return (
     <div className="flex items-center border-b border-champagne/20 focus-within:border-champagne transition-colors">
+      {icon && (
+        <span className="text-champagne/55 pr-3 shrink-0 inline-flex items-center" aria-hidden="true">
+          {icon}
+        </span>
+      )}
       {prefix && (
         <span className="text-champagne/60 text-base md:text-lg pr-1 select-none">
           {prefix}

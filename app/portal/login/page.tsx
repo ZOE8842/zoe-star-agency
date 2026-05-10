@@ -89,7 +89,7 @@ function LoginForm() {
 }
 
 const FEATURES = [
-  "LIVE-Slots",
+  "Creator Services",
   "Creator-Inbox",
   "Event-System",
   "Analytics",

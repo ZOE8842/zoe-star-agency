@@ -22,15 +22,12 @@ export default async function DashboardPage() {
   if (profile.role === "admin") redirect("/portal/admin");
 
   const now = new Date();
-  const weekFromNow = new Date(Date.now() + 7 * 24 * 3600 * 1000);
 
   const [
     unreadRes,
     upcomingEventsRes,
-    weekSlotsRes,
     openTicketsRes,
     recentMessagesRes,
-    nextSlotRes,
     nextEventRes,
     pendingCodeRes,
   ] = await Promise.all([
@@ -44,12 +41,6 @@ export default async function DashboardPage() {
       .eq("status", "open")
       .gte("start_at", now.toISOString()),
     supabase
-      .from("slots")
-      .select("id", { count: "exact", head: true })
-      .eq("creator_id", profile.id)
-      .gte("start_at", now.toISOString())
-      .lte("start_at", weekFromNow.toISOString()),
-    supabase
       .from("support_tickets")
       .select("id", { count: "exact", head: true })
       .eq("creator_id", profile.id)
@@ -60,14 +51,6 @@ export default async function DashboardPage() {
       .or(`recipient_id.eq.${profile.id},recipient_group.eq.all_creators`)
       .order("sent_at", { ascending: false })
       .limit(3),
-    supabase
-      .from("slots")
-      .select("id, start_at, status")
-      .eq("creator_id", profile.id)
-      .gte("start_at", now.toISOString())
-      .order("start_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
     supabase
       .from("events")
       .select("id, title, start_at, category")
@@ -89,10 +72,8 @@ export default async function DashboardPage() {
 
   const unreadCount = unreadRes.count ?? 0;
   const upcomingEvents = upcomingEventsRes.count ?? 0;
-  const weekSlots = weekSlotsRes.count ?? 0;
   const openTickets = openTicketsRes.count ?? 0;
   const recentMessages = recentMessagesRes.data ?? [];
-  const nextSlot = nextSlotRes.data;
   const nextEvent = nextEventRes.data;
   const pendingCode = pendingCodeRes.data;
 
@@ -100,14 +81,13 @@ export default async function DashboardPage() {
   const profileComplete = !!(profile.display_name && profile.tiktok_username && profile.country && profile.language);
   const avatarSet = !!profile.avatar_url;
   const bioSet = !!profile.bio;
-  const firstSlot = (weekSlotsRes.count ?? 0) > 0 || !!nextSlot;
   const firstRead = unreadCount === 0;
 
   const progressItems = [
     { label: "Profil ausfüllen", done: profileComplete, href: "/portal/profile" },
     { label: "Profilbild setzen", done: avatarSet, href: "/portal/profile" },
     { label: "Bio schreiben", done: bioSet, href: "/portal/profile" },
-    { label: "Ersten Slot anmelden", done: firstSlot, href: "/portal/slots" },
+    { label: "Services entdecken", done: false, href: "/portal/services" },
     { label: "Inbox checken", done: firstRead, href: "/portal/inbox" },
   ];
   const progressDone = progressItems.filter((p) => p.done).length;
@@ -134,18 +114,6 @@ export default async function DashboardPage() {
       cta: "Inbox öffnen",
       accent: String(unreadCount),
     };
-  } else if (nextSlot) {
-    const dt = new Date(nextSlot.start_at);
-    const dateStr = dt.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" });
-    const timeStr = dt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-    featured = {
-      eyebrow: "Dein Slot",
-      headline: dateStr,
-      tagline: `${timeStr} Uhr · Status: ${nextSlot.status}`,
-      href: "/portal/slots",
-      cta: "Slot ansehen",
-      accent: timeStr,
-    };
   } else if (nextEvent) {
     const dt = new Date(nextEvent.start_at);
     const dateStr = dt.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" });
@@ -159,11 +127,11 @@ export default async function DashboardPage() {
     };
   } else {
     featured = {
-      eyebrow: "Heute",
+      eyebrow: "Creator Services",
       headline: "Alles ruhig.",
-      tagline: "Keine offenen Punkte. Du kannst einen Slot eintragen oder Events ansehen.",
-      href: "/portal/slots",
-      cta: "Slot eintragen",
+      tagline: "Keine offenen Punkte. Schau dir die Creator Services an oder oeffne dein Postfach.",
+      href: "/portal/services",
+      cta: "Services oeffnen",
       accent: "—",
     };
   }
@@ -261,11 +229,10 @@ export default async function DashboardPage() {
 
             {/* Side Cards stack */}
             <div className="space-y-4 md:space-y-5">
-              <SideCard href="/portal/slots" eyebrow="Diese Woche" value={weekSlots}
-                hint={weekSlots === 0 ? "Keine Slots" : weekSlots === 1 ? "Slot" : "Slots"} />
+              <ServiceLink href="/portal/services" eyebrow="Services" label="TikTok Push & mehr" hint="In Vorbereitung" />
               <SideCard href="/portal/events" eyebrow="Events" value={upcomingEvents}
                 hint={upcomingEvents === 0 ? "—" : "offen"} />
-              <SideCard href="/portal/support" eyebrow="Tickets" value={openTickets}
+              <SideCard href="/portal/support" eyebrow="Support" value={openTickets}
                 hint={openTickets === 0 ? "Keine offen" : "in Bearbeitung"}
                 muted={openTickets === 0} />
             </div>
@@ -306,7 +273,7 @@ export default async function DashboardPage() {
           <p className="eyebrow mb-5 md:mb-6">Aktionen</p>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
             {[
-              { href: "/portal/slots", label: "Slot eintragen" },
+              { href: "/portal/services", label: "Creator Services" },
               { href: "/portal/inbox/compose", label: "Nachricht senden" },
               { href: "/portal/events", label: "Events" },
               { href: "/portal/downloads", label: "Downloads" },
@@ -380,6 +347,21 @@ export default async function DashboardPage() {
         )}
       </main>
     </>
+  );
+}
+
+function ServiceLink({ href, eyebrow, label, hint }: { href: string; eyebrow: string; label: string; hint: string }) {
+  return (
+    <Link
+      href={href}
+      className="group block border border-champagne/20 hover:border-champagne hover:bg-champagne/5 p-5 md:p-6 transition-all duration-300"
+    >
+      <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em] mb-3">{eyebrow}</p>
+      <p className="font-display italic text-cream group-hover:text-champagne text-2xl md:text-3xl leading-tight transition-colors">
+        {label}
+      </p>
+      <p className="text-cream/45 text-xs mt-3">{hint}</p>
+    </Link>
   );
 }
 

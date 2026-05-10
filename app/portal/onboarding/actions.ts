@@ -25,6 +25,7 @@ export interface OnboardingInput {
   extra_focus?: string;
   telegram_username?: string;
   instagram_username?: string;
+  whatsapp_url?: string;
   bio?: string;
   allow_website_showcase: boolean;
   allow_partner_cooperations: boolean;
@@ -75,6 +76,17 @@ export async function upsertOnboarding(input: OnboardingInput): Promise<ActionRe
   const extra_focus = clean(input.extra_focus, 160);
   const telegram_username = clean(input.telegram_username?.replace(/^@/, ""), 64);
   const instagram_username = clean(input.instagram_username?.replace(/^@/, ""), 64);
+
+  // WhatsApp-URL: Pflicht-Format wa.me / https-Link, sonst leer.
+  let whatsapp_url: string | null = null;
+  const rawWa = clean(input.whatsapp_url, 200);
+  if (rawWa) {
+    if (!/^https?:\/\//i.test(rawWa)) {
+      return { ok: false, error: "WhatsApp-Link muss mit http:// oder https:// beginnen." };
+    }
+    whatsapp_url = rawWa;
+  }
+
   const bio = clean(input.bio, 240);
 
   // Pre-Check: TikTok-Username darf nicht von ANDEREM Profil belegt sein.
@@ -123,6 +135,7 @@ export async function upsertOnboarding(input: OnboardingInput): Promise<ActionRe
       creator_category,
       live_format,
       telegram_username,
+      whatsapp_url,
       bio,
       allow_website_showcase: !!input.allow_website_showcase,
       allow_partner_cooperations: !!input.allow_partner_cooperations,

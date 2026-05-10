@@ -16,6 +16,11 @@ import {
   OnboardingChip,
   OnboardingCheck,
 } from "@/components/onboarding/Field";
+import {
+  TelegramIcon,
+  InstagramIcon,
+  WhatsAppIcon,
+} from "@/components/onboarding/SocialIcons";
 import { upsertOnboarding, type OnboardingInput as OnboardingPayload } from "./actions";
 
 interface FormState {
@@ -30,6 +35,7 @@ interface FormState {
   extra_focus: string;
   telegram_username: string;
   instagram_username: string;
+  whatsapp_url: string;
   bio: string;
   allow_website_showcase: boolean;
   allow_partner_cooperations: boolean;
@@ -107,6 +113,7 @@ const DEFAULT_STATE: FormState = {
   extra_focus: "",
   telegram_username: "",
   instagram_username: "",
+  whatsapp_url: "",
   bio: "",
   allow_website_showcase: false,
   allow_partner_cooperations: false,
@@ -206,6 +213,7 @@ export function OnboardingFlow({
       extra_focus: form.extra_focus || undefined,
       telegram_username: form.telegram_username || undefined,
       instagram_username: form.instagram_username || undefined,
+      whatsapp_url: form.whatsapp_url || undefined,
       bio: form.bio || undefined,
       allow_website_showcase: form.allow_website_showcase,
       allow_partner_cooperations: form.allow_partner_cooperations,
@@ -539,12 +547,13 @@ function Step5Communication({
     <div>
       <p className="eyebrow mb-4">Schritt 4</p>
       <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-[1.1] tracking-[-0.01em] mb-4">
-        Wie erreichen
+        Wie duerfen wir
         <br />
-        <span className="text-champagne">wir dich?</span>
+        <span className="text-champagne">dich kontaktieren?</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-10">
-        Beides optional. Keine Telefonnummer, kein WhatsApp.
+        Optional. Nur fuer Creator-Management, Rueckfragen und
+        wichtige Updates.
       </p>
 
       <div className="space-y-7">
@@ -554,6 +563,7 @@ function Step5Communication({
             onChange={(v) => update("telegram_username", v.replace(/^@+/, ""))}
             placeholder="username"
             prefix="@"
+            icon={<TelegramIcon />}
           />
         </OnboardingField>
 
@@ -563,9 +573,29 @@ function Step5Communication({
             onChange={(v) => update("instagram_username", v.replace(/^@+/, ""))}
             placeholder="handle"
             prefix="@"
+            icon={<InstagramIcon />}
+          />
+        </OnboardingField>
+
+        <OnboardingField
+          label="WhatsApp"
+          hint="Du kannst optional auch einen wa.me-Link statt deiner Nummer nutzen."
+          optional
+        >
+          <OnboardingInput
+            value={form.whatsapp_url}
+            onChange={(v) => update("whatsapp_url", v)}
+            placeholder="https://wa.me/..."
+            type="url"
+            inputMode="url"
+            icon={<WhatsAppIcon />}
           />
         </OnboardingField>
       </div>
+
+      <p className="text-cream/35 text-xs mt-8">
+        Nur angeben, wenn wir dich darueber kontaktieren duerfen.
+      </p>
     </div>
   );
 }

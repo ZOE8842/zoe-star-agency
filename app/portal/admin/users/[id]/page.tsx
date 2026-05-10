@@ -136,7 +136,7 @@ export default async function CreatorDetailPage({
 
         {/* Stats */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-px bg-cream/[0.05] mb-16">
-          <Stat label="Slots" value={upcomingSlots} hint="diese Woche" />
+          <Stat label="Push-Wuensche" value={upcomingSlots} hint="diese Woche" />
           <Stat label="Events" value={eventSignups} hint="Anmeldungen" />
           <Stat label="Inbox" value={messageCount} hint="erhalten" />
           <Stat label="Tickets" value={ticketCount} hint="alle" />

@@ -113,11 +113,26 @@ export function ZoeAppCodeBox({ initial, tiktokUsername }: Props) {
 
             <div className="pt-4 border-t border-champagne/10">
               <p className="eyebrow mb-2">So gehts</p>
-              <ol className="space-y-1.5 text-cream/70 text-sm">
+              <ol className="space-y-1.5 text-cream/70 text-sm mb-5">
                 <li>1. ZOE App im Telegram oeffnen</li>
                 <li>2. Code <span className="font-mono text-champagne">{code}</span> eingeben</li>
                 <li>3. <span className="font-mono">/zoestart</span> oder <span className="font-mono">/zoecheck</span> nutzen</li>
               </ol>
+
+              <div className="space-y-3 mt-5">
+                <div className="border-l-2 border-champagne/30 pl-3">
+                  <p className="font-mono text-champagne text-xs mb-1">/zoestart</p>
+                  <p className="text-cream/65 text-xs leading-relaxed">
+                    Analysiert deinen TikTok-Account und zeigt dir Verbesserungspotenzial fuer Profil, Content und LIVE-Auftritt.
+                  </p>
+                </div>
+                <div className="border-l-2 border-champagne/30 pl-3">
+                  <p className="font-mono text-champagne text-xs mb-1">/zoecheck</p>
+                  <p className="text-cream/65 text-xs leading-relaxed">
+                    Analysiert deine aktuelle LIVE-Performance und zeigt dir Optimierungsmoeglichkeiten fuer Wachstum, Zuschauer und Community.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <button

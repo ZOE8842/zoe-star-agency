@@ -125,31 +125,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ===== 3. SLOTS in 6h =====
-  const { data: upcomingSlots } = await supabase
-    .from("slots")
-    .select("id, creator_id, start_at, duration_minutes")
-    .eq("status", "planned")
-    .gte("start_at", now.toISOString())
-    .lte("start_at", _6h_future)
-    .limit(100);
-
-  for (const slot of upcomingSlots || []) {
-    const { data: profile } = await supabase.from("profiles").select("email, display_name").eq("id", slot.creator_id).single();
-    if (!profile) continue;
-
-    try {
-      await resend.emails.send({
-        from: `ZOE Star Agency <${fromEmail}>`,
-        to: profile.email,
-        subject: `Live-Slot in wenigen Stunden`,
-        text: `Hi ${profile.display_name},\n\ndein Live-Slot startet bald:\n${new Date(slot.start_at).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })} (${slot.duration_minutes} min)\n\nReady to go live? Vergiss die Brand-Standards nicht.\n\nZOE Star Agency`,
-      });
-      stats.slots++;
-    } catch (e: any) {
-      stats.errors.push(`slot/${slot.id}: ${e.message}`);
-    }
-  }
+  // ===== 3. LIVE-SLOT-REMINDER deaktiviert =====
+  // Altes "slots"-System ersetzt durch Creator Services (tiktok_push_requests).
+  // Reminder-Logik wird in Phase B mit dem TikTok-Push-Modul reaktiviert.
+  // void _6h_future zur Vermeidung "unused" warnings, falls oben deklariert.
+  void _6h_future;
 
   // ===== 4. SUPPORT-TICKETS open > 12h ohne Antwort =====
   const { data: pendingTickets } = await supabase
