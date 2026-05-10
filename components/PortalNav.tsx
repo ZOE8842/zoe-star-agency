@@ -12,7 +12,7 @@ const navItems = [
   { href: "/portal/inbox", label: "Inbox", indicator: true as const },
   { href: "/portal/events", label: "Events" },
   { href: "/portal/services", label: "Services" },
-  { href: "/portal/downloads", label: "Ressourcen" },
+  { href: "/portal/academy", label: "Academy" },
   { href: "/portal/info", label: "Info" },
   { href: "/portal/profile", label: "Profile" },
 ];

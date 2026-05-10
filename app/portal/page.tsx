@@ -287,7 +287,7 @@ export default async function DashboardPage() {
               { href: "/portal/services", label: "Creator Services" },
               { href: "/portal/inbox/compose", label: "Nachricht senden" },
               { href: "/portal/events", label: "Events" },
-              { href: "/portal/downloads", label: "Downloads" },
+              { href: "/portal/academy", label: "Academy" },
               { href: "/portal/support", label: "Support" },
             ].map((item) => (
               <Link
