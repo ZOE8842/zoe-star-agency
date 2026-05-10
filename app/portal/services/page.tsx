@@ -40,6 +40,14 @@ const SERVICES: ServiceCard[] = [
     badge: "aktiv",
     href: "/portal/services/live-absence",
   },
+  {
+    title: "Content Helfer",
+    short: "Video- und Profil-Feedback",
+    description:
+      "Reiche Video, Bild oder Link ein. Wir analysieren Hook, Schnitt, Licht, Ton, TikTok-Tauglichkeit + geben konkrete Verbesserungen.",
+    badge: "aktiv",
+    href: "/portal/services/content-helper",
+  },
 ];
 
 const BADGE_STYLES: Record<ServiceCard["badge"], string> = {
