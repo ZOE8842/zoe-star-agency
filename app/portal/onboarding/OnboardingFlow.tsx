@@ -27,6 +27,7 @@ interface FormState {
   live_format: string;
   live_window: string;
   goals: string[];
+  extra_focus: string;
   telegram_username: string;
   instagram_username: string;
   bio: string;
@@ -103,6 +104,7 @@ const DEFAULT_STATE: FormState = {
   live_format: "",
   live_window: "flex",
   goals: [],
+  extra_focus: "",
   telegram_username: "",
   instagram_username: "",
   bio: "",
@@ -161,7 +163,6 @@ export function OnboardingFlow({
       if (p.goals.includes(g)) {
         return { ...p, goals: p.goals.filter((x) => x !== g) };
       }
-      if (p.goals.length >= 3) return p;
       return { ...p, goals: [...p.goals, g] };
     });
   };
@@ -202,6 +203,7 @@ export function OnboardingFlow({
       live_format: form.live_format,
       live_window: form.live_window,
       goals: form.goals,
+      extra_focus: form.extra_focus || undefined,
       telegram_username: form.telegram_username || undefined,
       instagram_username: form.instagram_username || undefined,
       bio: form.bio || undefined,
@@ -275,7 +277,7 @@ export function OnboardingFlow({
                   <Step3LiveProfile form={form} update={update} />
                 )}
                 {step === 3 && (
-                  <Step4Goals form={form} toggleGoal={toggleGoal} />
+                  <Step4Goals form={form} update={update} toggleGoal={toggleGoal} />
                 )}
                 {step === 4 && (
                   <Step5Communication form={form} update={update} />
@@ -475,12 +477,13 @@ function Step3LiveProfile({
 }
 
 function Step4Goals({
-  form, toggleGoal,
+  form, update, toggleGoal,
 }: {
   form: FormState;
+  update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   toggleGoal: (g: string) => void;
 }) {
-  const remaining = 3 - form.goals.length;
+  const count = form.goals.length;
   return (
     <div>
       <p className="eyebrow mb-4">Schritt 3</p>
@@ -490,10 +493,10 @@ function Step4Goals({
         <span className="text-champagne">fokussieren?</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-8">
-        Maximal drei. {remaining > 0 ? `Noch ${remaining} frei.` : "Limit erreicht."}
+        Mehrfachauswahl. {count === 0 ? "Such dir aus was passt." : count === 1 ? "1 ausgewaehlt." : `${count} ausgewaehlt.`}
       </p>
 
-      <div className="flex flex-wrap gap-2.5">
+      <div className="flex flex-wrap gap-2.5 mb-10">
         {GOALS.map((g) => {
           const active = form.goals.includes(g.value);
           return (
@@ -501,12 +504,27 @@ function Step4Goals({
               key={g.value}
               label={g.label}
               active={active}
-              disabled={form.goals.length >= 3}
               onToggle={() => toggleGoal(g.value)}
             />
           );
         })}
       </div>
+
+      <OnboardingField
+        label="Extra Fokus"
+        hint={`${form.extra_focus.length}/160 Zeichen`}
+        optional
+      >
+        <OnboardingInput
+          value={form.extra_focus}
+          onChange={(v) => update("extra_focus", v.slice(0, 160))}
+          placeholder="z.B. Events, Moderation, Team, TikTok Shop"
+          maxLength={160}
+        />
+      </OnboardingField>
+      <p className="text-cream/35 text-xs mt-3">
+        Gibt es noch etwas, worauf du dich fokussieren moechtest?
+      </p>
     </div>
   );
 }
@@ -573,7 +591,7 @@ function Step6Showcase({
       <div className="space-y-8">
         <OnboardingField
           label="Bio"
-          hint={`${form.bio.length}/240 Zeichen`}
+          hint={`${form.bio.length}/240 Zeichen · wenn deine TikTok-Bio spaeter erkannt wird, kannst du sie als Vorschlag uebernehmen.`}
           optional
         >
           <textarea

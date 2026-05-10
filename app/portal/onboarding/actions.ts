@@ -22,6 +22,7 @@ export interface OnboardingInput {
   live_format: string;
   live_window: string;
   goals: string[];
+  extra_focus?: string;
   telegram_username?: string;
   instagram_username?: string;
   bio?: string;
@@ -66,14 +67,33 @@ export async function upsertOnboarding(input: OnboardingInput): Promise<ActionRe
   const live_window = ALLOWED_LIVE_WINDOWS.includes(input.live_window as never)
     ? input.live_window : "flex";
 
-  // Goals: max 3, nur erlaubte Werte
+  // Goals: kein 3er-Limit mehr — Creator darf mehrere Ziele wählen.
+  // Whitelist filtert ungueltige Werte raus.
   const goals = (Array.isArray(input.goals) ? input.goals : [])
-    .filter((g) => ALLOWED_GOALS.includes(g as never))
-    .slice(0, 3);
+    .filter((g) => ALLOWED_GOALS.includes(g as never));
 
+  const extra_focus = clean(input.extra_focus, 160);
   const telegram_username = clean(input.telegram_username?.replace(/^@/, ""), 64);
   const instagram_username = clean(input.instagram_username?.replace(/^@/, ""), 64);
   const bio = clean(input.bio, 240);
+
+  // Pre-Check: TikTok-Username darf nicht von ANDEREM Profil belegt sein.
+  // Eigener User darf eigenen Username speichern (Update-Idempotenz).
+  const { data: dup } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("tiktok_username", tiktok_username)
+    .neq("id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (dup) {
+    return {
+      ok: false,
+      error:
+        "Dieser TikTok-Username ist bereits bei ZOE registriert. Bitte pruefe die Schreibweise oder melde dich beim Team.",
+    };
+  }
 
   // metadata jsonb merge — bestehende keys nicht zerstoeren
   const { data: existingProfile } = await supabase
@@ -83,12 +103,15 @@ export async function upsertOnboarding(input: OnboardingInput): Promise<ActionRe
     .single();
 
   const prevMeta = (existingProfile?.metadata as Record<string, unknown>) || {};
-  const newMeta = {
+  const newMeta: Record<string, unknown> = {
     ...prevMeta,
     goals,
     live_window,
-    ...(instagram_username ? { instagram_username } : {}),
   };
+  if (extra_focus) newMeta.extra_focus = extra_focus;
+  else delete newMeta.extra_focus;
+  if (instagram_username) newMeta.instagram_username = instagram_username;
+  else delete newMeta.instagram_username;
 
   const { error } = await supabase
     .from("profiles")
@@ -109,7 +132,22 @@ export async function upsertOnboarding(input: OnboardingInput): Promise<ActionRe
     })
     .eq("id", user.id);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    // Defense-in-depth: falls die Race-Condition den Pre-Check umgangen hat,
+    // den unique-violation auch hier zu Friendly-Text uebersetzen.
+    const code = (error as { code?: string }).code;
+    if (
+      code === "23505" &&
+      /tiktok_username/i.test(error.message)
+    ) {
+      return {
+        ok: false,
+        error:
+          "Dieser TikTok-Username ist bereits bei ZOE registriert. Bitte pruefe die Schreibweise oder melde dich beim Team.",
+      };
+    }
+    return { ok: false, error: error.message };
+  }
   return { ok: true };
 }
 
