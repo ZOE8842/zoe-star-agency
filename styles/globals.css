@@ -694,10 +694,15 @@
   --hero-scroll-y: 0;
 }
 
+/* Drift-Animation abschalten innerhalb parallax-root, sonst gewinnt
+   die @keyframes-animation gegen das transform und Parallax bleibt
+   wirkungslos. Andere Pages mit .hero-glow-mesh behalten den drift. */
 @media (prefers-reduced-motion: no-preference) {
   .hero-parallax-root .hero-glow-mesh {
+    animation: none;
     transform: translate3d(0, calc(var(--hero-scroll-y) * 60px), 0);
     transition: transform 60ms linear;
+    will-change: transform;
   }
 }
 
