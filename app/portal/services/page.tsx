@@ -11,8 +11,8 @@ interface ServiceCard {
   title: string;
   short: string;
   description: string;
-  badge: "aktiv" | "naechste" | "vorbereitung";
-  href?: string;
+  badge: "aktiv";
+  href: string;
 }
 
 const SERVICES: ServiceCard[] = [
@@ -40,39 +40,14 @@ const SERVICES: ServiceCard[] = [
     badge: "aktiv",
     href: "/portal/services/live-absence",
   },
-  {
-    title: "Big Match Partner",
-    short: "Anfrage fuer staerkere Battles",
-    description:
-      "Match-Partner fuer groessere Battles oder besondere Streams anfragen. Wir suchen passende Gegner.",
-    badge: "vorbereitung",
-  },
-  {
-    title: "Content Helfer",
-    short: "Video- und Profil-Feedback",
-    description:
-      "Reiche Video oder Link ein, wir analysieren Hook, Schnitt, Licht, TikTok-Tauglichkeit und konkrete Verbesserungen.",
-    badge: "vorbereitung",
-  },
-  {
-    title: "Problem melden",
-    short: "Account, LIVE, Technik, Sperren",
-    description:
-      "Echte Probleme bekommen einen Eintrag — damit nichts in DMs verloren geht. Wir antworten so schnell wie moeglich.",
-    badge: "vorbereitung",
-  },
 ];
 
 const BADGE_STYLES: Record<ServiceCard["badge"], string> = {
   aktiv: "bg-champagne text-ink",
-  naechste: "border border-champagne/60 text-champagne",
-  vorbereitung: "border border-champagne/35 text-champagne/85",
 };
 
 const BADGE_LABEL: Record<ServiceCard["badge"], string> = {
   aktiv: "Aktiv",
-  naechste: "Kommt als Naechstes",
-  vorbereitung: "In Vorbereitung",
 };
 
 export default async function ServicesHubPage() {
@@ -98,60 +73,40 @@ export default async function ServicesHubPage() {
           Alles, was du <span className="text-champagne">brauchst.</span>
         </h1>
         <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-12 max-w-xl">
-          LIVE-Push, Termine, Match-Partner und Content-Feedback — gebuendelt
-          an einem Ort. Wir bauen die Module Schritt fuer Schritt sauber aus.
+          LIVE-Push anmelden, Telefon-Termin anfragen, LIVE-Abmeldung
+          weitergeben — alles was du operativ mit ZOE klaerst, an einem Ort.
         </p>
 
         <div className="grid gap-3 md:gap-4">
-          {SERVICES.map((s) => {
-            const inner = (
-              <>
-                <div className="flex items-baseline justify-between gap-3 mb-2.5">
-                  <h2 className="font-display italic text-cream text-xl md:text-2xl leading-tight">
-                    {s.title}
-                  </h2>
-                  <span
-                    className={`shrink-0 px-2.5 py-0.5 text-[9px] uppercase tracking-[0.25em] ${BADGE_STYLES[s.badge]}`}
-                  >
-                    {BADGE_LABEL[s.badge]}
-                  </span>
-                </div>
-                <p className="text-cream/55 text-[11px] uppercase tracking-[0.22em] mb-3">
-                  {s.short}
-                </p>
-                <p className="text-cream/65 text-sm md:text-base leading-relaxed">
-                  {s.description}
-                </p>
-              </>
-            );
-            if (s.href) {
-              return (
-                <Link
-                  key={s.title}
-                  href={s.href}
-                  className="border border-champagne/30 hover:border-champagne hover:bg-champagne/5 p-5 md:p-6 transition-colors block group"
-                >
-                  {inner}
-                  <p className="mt-3 text-champagne text-[10px] uppercase tracking-[0.25em] group-hover:text-champagne-300">
-                    Oeffnen →
-                  </p>
-                </Link>
-              );
-            }
-            return (
-              <article
-                key={s.title}
-                className="border border-champagne/15 p-5 md:p-6"
-              >
-                {inner}
-              </article>
-            );
-          })}
+          {SERVICES.map((s) => (
+            <Link
+              key={s.title}
+              href={s.href}
+              className="border border-champagne/30 hover:border-champagne hover:bg-champagne/5 p-5 md:p-6 transition-colors block group"
+            >
+              <div className="flex items-baseline justify-between gap-3 mb-2.5">
+                <h2 className="font-display italic text-cream text-xl md:text-2xl leading-tight">
+                  {s.title}
+                </h2>
+                <span className={`shrink-0 px-2.5 py-0.5 text-[9px] uppercase tracking-[0.25em] ${BADGE_STYLES[s.badge]}`}>
+                  {BADGE_LABEL[s.badge]}
+                </span>
+              </div>
+              <p className="text-cream/55 text-[11px] uppercase tracking-[0.22em] mb-3">
+                {s.short}
+              </p>
+              <p className="text-cream/65 text-sm md:text-base leading-relaxed">
+                {s.description}
+              </p>
+              <p className="mt-3 text-champagne text-[10px] uppercase tracking-[0.25em] group-hover:text-champagne-300">
+                Oeffnen →
+              </p>
+            </Link>
+          ))}
         </div>
 
         <p className="text-cream/35 text-xs mt-12 leading-relaxed">
-          Bei Fragen oder Wuenschen melde dich beim Management.
-          Wir bauen die Services so, dass sie fuer dich passen.
+          Bei Fragen melde dich beim Management.
         </p>
       </main>
     </>
