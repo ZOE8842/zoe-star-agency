@@ -1,9 +1,14 @@
 -- ZOE Star Agency — Academy V2 Foundation
 -- Block D: Progress + Quiz + Challenge.
--- Idempotent. Reihenfolge: CREATE TABLES → Policies.
+-- Idempotent.
+--
+-- HINWEIS: 0001_initial_schema hat eine alte academy_progress-Tabelle
+-- mit user_id + module_id + lesson_id (UUID-FK) angelegt — die ist
+-- empty + wird nicht genutzt. Wir bauen parallel ein neues
+-- academy_lesson_reads-Schema fuer slug-basiertes Tracking.
 
--- 1) academy_progress — Lesson-Read-Tracking
-create table if not exists academy_progress (
+-- 1) academy_lesson_reads — Lesson-Read-Tracking (Slug-basiert)
+create table if not exists academy_lesson_reads (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references profiles(id) on delete cascade,
   category_slug text not null,
@@ -12,28 +17,25 @@ create table if not exists academy_progress (
   unique(profile_id, category_slug, lesson_slug)
 );
 
-create index if not exists ap_profile_idx on academy_progress (profile_id);
+create index if not exists alr_profile_idx on academy_lesson_reads (profile_id);
 
-alter table academy_progress enable row level security;
+alter table academy_lesson_reads enable row level security;
 
-drop policy if exists ap_own on academy_progress;
-create policy ap_own on academy_progress for select
-  using (profile_id = auth.uid());
+drop policy if exists alr_own on academy_lesson_reads;
+create policy alr_own on academy_lesson_reads for select using (profile_id = auth.uid());
 
-drop policy if exists ap_insert on academy_progress;
-create policy ap_insert on academy_progress for insert
-  with check (profile_id = auth.uid());
+drop policy if exists alr_insert on academy_lesson_reads;
+create policy alr_insert on academy_lesson_reads for insert with check (profile_id = auth.uid());
 
-drop policy if exists ap_delete on academy_progress;
-create policy ap_delete on academy_progress for delete
-  using (profile_id = auth.uid());
+drop policy if exists alr_delete on academy_lesson_reads;
+create policy alr_delete on academy_lesson_reads for delete using (profile_id = auth.uid());
 
-drop policy if exists ap_admin_read on academy_progress;
-create policy ap_admin_read on academy_progress for select
+drop policy if exists alr_admin_read on academy_lesson_reads;
+create policy alr_admin_read on academy_lesson_reads for select
   using (exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'admin'));
 
 
--- 2) academy_quiz_attempts — Multi-Choice-Quizz-Versuche
+-- 2) academy_quiz_attempts
 create table if not exists academy_quiz_attempts (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references profiles(id) on delete cascade,
@@ -49,19 +51,17 @@ create index if not exists aqa_profile_quiz_idx on academy_quiz_attempts (profil
 alter table academy_quiz_attempts enable row level security;
 
 drop policy if exists aqa_own on academy_quiz_attempts;
-create policy aqa_own on academy_quiz_attempts for select
-  using (profile_id = auth.uid());
+create policy aqa_own on academy_quiz_attempts for select using (profile_id = auth.uid());
 
 drop policy if exists aqa_insert on academy_quiz_attempts;
-create policy aqa_insert on academy_quiz_attempts for insert
-  with check (profile_id = auth.uid());
+create policy aqa_insert on academy_quiz_attempts for insert with check (profile_id = auth.uid());
 
 drop policy if exists aqa_admin_read on academy_quiz_attempts;
 create policy aqa_admin_read on academy_quiz_attempts for select
   using (exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'admin'));
 
 
--- 3) academy_challenges — wochentliche Challenges
+-- 3) academy_challenges
 create table if not exists academy_challenges (
   id uuid primary key default gen_random_uuid(),
   slug text unique not null,
@@ -80,8 +80,7 @@ create index if not exists achal_status_idx on academy_challenges (status, ends_
 alter table academy_challenges enable row level security;
 
 drop policy if exists achal_read on academy_challenges;
-create policy achal_read on academy_challenges for select
-  using (status in ('active','closed','archived'));
+create policy achal_read on academy_challenges for select using (status in ('active','closed','archived'));
 
 drop policy if exists achal_admin_all on academy_challenges;
 create policy achal_admin_all on academy_challenges for all
@@ -105,12 +104,10 @@ create index if not exists acsub_challenge_idx on academy_challenge_submissions 
 alter table academy_challenge_submissions enable row level security;
 
 drop policy if exists acsub_own on academy_challenge_submissions;
-create policy acsub_own on academy_challenge_submissions for select
-  using (profile_id = auth.uid());
+create policy acsub_own on academy_challenge_submissions for select using (profile_id = auth.uid());
 
 drop policy if exists acsub_insert on academy_challenge_submissions;
-create policy acsub_insert on academy_challenge_submissions for insert
-  with check (profile_id = auth.uid());
+create policy acsub_insert on academy_challenge_submissions for insert with check (profile_id = auth.uid());
 
 drop policy if exists acsub_admin_all on academy_challenge_submissions;
 create policy acsub_admin_all on academy_challenge_submissions for all

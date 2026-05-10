@@ -17,7 +17,7 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
 
   // Progress laden
   const { data: progressRows } = await supabase
-    .from("academy_progress")
+    .from("academy_lesson_reads")
     .select("category_slug, lesson_slug")
     .eq("profile_id", profile.id);
   const completedSet = new Set(

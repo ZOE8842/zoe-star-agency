@@ -21,7 +21,7 @@ export default async function AcademyLessonPage({ params }: Props) {
   if (!lesson) notFound();
 
   const { data: progress } = await supabase
-    .from("academy_progress")
+    .from("academy_lesson_reads")
     .select("id")
     .eq("profile_id", profile.id)
     .eq("category_slug", slug)

@@ -23,7 +23,7 @@ export async function toggleLessonComplete(
   if (!user) return { ok: false, completed: false, error: "Nicht eingeloggt." };
 
   const { data: existing } = await supabase
-    .from("academy_progress")
+    .from("academy_lesson_reads")
     .select("id")
     .eq("profile_id", user.id)
     .eq("category_slug", categorySlug)
@@ -32,7 +32,7 @@ export async function toggleLessonComplete(
 
   if (existing) {
     const { error } = await supabase
-      .from("academy_progress")
+      .from("academy_lesson_reads")
       .delete()
       .eq("id", existing.id);
     if (error) return { ok: false, completed: false, error: error.message };
@@ -43,7 +43,7 @@ export async function toggleLessonComplete(
   }
 
   const { error } = await supabase
-    .from("academy_progress")
+    .from("academy_lesson_reads")
     .insert({ profile_id: user.id, category_slug: categorySlug, lesson_slug: lessonSlug });
   if (error) return { ok: false, completed: false, error: error.message };
   revalidatePath("/portal/academy");
