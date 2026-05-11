@@ -3,6 +3,11 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { GIFTS, type Gift } from "@/lib/academy/data";
 import { TreasureSection } from "@/components/academy/TreasureSection";
+import { GiftFaqSection } from "@/components/academy/GiftFaqSection";
+import { EnigmaSection } from "@/components/academy/EnigmaSection";
+import { FunktionenSection } from "@/components/academy/FunktionenSection";
+import { ModerationSection } from "@/components/academy/ModerationSection";
+import { UebersichtSection } from "@/components/academy/UebersichtSection";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +25,17 @@ interface TabDef {
   stub?: StubReason;
   intro?: string;         // Erklaer-Text oben in der Section
 }
+
+// Tabs deren Header (h2 + Count) durch die jeweilige Section-Komponente
+// selbst gerendert wird. Default-Header wird dann unterdrueckt.
+const CUSTOM_RENDER_TABS = new Set<string>([
+  "schatz",
+  "faq",
+  "enigma",
+  "funktionen",
+  "moderation",
+  "uebersicht",
+]);
 
 const TABS: TabDef[] = [
   {
@@ -54,10 +70,13 @@ const TABS: TabDef[] = [
   { id: "schatz",     label: "Schatztruhe",         short: "Schatz" },
   { id: "portal",     label: "Portal",              short: "Portal",    stub: "in-arbeit" },
   { id: "coins",      label: "Coin-System",         short: "Coins",     stub: "soon" },
-  { id: "binding",    label: "Zuschauerbindung",    short: "Binding",   stub: "soon" },
+  { id: "enigma",     label: "Enigma",              short: "Enigma" },
+  { id: "funktionen", label: "Funktionen",          short: "Funktionen" },
+  { id: "moderation", label: "Moderation",          short: "Mod" },
   { id: "strategien", label: "LIVE Strategien",     short: "Strategie", stub: "soon" },
   { id: "battles",    label: "Battles & Matches",   short: "Battle",    stub: "soon" },
-  { id: "faq",        label: "FAQ",                 short: "FAQ",       stub: "soon" },
+  { id: "faq",        label: "FAQ",                 short: "FAQ" },
+  { id: "uebersicht", label: "Komplettuebersicht",  short: "Uebersicht" },
 ];
 
 interface PageProps {
@@ -147,7 +166,7 @@ export default async function AcademyGiftsPage({ searchParams }: PageProps) {
 
         {/* ── ACTIVE TAB CONTENT ──────────────────────────────────── */}
         <section className="mb-12">
-          {tab.id !== "schatz" && (
+          {!CUSTOM_RENDER_TABS.has(tab.id) && (
             <>
               <div className="flex items-baseline justify-between gap-3 mb-3 flex-wrap">
                 <h2 className="font-display italic text-cream text-2xl md:text-3xl">
@@ -169,6 +188,16 @@ export default async function AcademyGiftsPage({ searchParams }: PageProps) {
 
           {tab.id === "schatz" ? (
             <TreasureSection />
+          ) : tab.id === "faq" ? (
+            <GiftFaqSection />
+          ) : tab.id === "enigma" ? (
+            <EnigmaSection />
+          ) : tab.id === "funktionen" ? (
+            <FunktionenSection />
+          ) : tab.id === "moderation" ? (
+            <ModerationSection />
+          ) : tab.id === "uebersicht" ? (
+            <UebersichtSection />
           ) : tab.stub ? (
             <StubBlock reason={tab.stub} label={tab.label} />
           ) : (
