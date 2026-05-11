@@ -37,8 +37,7 @@ export default async function ContentHelperNewPage() {
           Was sollen wir <span className="text-champagne">analysieren?</span>
         </h1>
         <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-10 max-w-xl">
-          Video, Bild oder Link. Wir schauen Hook, Aufbau, Licht, Ton,
-          TikTok-Tauglichkeit + geben konkrete Schritte.
+          Video, Bild oder Link. Hook, Aufbau, Licht, Ton — konkrete Schritte zurueck.
         </p>
 
         <SubmitForm />

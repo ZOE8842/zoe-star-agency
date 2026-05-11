@@ -11,7 +11,7 @@ export const maxDuration = 60;
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Eingereicht",
-  queued: "In Warteschlange",
+  queued: "Wartet",
   processing: "Wird analysiert",
   done: "Fertig",
   failed: "Fehler",
@@ -156,10 +156,10 @@ export default async function ContentHelperDetailPage({ params }: Props) {
         {(job.status === "queued" || job.status === "processing") && (
           <div className="border border-champagne/15 p-5 md:p-7 mb-6">
             <p className="font-display italic text-cream text-xl mb-2">
-              {job.status === "queued" ? "In Warteschlange." : "Wird gerade analysiert."}
+              {job.status === "queued" ? "Wartet auf den Worker." : "Analyse laeuft."}
             </p>
             <p className="text-cream/65 text-sm leading-relaxed">
-              Du bekommst Bescheid sobald die Analyse fertig ist.
+              Du bekommst Bescheid sobald das Ergebnis da ist.
             </p>
           </div>
         )}

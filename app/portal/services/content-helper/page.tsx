@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Eingereicht",
-  queued: "In Warteschlange",
+  queued: "Wartet",
   processing: "Wird analysiert",
   done: "Fertig",
   failed: "Fehler",
@@ -72,11 +72,10 @@ export default async function ContentHelperHub() {
 
         <p className="eyebrow mb-3">Content Helfer</p>
         <h1 className="font-display italic text-cream text-4xl md:text-5xl leading-[1.05] tracking-[-0.02em] mb-4">
-          Profi-Feedback auf <span className="text-champagne">deinen Content.</span>
+          Feedback auf <span className="text-champagne">deinen Content.</span>
         </h1>
         <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-10 max-w-xl">
-          Reiche Video, Bild oder Link ein. Wir analysieren Hook, Schnitt,
-          Licht, Ton, TikTok-Tauglichkeit + geben konkrete Verbesserungen.
+          Video, Bild oder Link einreichen. Hook, Schnitt, Licht, Ton — konkrete Schritte zurueck.
         </p>
 
         <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
@@ -98,10 +97,10 @@ export default async function ContentHelperHub() {
         {rows.length === 0 && (
           <div className="border border-champagne/15 p-8 md:p-10 text-center">
             <p className="font-display italic text-cream/45 text-xl mb-2">
-              Noch keine Anfragen.
+              Noch nichts eingereicht.
             </p>
             <p className="text-cream/35 text-sm">
-              Sobald du etwas einreichst, erscheint es hier mit Status + Ergebnis.
+              Erste Anfrage erscheint hier mit Status und Ergebnis.
             </p>
           </div>
         )}
@@ -136,8 +135,7 @@ export default async function ContentHelperHub() {
         </ul>
 
         <p className="text-cream/35 text-xs mt-12 leading-relaxed">
-          Limit: max 5 offene Anfragen gleichzeitig. Sobald du Antwort hast,
-          kannst du weitere stellen.
+          Max 5 offene Anfragen parallel. Sobald eine zurueck ist, geht eine neue.
         </p>
       </main>
     </>
