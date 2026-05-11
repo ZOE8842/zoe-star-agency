@@ -92,12 +92,11 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
       <main className="container-luxe relative z-10 py-12 md:py-16 max-w-3xl">
         <p className="eyebrow mb-3">Academy</p>
         <h1 className="font-display italic text-cream text-4xl md:text-5xl leading-[1.05] tracking-[-0.02em] mb-4">
-          Alles was du fuer <span className="text-champagne">starkes LIVE</span> wissen musst.
+          Was <span className="text-champagne">LIVE</span> stark macht.
         </h1>
         <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
-          Praktisches Wissen aus Backstage-Schulungen, dem TikTok LIVE
-          Deutschland-Account und ZOE-Standards. Quiz dich durch + sammle
-          deinen Fortschritt.
+          Backstage-Schulungen, TikTok LIVE Deutschland, ZOE-Standards.
+          Lesen, Quiz, Fortschritt sammeln.
         </p>
 
         {/* Quellen-Transparenz · ehrliche Kennzeichnung */}
@@ -115,7 +114,7 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
         {/* Progress-Bar */}
         <div className="border border-champagne/15 p-4 md:p-5 mb-8">
           <div className="flex items-baseline justify-between gap-3 mb-3">
-            <p className="eyebrow">Dein Fortschritt</p>
+            <p className="eyebrow">Fortschritt</p>
             <span className="font-display italic text-champagne text-xl">{pct}%</span>
           </div>
           <div className="h-px bg-champagne/15 mb-3 overflow-hidden">

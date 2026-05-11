@@ -58,14 +58,14 @@ export default async function ProfilePage() {
           >
             <div className="flex items-baseline justify-between gap-3 mb-2 flex-wrap">
               <p className="font-display italic text-champagne text-lg md:text-xl">
-                Dein Showcase ist noch nicht vollstaendig.
+                Showcase unvollstaendig.
               </p>
               <span className="text-champagne text-xl group-hover:translate-x-1 transition-transform">→</span>
             </div>
             <p className="text-cream/70 text-sm leading-relaxed">
-              Bitte lade <span className="text-champagne font-medium">2 Bilder</span> hoch, damit wir
-              deine Showcase-/Kooperations-Freigabe pruefen koennen.
-              Aktuell: {imageCount} von 2 Bildern.
+              Lade <span className="text-champagne font-medium">2 Bilder</span> hoch — sonst bleibt
+              die Showcase- und Kooperations-Freigabe gesperrt.
+              Aktuell {imageCount} von 2.
             </p>
             <p className="text-champagne text-[10px] uppercase tracking-[0.25em] mt-3">
               Showcase vervollstaendigen
@@ -85,8 +85,7 @@ export default async function ProfilePage() {
             <span className="text-champagne text-xl group-hover:translate-x-1 transition-transform">→</span>
           </div>
           <p className="text-cream/55 text-sm leading-relaxed mb-4">
-            Bilder verwalten, Display-Name fuer die Webseite waehlen, Showcase-
-            Freigabe + Brand-Kooperationen jederzeit aktivieren oder deaktivieren.
+            Bilder, Display-Name, Freigaben — jederzeit aenderbar.
           </p>
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`px-2.5 py-0.5 text-[10px] uppercase tracking-[0.25em] ${
@@ -112,7 +111,7 @@ export default async function ProfilePage() {
           </div>
           {coopActive && (
             <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em] mt-3">
-              Du kannst die Brand-Kooperations-Freigabe jederzeit hier wieder deaktivieren.
+              Freigabe jederzeit deaktivierbar.
             </p>
           )}
         </Link>
