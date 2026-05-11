@@ -53,6 +53,8 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
       ? new Date(Date.now() + expiresInDays * 24 * 3600 * 1000).toISOString()
       : null;
 
+    const supabase = createClient();
+
     if (mode === "send") {
       // Code + Mail in einem Schritt via Admin-API
       const res = await fetch("/api/admin/invites/send", {
@@ -73,6 +75,17 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
         setLoading(false);
         return;
       }
+      // DB-Verify: Code MUSS jetzt in invites stehen, sonst Fail.
+      const verify = await supabase
+        .from("invites")
+        .select("code")
+        .eq("code", json.code)
+        .maybeSingle();
+      if (!verify.data) {
+        setError(`Code ${json.code} wurde NICHT in der DB gefunden. Bitte erneut versuchen oder Admin pruefen.`);
+        setLoading(false);
+        return;
+      }
       setSuccess({
         code: json.code,
         signupUrl: json.signup_url,
@@ -80,13 +93,23 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
         recipient: email.trim(),
       });
     } else {
-      // Code-only via direktem Supabase-Insert (alter Pfad, RLS)
-      const supabase = createClient();
+      // Code-only via direktem Supabase-Insert
       const { error: err } = await supabase.from("invites").insert({
         code, created_by: adminId, intended_role: role, expires_at,
       });
       if (err) {
-        setError(err.message);
+        setError(`Insert fehlgeschlagen: ${err.message}`);
+        setLoading(false);
+        return;
+      }
+      // DB-Verify
+      const verify = await supabase
+        .from("invites")
+        .select("code")
+        .eq("code", code)
+        .maybeSingle();
+      if (!verify.data) {
+        setError(`Code ${code} wurde NICHT in der DB gefunden trotz Insert ok. Bitte erneut versuchen.`);
         setLoading(false);
         return;
       }
@@ -203,10 +226,13 @@ export function InviteGenerator({ adminId }: { adminId: string }) {
       {error && <div className="border border-red-500/40 bg-red-500/10 px-4 py-2 text-red-300 text-sm mb-4">{error}</div>}
       {success && (
         <div className="border border-green-500/40 bg-green-500/5 px-4 py-3 mb-4 space-y-1.5">
-          <p className="text-green-300 text-sm">
+          <p className="text-green-300 text-sm font-medium">
+            ✓ Code in DB gespeichert + verifiziert.
+          </p>
+          <p className="text-cream/70 text-sm">
             {success.mailed
               ? <>Mail an <span className="font-mono text-champagne">{success.recipient}</span> versendet.</>
-              : <>Invite-Code <span className="font-mono text-champagne">{success.code}</span> erstellt.</>}
+              : <>Code <span className="font-mono text-champagne">{success.code}</span> bereit zum Verschicken.</>}
           </p>
           <p className="text-cream/50 text-xs">
             Code: <span className="font-mono text-cream/80">{success.code}</span>
