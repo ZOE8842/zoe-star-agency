@@ -8,12 +8,16 @@ export const dynamic = "force-dynamic";
 export default async function AdminPendingPage() {
   const { supabase, profile } = await requireAdmin();
 
+  // Nur Creator anzeigen, die WIRKLICH zur Freigabe bereit sind:
+  // role=creator + status=pending + onboarding_completed=true
+  // → keine halbfertigen Signups in der Approval-Liste.
   const { data: pendingCreators } = await supabase
     .from("profiles")
     .select("id, display_name, tiktok_username, email, country, language, creator_category, live_format, onboarding_completed, onboarding_completed_at, joined_at, metadata")
     .eq("role", "creator")
     .eq("status", "pending")
-    .order("joined_at", { ascending: true });
+    .eq("onboarding_completed", true)
+    .order("onboarding_completed_at", { ascending: true });
 
   const list = pendingCreators ?? [];
 

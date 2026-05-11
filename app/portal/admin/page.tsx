@@ -107,7 +107,8 @@ export default async function AdminPage() {
       aaRes, lpRes, showcaseRes, dmQueueRes, dmFailRes,
     ] = await Promise.all([
       supabase.from("profiles").select("id", { head: true, count: "exact" })
-        .eq("role", "creator").eq("status", "pending"),
+        .eq("role", "creator").eq("status", "pending")
+        .eq("onboarding_completed", true),
       supabase.from("tiktok_push_requests").select("id", { head: true, count: "exact" })
         .eq("status", "submitted"),
       supabase.from("phone_call_requests").select("id", { head: true, count: "exact" })
