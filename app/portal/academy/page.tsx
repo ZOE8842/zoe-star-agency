@@ -183,7 +183,7 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
               type="search"
               name="q"
               defaultValue={query}
-              placeholder="Suche · z.B. Battle, Watchtime, Shadowban …"
+              placeholder="Suche · z.B. Battle, Watchtime, Account Status …"
               className="w-full bg-transparent border-b border-champagne/20 focus:border-champagne text-cream py-2.5 placeholder-cream/30 focus:outline-none"
             />
             {query && (
@@ -317,7 +317,7 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
               Keine Treffer fuer „{query}".
             </p>
             <p className="text-cream/35 text-sm mt-2">
-              Versuche andere Begriffe — Battle, Watchtime, Shadowban,
+              Versuche andere Begriffe — Battle, Watchtime, Account Status,
               Geschenke, Match, Mod.
             </p>
           </div>

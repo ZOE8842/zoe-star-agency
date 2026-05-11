@@ -388,7 +388,7 @@ export const QUIZZES: Quiz[] = [
 
   {
     slug: "tiktok-strikes",
-    category_slug: "shadowban-sicherheit",
+    category_slug: "account-sicherheit",
     title: "Strikes + Risiken · Agency-Wissen",
     intro: "Was im LIVE wirklich gefaehrlich ist — nicht was die Public-Regel sagt.",
     questions: [

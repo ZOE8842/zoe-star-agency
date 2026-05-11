@@ -11,7 +11,7 @@ const CATEGORIES = [
   "community-aufbau",
   "wachstum",
   "technik",
-  "shadowban-sicherheit",
+  "account-sicherheit",
   "tiktok-geschenke",
   "tiktok-regeln",
   "agentur-standards",
