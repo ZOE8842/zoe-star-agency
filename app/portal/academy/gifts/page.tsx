@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { GIFTS, type Gift } from "@/lib/academy/data";
+import { TreasureSection } from "@/components/academy/TreasureSection";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ const TABS: TabDef[] = [
     intro: "Werden erst ab bestimmten Schenke-Leveln freigeschaltet.",
   },
   { id: "event",      label: "Event Geschenke",     short: "Event",     stub: "soon" },
-  { id: "schatz",     label: "Schatztruhe",         short: "Schatz",    stub: "in-arbeit" },
+  { id: "schatz",     label: "Schatztruhe",         short: "Schatz" },
   { id: "portal",     label: "Portal",              short: "Portal",    stub: "in-arbeit" },
   { id: "coins",      label: "Coin-System",         short: "Coins",     stub: "soon" },
   { id: "binding",    label: "Zuschauerbindung",    short: "Binding",   stub: "soon" },
@@ -146,25 +147,31 @@ export default async function AcademyGiftsPage({ searchParams }: PageProps) {
 
         {/* ── ACTIVE TAB CONTENT ──────────────────────────────────── */}
         <section className="mb-12">
-          <div className="flex items-baseline justify-between gap-3 mb-3 flex-wrap">
-            <h2 className="font-display italic text-cream text-2xl md:text-3xl">
-              {tab.label}
-            </h2>
-            {!tab.stub && (
-              <span className="text-cream/45 text-[11px] uppercase tracking-[0.22em]">
-                {filteredGifts.length} Eintraege
-              </span>
-            )}
-          </div>
-          {tab.intro && (
-            <p className="text-cream/60 text-sm md:text-base leading-relaxed mb-6 max-w-2xl">
-              {tab.intro}
-            </p>
+          {tab.id !== "schatz" && (
+            <>
+              <div className="flex items-baseline justify-between gap-3 mb-3 flex-wrap">
+                <h2 className="font-display italic text-cream text-2xl md:text-3xl">
+                  {tab.label}
+                </h2>
+                {!tab.stub && (
+                  <span className="text-cream/45 text-[11px] uppercase tracking-[0.22em]">
+                    {filteredGifts.length} Eintraege
+                  </span>
+                )}
+              </div>
+              {tab.intro && (
+                <p className="text-cream/60 text-sm md:text-base leading-relaxed mb-6 max-w-2xl">
+                  {tab.intro}
+                </p>
+              )}
+            </>
           )}
 
-          {tab.stub && <StubBlock reason={tab.stub} label={tab.label} />}
-
-          {!tab.stub && (
+          {tab.id === "schatz" ? (
+            <TreasureSection />
+          ) : tab.stub ? (
+            <StubBlock reason={tab.stub} label={tab.label} />
+          ) : (
             <>
               {/* Search */}
               <form method="get" action="/portal/academy/gifts" className="mb-6">
