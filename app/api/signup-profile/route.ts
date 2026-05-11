@@ -53,8 +53,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "User nicht gefunden. Bitte neu registrieren." }, { status: 400 });
   }
 
-  // Email-Match-Check — Schutz gegen ID-Forgery
-  if (userData.user.email !== email) {
+  // Email-Match-Check — Schutz gegen ID-Forgery.
+  // Supabase normalisiert auth.users.email auf lowercase → wir vergleichen
+  // case-insensitive damit Nutzer mit Gross-/Klein-Mischung nicht blocken.
+  if ((userData.user.email || "").toLowerCase() !== email.toLowerCase()) {
     return rejectAndCleanup(400, "Email stimmt nicht mit Account überein.");
   }
 
@@ -91,10 +93,11 @@ export async function POST(req: NextRequest) {
   // 4. Profile anlegen
   // V2-A: Creator starten in 'pending' — Admin muss nach Onboarding approven.
   // Admin/Manager-Invites werden sofort 'active' (Operations-Rollen).
+  // Email wird lowercased gespeichert (konsistent mit auth.users).
   const initialStatus = invite.intended_role === "creator" ? "pending" : "active";
   const { error: profErr } = await admin.from("profiles").insert({
     id: user_id,
-    email,
+    email: email.toLowerCase(),
     tiktok_username,
     display_name,
     role: invite.intended_role,
