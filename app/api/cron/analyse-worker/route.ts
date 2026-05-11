@@ -31,8 +31,9 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const maxA = Math.max(1, Math.min(10, Number(url.searchParams.get("maxAccount") ?? 3)));
   const maxL = Math.max(1, Math.min(10, Number(url.searchParams.get("maxLive") ?? 3)));
+  const maxC = Math.max(1, Math.min(10, Number(url.searchParams.get("maxContent") ?? 3)));
 
-  const result = await runWorkerBatch(supabase, { maxAccount: maxA, maxLive: maxL });
+  const result = await runWorkerBatch(supabase, { maxAccount: maxA, maxLive: maxL, maxContent: maxC });
 
   return NextResponse.json({
     success: true,
@@ -40,13 +41,15 @@ export async function GET(request: NextRequest) {
     processed: {
       account: result.account.length,
       live: result.live.length,
+      content: result.content.length,
     },
     failed: {
       account: result.account.filter((r) => !r.ok).length,
       live: result.live.filter((r) => !r.ok).length,
+      content: result.content.filter((r) => !r.ok).length,
     },
     total_cost_usd: Number(result.total_cost_usd.toFixed(4)),
-    details: { account: result.account, live: result.live },
+    details: { account: result.account, live: result.live, content: result.content },
   });
 }
 
@@ -71,15 +74,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
   const { id, kind } = body;
-  if (!id || (kind !== "account" && kind !== "live")) {
-    return NextResponse.json({ error: "id + kind ('account' | 'live') erforderlich" }, { status: 400 });
+  if (!id || (kind !== "account" && kind !== "live" && kind !== "content_review")) {
+    return NextResponse.json({ error: "id + kind ('account' | 'live' | 'content_review') erforderlich" }, { status: 400 });
   }
 
-  const { processAccountAnalysis, processLiveReport } = await import("@/lib/analyse/worker");
+  const { processAccountAnalysis, processLiveReport, processContentReview } = await import("@/lib/analyse/worker");
   const r =
     kind === "account"
       ? await processAccountAnalysis(supabase, id)
-      : await processLiveReport(supabase, id);
+      : kind === "live"
+      ? await processLiveReport(supabase, id)
+      : await processContentReview(supabase, id);
 
   return NextResponse.json(r);
 }

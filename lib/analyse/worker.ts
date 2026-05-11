@@ -11,12 +11,13 @@
 //   8) Bei Fehler: status='failed' + error_message
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { claudeAnalyze } from "./claude";
+import { claudeAnalyze, claudeAnalyzeVision } from "./claude";
 import {
   ACCOUNT_ANALYSE_SYSTEM,
   LIVE_PERFORMANCE_SYSTEM,
   DATA_DISCLAIMER,
 } from "./prompts";
+import { CONTENT_IMAGE_SYSTEM, CONTENT_PROFILE_NOTE, CONTENT_VIDEO_NOTE } from "./content-prompts";
 import { parseAccountResult, parseLiveResult } from "./parsers";
 import {
   getCreatorSnapshot,
@@ -356,16 +357,202 @@ export async function processLiveReport(
 // BATCH-RUNNER · holt pending, processed mit Limit
 // ─────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────
+// CONTENT-HELPER
+// kind=image      → Claude Vision Analyse
+// kind=video_*    → Status auf 'in_review' fuer Admin (Anthropic verarbeitet
+//                   keine Videos direkt)
+// kind=profile    → Status auf 'in_review' fuer Admin
+// ─────────────────────────────────────────────────────────────────────────
+
+function publicImageUrl(supabase: SupabaseClient, storagePath: string): string {
+  // creator-content Bucket ist public konfiguriert
+  const { data } = supabase.storage.from("creator-content").getPublicUrl(storagePath);
+  return data.publicUrl;
+}
+
+export async function processContentReview(
+  supabase: SupabaseClient,
+  id: string,
+): Promise<ProcessResult> {
+  const startedAt = new Date().toISOString();
+
+  // 1) Lock auf processing
+  const { data: locked, error: lockErr } = await supabase
+    .from("content_reviews")
+    .update({ status: "processing", processing_started_at: startedAt })
+    .eq("id", id)
+    .in("status", ["submitted", "queued"])
+    .select("*")
+    .maybeSingle();
+
+  if (lockErr || !locked) {
+    return {
+      ok: false,
+      id,
+      status: "failed",
+      cost_usd: 0,
+      error: lockErr?.message || "Lock fehlgeschlagen — bereits in Bearbeitung?",
+    };
+  }
+
+  try {
+    const kind = locked.kind as "image" | "video_file" | "video_link" | "profile";
+    const note = locked.manual_note as string | null;
+
+    // IMAGE · Claude Vision
+    if (kind === "image" && locked.video_storage_path) {
+      const url = publicImageUrl(supabase, locked.video_storage_path);
+      const text =
+        (note ? `Hinweis vom Creator: "${note}"\n\n` : "") +
+        "Analysiere das obige Bild als TikTok-Content-Visual. Folge dem geforderten Format.";
+
+      const c = await claudeAnalyzeVision({
+        systemPrompt: CONTENT_IMAGE_SYSTEM,
+        imageUrls: [url],
+        text,
+        maxTokens: 2500,
+      });
+
+      if (!c.ok) throw new Error(c.error || "Claude-Vision fehlgeschlagen");
+
+      // JSON-Block extrahieren
+      const jsonMatch = c.text.match(/```json\s*([\s\S]+?)\s*```/);
+      let ai_score: Record<string, unknown> = {};
+      if (jsonMatch) {
+        try { ai_score = JSON.parse(jsonMatch[1]); } catch {}
+      }
+
+      const { error: upErr } = await supabase
+        .from("content_reviews")
+        .update({
+          status: "done",
+          summary: { text: c.text },
+          ai_score,
+          ai_provider: "anthropic",
+          ai_model: c.model,
+          cost_usd: c.cost_usd,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (upErr) throw new Error(upErr.message);
+
+      await notifyContentReady(supabase, locked.profile_id, id);
+
+      await supabase.from("data_source_health").insert({
+        source: "claude_worker",
+        kind: "content_image",
+        ok: true,
+        count_items: 1,
+        cost_usd: c.cost_usd,
+        duration_ms: Date.now() - new Date(startedAt).getTime(),
+        payload: { content_review_id: id },
+      });
+
+      return { ok: true, id, status: "done", cost_usd: c.cost_usd };
+    }
+
+    // VIDEO + PROFILE · manueller Admin-Workflow
+    const manualNote =
+      kind === "profile" ? CONTENT_PROFILE_NOTE : CONTENT_VIDEO_NOTE;
+
+    const { error: upErr } = await supabase
+      .from("content_reviews")
+      .update({
+        status: "in_review",
+        summary: { text: manualNote, note },
+        ai_provider: "manual",
+        cost_usd: 0,
+        processing_started_at: startedAt,
+      })
+      .eq("id", id);
+    if (upErr) throw new Error(upErr.message);
+
+    // Admin-Notification (alle Admins)
+    const { data: admins } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "admin")
+      .eq("status", "active");
+    for (const a of admins ?? []) {
+      await queueInboxNotification(supabase, {
+        user_id: a.id,
+        type: "reminder",
+        title: "Content-Review wartet auf manuelle Pruefung",
+        body: `Neuer ${kind}-Submit · Admin-Review notwendig`,
+        link: `/portal/services/content-helper/${id}`,
+        bundle_key: "content_review_admin",
+      });
+    }
+
+    await supabase.from("data_source_health").insert({
+      source: "claude_worker",
+      kind: "content_manual_route",
+      ok: true,
+      count_items: 1,
+      cost_usd: 0,
+      duration_ms: Date.now() - new Date(startedAt).getTime(),
+      payload: { content_review_id: id, kind },
+    });
+
+    return { ok: true, id, status: "done", cost_usd: 0 };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    await supabase
+      .from("content_reviews")
+      .update({ status: "failed", error_message: msg.slice(0, 1000), reviewed_at: new Date().toISOString() })
+      .eq("id", id);
+    await supabase.from("data_source_health").insert({
+      source: "claude_worker",
+      kind: "content_review",
+      ok: false,
+      error_message: msg.slice(0, 500),
+      payload: { content_review_id: id },
+    });
+    return { ok: false, id, status: "failed", cost_usd: 0, error: msg };
+  }
+}
+
+async function notifyContentReady(
+  supabase: SupabaseClient,
+  profile_id: string,
+  reviewId: string,
+) {
+  await queueInboxNotification(supabase, {
+    user_id: profile_id,
+    type: "analysis",
+    title: "Dein Content-Review ist fertig",
+    body: "Aura hat dein Bild analysiert. Schau es dir an wenn du Zeit hast.",
+    link: `/portal/services/content-helper/${reviewId}`,
+    bundle_key: "content_review",
+  });
+  await pushActivityFeed(supabase, {
+    type: "analysis_done",
+    actor_id: profile_id,
+    headline: "Content-Review fertig",
+  });
+  await queuePlatformNotification(supabase, {
+    profile_id,
+    type: "analysis_ready",
+    title: "Dein Content-Review ist fertig",
+    body: "Dein Content-Review ist fertig ✨ Du findest ihn jetzt im ZOE Portal.",
+    context_url: `/portal/services/content-helper/${reviewId}`,
+    priority: 3,
+  });
+}
+
 export async function runWorkerBatch(
   supabase: SupabaseClient,
-  opts: { maxAccount?: number; maxLive?: number } = {},
+  opts: { maxAccount?: number; maxLive?: number; maxContent?: number } = {},
 ): Promise<{
   account: ProcessResult[];
   live: ProcessResult[];
+  content: ProcessResult[];
   total_cost_usd: number;
 }> {
   const maxA = opts.maxAccount ?? 5;
   const maxL = opts.maxLive ?? 5;
+  const maxC = opts.maxContent ?? 5;
 
   const { data: aaPending } = await supabase
     .from("account_analyses")
@@ -381,6 +568,13 @@ export async function runWorkerBatch(
     .order("created_at", { ascending: true })
     .limit(maxL);
 
+  const { data: crPending } = await supabase
+    .from("content_reviews")
+    .select("id")
+    .in("status", ["submitted", "queued"])
+    .order("created_at", { ascending: true })
+    .limit(maxC);
+
   const accountResults: ProcessResult[] = [];
   for (const row of aaPending ?? []) {
     accountResults.push(await processAccountAnalysis(supabase, row.id));
@@ -391,9 +585,15 @@ export async function runWorkerBatch(
     liveResults.push(await processLiveReport(supabase, row.id));
   }
 
+  const contentResults: ProcessResult[] = [];
+  for (const row of crPending ?? []) {
+    contentResults.push(await processContentReview(supabase, row.id));
+  }
+
   const total_cost_usd =
     accountResults.reduce((s, r) => s + r.cost_usd, 0) +
-    liveResults.reduce((s, r) => s + r.cost_usd, 0);
+    liveResults.reduce((s, r) => s + r.cost_usd, 0) +
+    contentResults.reduce((s, r) => s + r.cost_usd, 0);
 
-  return { account: accountResults, live: liveResults, total_cost_usd };
+  return { account: accountResults, live: liveResults, content: contentResults, total_cost_usd };
 }
