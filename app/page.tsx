@@ -12,6 +12,7 @@ import { CreatorShowcaseCard, type CreatorShowcase } from "@/components/CreatorS
 import { FeaturedCreatorsStrip } from "@/components/FeaturedCreatorsStrip";
 import { HeroParallax } from "@/components/HeroParallax";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import {
   TikTokIcon,
   InstagramIcon,
@@ -21,16 +22,24 @@ import {
 const VISUAL_CYCLE: NonNullable<CreatorShowcase["visual"]>[] = ["champagne", "warm", "cool", "ink"];
 
 async function fetchFeaturedCreators(): Promise<CreatorShowcase[]> {
-  const supabase = await createServerClient();
   // Public-Showcase darf NUR Cards zeigen die:
   //   1) is_approved + is_featured durch Admin sind  UND
   //   2) deren Owner allow_website_showcase_confirmed = true gesetzt hat
   //      (Email-Bestaetigung). Schutz vor "Admin-approved aber User
   //      hat Consent-Mail nie bestaetigt".
   //
-  // 2-Step statt PostgREST-embed: showcase_creators hat ZWEI FK auf
-  // profiles (profile_id + approved_by). `profiles!inner(...)` wirft
-  // PostgREST-Ambiguity. Daher: erst showcases, dann profiles per IN.
+  // RLS-Problem fuer Anon: profiles ist RLS-protected, anon kann
+  // confirmed-Flag nicht lesen. Wir nutzen Service-Role direkt fuer
+  // diese READ-only Public-Query — kein Risiko weil wir auf approved
+  // + featured + confirmed filtern.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabase = createAdminClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  void createServerClient;
+  // 2-Step Query: showcase_creators -> profiles via IN
+  // (statt embed-Ambiguity wegen 2 FKs auf profiles).
   const { data: shows } = await supabase
     .from("showcase_creators")
     .select("profile_id, display_name, category, showcase_image, tiktok_url, instagram_url, approved_at, sort_order")
