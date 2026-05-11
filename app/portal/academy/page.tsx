@@ -3,6 +3,9 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { CATEGORIES } from "@/lib/academy/data";
 import { QUIZZES } from "@/lib/academy/quizzes";
+import {
+  INSIDER_CARDS, INSIDER_TONE_LABEL, INSIDER_TONE_STYLE, INSIDER_TONE_LABEL_STYLE,
+} from "@/lib/academy/insider";
 
 export const dynamic = "force-dynamic";
 
@@ -186,6 +189,44 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
             </p>
           )}
         </form>
+
+        {/* INSIDER-CARDS · harte Agency-Wahrheit */}
+        <section className="mb-10 md:mb-12">
+          <div className="flex items-baseline justify-between mb-4">
+            <p className="eyebrow">Insider · harte Wahrheit</p>
+            <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+              Aus echten Lives
+            </span>
+          </div>
+          <ul className="grid gap-2.5 md:grid-cols-2">
+            {INSIDER_CARDS.slice(0, 8).map((c, i) => (
+              <li
+                key={i}
+                className={`border p-4 md:p-5 ${INSIDER_TONE_STYLE[c.tone]}`}
+              >
+                <div className="flex items-baseline gap-2 mb-2 flex-wrap">
+                  <span className={`px-2 py-0.5 text-[9px] uppercase tracking-[0.22em] ${INSIDER_TONE_LABEL_STYLE[c.tone]}`}>
+                    {INSIDER_TONE_LABEL[c.tone]}
+                  </span>
+                </div>
+                <p className="text-cream text-sm md:text-base leading-snug font-medium mb-1.5">
+                  {c.title}
+                </p>
+                <p className="text-cream/65 text-xs md:text-sm leading-relaxed mb-1">
+                  {c.body}
+                </p>
+                {c.why && (
+                  <p className="text-cream/40 text-[10px] italic mt-1.5">
+                    {c.why}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-4">
+            {INSIDER_CARDS.length} Karten gesamt — Rest folgt in den Lektionen
+          </p>
+        </section>
 
         <div className="grid gap-3 md:gap-4 md:grid-cols-2 mb-8">
           <Link

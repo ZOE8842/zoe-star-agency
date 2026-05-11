@@ -254,6 +254,265 @@ export const QUIZZES: Quiz[] = [
       },
     ],
   },
+
+  // ─── INSIDER-QUIZZE V2.1 ─────────────────────────────────────────
+  // Echte Agency-Erfahrung. Harte Wahrheit. Keine Schul-App-Sprache.
+
+  {
+    slug: "erste-15-minuten",
+    category_slug: "live-grundlagen",
+    title: "Die ersten 15 Minuten · Insider",
+    intro: "Was Streams in den ersten Minuten kaputt macht — direkt aus echten Lives.",
+    questions: [
+      {
+        q: "Was killt Watchtime am schnellsten in Minute 1?",
+        options: [
+          "Schlechtes Licht",
+          "Stille + Setup-Gefummel",
+          "Zu wenige Zuschauer",
+          "Falsche Musik",
+        ],
+        correct: 1,
+        explanation: "Stille + 'Moment, ich muss noch was richten' in Min. 1 = Algo droppt sofort. Setup MUSS vor Stream-Start fertig sein.",
+      },
+      {
+        q: "Was passiert wenn du direkt zu Beginn matchst?",
+        options: [
+          "Mehr Reichweite",
+          "Zuschauerbindung sinkt — Stream wirkt 'unfertig'",
+          "Algo boostet immer",
+          "Egal, Hauptsache aktiv",
+        ],
+        correct: 1,
+        explanation: "Match in Min. 1-5 = du gewinnst Match-Volumen, verlierst aber Zuschauer die noch nicht 'angekommen' sind. Erst 10-15 Min warm-up.",
+      },
+      {
+        q: "Warum sind die ersten 15 Minuten kritisch?",
+        options: [
+          "Persoenliche Aufwaerm-Phase",
+          "TikTok testet Watchtime + Interaktion + entscheidet Reach",
+          "Sound-Check",
+          "Mods muessen reinkommen",
+        ],
+        correct: 1,
+        explanation: "Algo macht in den ersten Minuten Reach-Decision. Wer hier verkackt, kriegt nichts mehr fuer den Rest des Streams.",
+      },
+      {
+        q: "Was ist schlimmer als wenige Zuschauer?",
+        options: [
+          "Schlechtes Licht",
+          "Tote Zuschauer ohne Interaktion",
+          "Falsche Tageszeit",
+          "Falscher Titel",
+        ],
+        correct: 1,
+        explanation: "20 stille Zuschauer killen die Stream-Metriken haerter als 5 aktive. Algo wertet Engagement, nicht Anzahl.",
+      },
+      {
+        q: "Was ist die Pflicht in den ersten 60 Sekunden?",
+        options: [
+          "Cover-Story erzaehlen",
+          "Aktiv sprechen + ersten Zuschauer namentlich begruessen",
+          "Erst still beobachten",
+          "Sofort um Geschenke fragen",
+        ],
+        correct: 1,
+        explanation: "Sofort aktiv + Namen lesen. Selbst wenn nur 1 Zuschauer da ist: ansprechen. Stille = Tod.",
+      },
+    ],
+  },
+
+  {
+    slug: "match-fehler",
+    category_slug: "battles-matches",
+    title: "Match-Fehler · die typischen",
+    intro: "Was Matches kaputt macht — Agency-Sicht.",
+    questions: [
+      {
+        q: "Warum sind immer gleiche Matchpartner schlecht?",
+        options: [
+          "Verstoss gegen TikTok-Regeln",
+          "Zuschauer langweilen sich + weniger Reichweite",
+          "Algo gibt Strafpunkte",
+          "Eigentlich kein Problem",
+        ],
+        correct: 1,
+        explanation: "Wiederholte Partner = Zuschauer kennen den Ablauf, Spannung weg. Algo merkt geringere Watchtime.",
+      },
+      {
+        q: "Was ist ein toxischer Matchpartner?",
+        options: [
+          "Hat weniger Zuschauer als du",
+          "Spielt nicht mit, beleidigt Zuschauer, will nur seine Mods",
+          "Gewinnt zu oft",
+          "Hat schlechtes Licht",
+        ],
+        correct: 1,
+        explanation: "Toxisch = nimmt deine Energie + Community runter. Erkennen + raus + auf Block-Liste.",
+      },
+      {
+        q: "Was tust du nach einem verlorenen Match?",
+        options: [
+          "Sofort neuen Match starten",
+          "Stream beenden",
+          "Energie halten, danken, naechstes Thema sofort",
+          "Kurz pausieren, dann weiter",
+        ],
+        correct: 2,
+        explanation: "Match endet, Stream wirkt 'fertig' = Drop-Point. Naechstes Mini-Thema MUSS innerhalb 30 Sek anlaufen.",
+      },
+      {
+        q: "Wie waehlst du gute Matchpartner?",
+        options: [
+          "Aehnliches Zuschauerlevel + komplementaere Energie",
+          "Immer staerker als du",
+          "Immer schwaecher als du",
+          "Egal, Hauptsache Match",
+        ],
+        correct: 0,
+        explanation: "Aehnliche Groesse = fairer Battle. Komplementaere Energie = nicht 2× ruhig, nicht 2× laut. Mix wirkt.",
+      },
+      {
+        q: "Wann ist 2vs2 sinnvoller als 1vs1?",
+        options: [
+          "Immer",
+          "Wenn beide Streams kleine Zahlen haben + sich kombinieren wollen",
+          "Nie, 1vs1 ist immer besser",
+          "Nur an Wochenenden",
+        ],
+        correct: 1,
+        explanation: "2vs2 = beide Audiences vereint. Bei kleinen Streams Hebel. Bei grossen kann es chaotisch wirken.",
+      },
+    ],
+  },
+
+  {
+    slug: "tiktok-strikes",
+    category_slug: "shadowban-sicherheit",
+    title: "Strikes + Risiken · Agency-Wissen",
+    intro: "Was im LIVE wirklich gefaehrlich ist — nicht was die Public-Regel sagt.",
+    questions: [
+      {
+        q: "Was ist Gift-Baiting?",
+        options: [
+          "Geschenk-Galerie zeigen",
+          "Tricks/Versprechen um Geschenke zu kriegen (Tanz pro Geschenk etc.)",
+          "Geschenkgeber begruessen",
+          "Geschenke selbst verschicken",
+        ],
+        correct: 1,
+        explanation: "Konkrete Gegenleistung versprechen = Verstoss. 'Bei 100 Roses zieh ich aus' = Sofort-Sperre + Account-Risiko.",
+      },
+      {
+        q: "Was ist im LIVE-Hintergrund problematisch?",
+        options: [
+          "Pflanzen",
+          "Alkohol-Flaschen, Zigaretten, sichtbare Marken",
+          "Helle Wand",
+          "Spiegel",
+        ],
+        correct: 1,
+        explanation: "Alkohol + Zigaretten im Bild = Reach-Drosselung. Selbst wenn du nichts trinkst. Hintergrund pruefen!",
+      },
+      {
+        q: "Welche Filter sind LIVE-sicher?",
+        options: [
+          "Alle Filter",
+          "Nur dezente Haut/Licht-Filter — keine starken Beauty-Filter",
+          "Keine Filter, immer raw",
+          "Nur TikTok-eigene Filter",
+        ],
+        correct: 1,
+        explanation: "Starke Beauty-Filter werden manchmal als 'misleading' geflagged. Dezent ist sicher, krass ist Risiko.",
+      },
+      {
+        q: "Wenn du eine Sperre bekommst — was ist der falscheste Move?",
+        options: [
+          "24h Pause + Appeal",
+          "Sofort mit anderem Account weitermachen",
+          "Mod kontaktieren",
+          "Stream-Logs sichern",
+        ],
+        correct: 1,
+        explanation: "Multi-Account-Workaround = beide Accounts gehen drauf. TikTok erkennt Geraet + IP. Pause + Appeal ist der einzige saubere Weg.",
+      },
+      {
+        q: "Was triggert oft unerwartete Strikes?",
+        options: [
+          "Lange Stream-Dauer",
+          "Versehentlich gezeigte 18+ Inhalte (Buch-Cover, Tattoo, Chat)",
+          "Zu viele Mods",
+          "Zu viele Battles",
+        ],
+        correct: 1,
+        explanation: "Hintergrund-Details + Chat-Texte werden gescannt. Buch-Cover, T-Shirt-Aufschrift, Chat-Worte = unerwarteter Strike-Source.",
+      },
+    ],
+  },
+
+  {
+    slug: "auszahlung-system",
+    category_slug: "tiktok-geschenke",
+    title: "Auszahlung · was wirklich zaehlt",
+    intro: "TikTok-Auszahlungs-Logik. Insider-Werte.",
+    questions: [
+      {
+        q: "Wann zaehlt ein LIVE-Tag als 'gueltig'?",
+        options: [
+          "Wenn du live warst",
+          "Mind. 25 Min real-time LIVE pro Tag",
+          "Mind. 60 Min pro Stream",
+          "Mind. 100 Zuschauer",
+        ],
+        correct: 1,
+        explanation: "Ab 25 Min real-time wird der Tag offiziell gezaehlt. Darunter = Tag verloren, egal wie aktiv du warst.",
+      },
+      {
+        q: "Was bringt mehr Reach: ein 30-Min-Stream oder drei 10-Min-Streams?",
+        options: [
+          "Drei 10-Min-Streams",
+          "Ein 30-Min-Stream",
+          "Egal",
+          "Drei sind besser fuer Algo",
+        ],
+        correct: 1,
+        explanation: "Stop + Restart = Algo-Reset. Lange Streams haben akkumulierte Watchtime + besseren Algo-Score. 61+ Min ist sweet spot.",
+      },
+      {
+        q: "Was ist die wichtigste Wochen-Mission fuer kleine Streamer?",
+        options: [
+          "Most-Streams-this-week",
+          "Gueltige Live-Tage erfuellen + neue Follower",
+          "Diamanten-Volume",
+          "Match-Anzahl",
+        ],
+        correct: 1,
+        explanation: "Wochen-Bonus kommt aus Konstanz, nicht Volumen. Lieber 5 stabile Tage als 2 Mega-Streams.",
+      },
+      {
+        q: "Wann sollte man Stream-Pause machen wenn die Diamanten ausbleiben?",
+        options: [
+          "Nach 30 Min ohne Geschenk",
+          "Gar nicht — durchhalten + Stamm-Zuschauer aktivieren",
+          "Nach jedem Verlust",
+          "Sofort wenn keiner kommt",
+        ],
+        correct: 1,
+        explanation: "Kein-Geschenk-Phase ist Test fuer Stamm-Zuschauer-Bindung. Durchhalten, persoenlich werden, dranbleiben.",
+      },
+      {
+        q: "Warum sind Monatsende + Wochenende wichtig?",
+        options: [
+          "Algorithmus boostet mehr",
+          "Bonus-Aktionen + Event-Geschenke + mehr Zuschauer-Volumen",
+          "Mehr Mods online",
+          "Mehr Battles verfuegbar",
+        ],
+        correct: 1,
+        explanation: "Plattform-Aktionen + Event-Multiplier + Zuschauer haben mehr Zeit. Schlechtere Wahl: Mittwoch nachts.",
+      },
+    ],
+  },
 ];
 
 export function bestScoreForUser(attempts: Array<{ quiz_slug: string; score: number; max_score: number }>): Map<string, { score: number; max_score: number }> {
