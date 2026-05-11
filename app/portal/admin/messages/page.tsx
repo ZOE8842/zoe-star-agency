@@ -26,6 +26,17 @@ interface Props {
   searchParams: Promise<{ f?: string }>;
 }
 
+function stripRePrefix(s: string | null): string {
+  return (s ?? "").replace(/^(re:\s*)+/i, "").trim();
+}
+
+function threadKey(senderId: string | null, recipientId: string | null, subject: string | null): string {
+  const a = senderId ?? "";
+  const b = recipientId ?? "";
+  const pair = a < b ? `${a}|${b}` : `${b}|${a}`;
+  return `${pair}::${stripRePrefix(subject).toLowerCase()}`;
+}
+
 export default async function AdminMessagesPage({ searchParams }: Props) {
   const { supabase, profile } = await requireAdmin();
   const sp = await searchParams;
@@ -39,6 +50,28 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
     .order("sent_at", { ascending: false })
     .limit(100);
   const recent = recentRaw ?? [];
+
+  // Alle Admin-IDs holen — Threads gelten als "wartet auf Antwort", wenn
+  // die letzte Message von einem Nicht-Admin an einen Admin ging.
+  const { data: admins } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin");
+  const adminIds = new Set((admins ?? []).map((a) => a.id));
+
+  // Waiting-Set: pro Thread die letzte Message, wenn sender=Creator + recipient=Admin
+  const seenThread = new Set<string>();
+  const waitingSet = new Set<string>();
+  for (const m of recent) {
+    // direct-only — broadcasts werden nicht als "wartet" gewertet
+    if (m.category !== "direct" || !m.sender_id || !m.recipient_id) continue;
+    const k = threadKey(m.sender_id, m.recipient_id, m.subject);
+    if (seenThread.has(k)) continue; // recent ist DESC sortiert → erste pro Key ist die neueste
+    seenThread.add(k);
+    if (!adminIds.has(m.sender_id) && adminIds.has(m.recipient_id)) {
+      waitingSet.add(m.id);
+    }
+  }
 
   // Namen aller Sender/Recipients holen
   const ids = new Set<string>();
@@ -73,16 +106,17 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
   // Filter anwenden
   const filtered = recent.filter((m) => {
     if (filter === "unread") return unreadSet.has(m.id);
+    if (filter === "waiting") return waitingSet.has(m.id);
     if (filter === "broadcast") return m.category === "broadcast" || m.recipient_group != null;
     if (filter === "direct") return m.category === "direct" && m.recipient_group == null;
-    return true; // "all" oder "waiting" (waiting kommt im naechsten Commit)
+    return true;
   });
 
   // Counts fuer Filter-Pills
   const counts: Record<FilterKey, number> = {
     all: recent.length,
     unread: unreadSet.size,
-    waiting: 0,
+    waiting: waitingSet.size,
     broadcast: recent.filter((m) => m.category === "broadcast" || m.recipient_group != null).length,
     direct: recent.filter((m) => m.category === "direct" && m.recipient_group == null).length,
   };
@@ -140,6 +174,7 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
             const isBroadcast = m.recipient_group != null;
             const isOwnRecipient = m.recipient_id === profile.id;
             const unread = isOwnRecipient && unreadSet.has(m.id);
+            const waiting = waitingSet.has(m.id);
             const sender = m.sender_id ? nameMap.get(m.sender_id) : null;
             const recipient = m.recipient_id ? nameMap.get(m.recipient_id) : null;
             const targetLabel = isBroadcast
@@ -162,6 +197,11 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
                     <span className="eyebrow">{CATEGORY_LABEL[m.category] || m.category}</span>
                     {m.requires_ack && (
                       <span className="text-[10px] uppercase tracking-[0.2em] text-champagne">Ack</span>
+                    )}
+                    {waiting && (
+                      <span className="text-[10px] uppercase tracking-[0.25em] px-1.5 py-0.5 bg-champagne text-ink">
+                        Wartet
+                      </span>
                     )}
                     <span className="text-cream/40 text-[10px] uppercase tracking-[0.2em]">
                       {targetLabel}
