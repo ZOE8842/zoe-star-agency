@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Logo } from "./Logo";
 
 interface NavItem {
   href: string;
@@ -19,18 +18,21 @@ interface Props {
   avatarUrl?: string | null;
 }
 
+const SOLID_BLACK = "#050505";
+const GOLD = "#d4af6b";
+const GOLD_TEXT = "#f5e7ce";
+const GOLD_DIVIDER = "rgba(212,175,107,0.10)";
+const GOLD_DIVIDER_SOFT = "rgba(212,175,107,0.08)";
+const ACTIVE_BG = "#14110c";
+
 export function MobileNavDrawer({
   items, isAdmin, isManager, displayName, tiktokUsername, avatarUrl,
 }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // Bei Pfad-Wechsel automatisch zu
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  useEffect(() => { setOpen(false); }, [pathname]);
 
-  // Body-Scroll-Lock waehrend offen
   useEffect(() => {
     if (open) {
       const prev = document.body.style.overflow;
@@ -39,7 +41,6 @@ export function MobileNavDrawer({
     }
   }, [open]);
 
-  // ESC schliesst
   useEffect(() => {
     if (!open) return;
     function handle(e: KeyboardEvent) {
@@ -55,10 +56,12 @@ export function MobileNavDrawer({
 
   return (
     <>
+      {/* Burger-Button (im Header, nur Mobile) */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Menue oeffnen"
-        className="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 text-champagne hover:text-champagne-300"
+        className="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2"
+        style={{ color: GOLD }}
       >
         <span className="sr-only">Menue</span>
         <svg width="22" height="14" viewBox="0 0 22 14" fill="none" aria-hidden>
@@ -68,92 +71,160 @@ export function MobileNavDrawer({
         </svg>
       </button>
 
-      {/* Overlay — bg-black/90 + starker Blur, deckt alles ab */}
+      {/* Overlay · solides Schwarz + Blur · z-9998 */}
       <div
         onClick={() => setOpen(false)}
         aria-hidden
-        className={`fixed inset-0 bg-black/90 backdrop-blur-lg z-[100] transition-opacity duration-300 ${
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        className={`fixed inset-0 z-[9998] transition-all duration-300 ${
+          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
+        style={{
+          background: "rgba(0,0,0,0.96)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+        }}
       />
 
-      {/* Drawer — solides Schwarz · hoher z-index ueber Header (z-50) + Overlay (z-100) */}
+      {/* Drawer · echtes solides Panel · z-9999 · keine Transparenz */}
       <aside
         role="dialog" aria-modal="true" aria-label="Hauptmenue"
-        style={{ boxShadow: "0 0 80px rgba(0,0,0,0.95)" }}
-        className={`fixed inset-y-0 right-0 w-[86%] max-w-[420px] bg-[#050505] border-l border-[#6f5a2d] overflow-y-auto z-[110] transform transition-transform duration-300 ease-out ${
+        className={`fixed top-0 right-0 h-screen z-[9999] transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{
+          width: "88%",
+          maxWidth: "430px",
+          background: SOLID_BLACK,
+          borderLeft: "1px solid rgba(212,175,107,0.22)",
+          boxShadow: "-20px 0 80px rgba(0,0,0,0.98)",
+        }}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-champagne/10">
-          <Link href="/portal" aria-label="ZOE Star Agency" onClick={() => setOpen(false)}>
-            <Logo variant="horizontal" className="h-7" />
-          </Link>
-          <button
-            onClick={() => setOpen(false)}
-            aria-label="Menue schliessen"
-            className="inline-flex items-center justify-center w-11 h-11 -mr-2 text-cream/55 hover:text-champagne"
+        <div
+          className="flex flex-col"
+          style={{ background: SOLID_BLACK, minHeight: "100%" }}
+        >
+          {/* Header */}
+          <div
+            className="flex items-center justify-between px-6"
+            style={{
+              height: "72px",
+              borderBottom: `1px solid ${GOLD_DIVIDER}`,
+              background: SOLID_BLACK,
+            }}
           >
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
-              <line x1="2" y1="2" x2="20" y2="20" stroke="currentColor" strokeWidth="1.5" />
-              <line x1="20" y1="2" x2="2" y2="20" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="px-6 py-5 border-b border-champagne/10 flex items-center gap-3">
-          {avatarUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-champagne/30" loading="lazy" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-champagne/10 border border-champagne/30 flex items-center justify-center text-champagne text-sm font-display italic">
-              {initials || "?"}
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-cream text-sm font-medium truncate">{displayName || "Creator"}</p>
-            {tiktokUsername && (
-              <p className="text-cream/45 text-xs truncate">@{tiktokUsername}</p>
-            )}
-          </div>
-        </div>
-
-        <nav className="relative bg-[#050505]">
-          {items.map((it) => {
-            const active = pathname === it.href || (it.href !== "/portal" && pathname?.startsWith(it.href));
-            return (
-              <Link
-                key={it.href}
-                href={it.href}
-                className={`block w-full text-left py-5 px-6 text-base transition-colors border-b border-[#1f1a12] ${
-                  active
-                    ? "bg-[#14100a] text-[#d5b76b]"
-                    : "text-[#f5e7ce] hover:bg-[#111111] active:bg-[#161616]"
-                }`}
-              >
-                {it.label}
-              </Link>
-            );
-          })}
-          {(isAdmin || isManager) && (
             <Link
-              href={isAdmin ? "/portal/admin" : "/portal/manager"}
-              className="block w-full text-left py-5 px-6 text-base text-[#d5b76b] hover:bg-[#111111] border-b border-[#1f1a12]"
+              href="/portal"
+              onClick={() => setOpen(false)}
+              className="text-lg font-medium"
+              style={{ color: GOLD }}
             >
-              {isAdmin ? "Admin" : "Manager"}
+              ZOE⭐️
             </Link>
-          )}
-        </nav>
-
-        <div className="px-3 pb-6 pt-2 bg-[#050505]">
-          <form action="/portal/logout" method="post">
             <button
-              type="submit"
-              className="w-full text-left px-4 py-4 text-cream/55 hover:text-[#d5b76b] text-sm"
+              onClick={() => setOpen(false)}
+              aria-label="Menue schliessen"
+              className="text-3xl leading-none w-11 h-11 -mr-2 inline-flex items-center justify-center"
+              style={{ color: GOLD }}
             >
-              Logout
+              ×
             </button>
-          </form>
+          </div>
+
+          {/* User-Card */}
+          <div
+            className="px-6 py-5 flex items-center gap-3"
+            style={{
+              background: SOLID_BLACK,
+              borderBottom: `1px solid ${GOLD_DIVIDER_SOFT}`,
+            }}
+          >
+            {avatarUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={avatarUrl} alt="" loading="lazy"
+                className="w-10 h-10 rounded-full object-cover"
+                style={{ border: "1px solid rgba(212,175,107,0.30)" }}
+              />
+            ) : (
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-display italic"
+                style={{
+                  background: "rgba(212,175,107,0.08)",
+                  border: "1px solid rgba(212,175,107,0.30)",
+                  color: GOLD,
+                }}
+              >
+                {initials || "?"}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="text-lg font-medium truncate" style={{ color: GOLD_TEXT }}>
+                {displayName || "Creator"}
+              </div>
+              {tiktokUsername && (
+                <div className="text-sm mt-0.5 truncate" style={{ color: "#9f8d6a" }}>
+                  @{tiktokUsername}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Nav · ALLES inline-style damit nichts durchscheint */}
+          <nav className="flex-1" style={{ background: SOLID_BLACK }}>
+            {items.map((it) => {
+              const active = pathname === it.href || (it.href !== "/portal" && pathname?.startsWith(it.href));
+              return (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  className="block px-6 py-5 text-[17px]"
+                  style={{
+                    color: active ? GOLD : GOLD_TEXT,
+                    background: active ? ACTIVE_BG : SOLID_BLACK,
+                    borderBottom: `1px solid ${GOLD_DIVIDER_SOFT}`,
+                  }}
+                >
+                  {it.label}
+                </Link>
+              );
+            })}
+            {(isAdmin || isManager) && (
+              <Link
+                href={isAdmin ? "/portal/admin" : "/portal/manager"}
+                className="block px-6 py-5 text-[17px]"
+                style={{
+                  color: GOLD,
+                  background: SOLID_BLACK,
+                  borderBottom: `1px solid ${GOLD_DIVIDER_SOFT}`,
+                }}
+              >
+                {isAdmin ? "Admin" : "Manager"}
+              </Link>
+            )}
+          </nav>
+
+          {/* Logout · solid Card-Style */}
+          <div
+            className="p-6"
+            style={{
+              background: SOLID_BLACK,
+              borderTop: `1px solid ${GOLD_DIVIDER_SOFT}`,
+            }}
+          >
+            <form action="/portal/logout" method="post">
+              <button
+                type="submit"
+                className="w-full py-4 text-left px-4"
+                style={{
+                  color: GOLD_TEXT,
+                  background: "#111111",
+                  border: "1px solid rgba(212,175,107,0.14)",
+                }}
+              >
+                Logout
+              </button>
+            </form>
+          </div>
         </div>
       </aside>
     </>
