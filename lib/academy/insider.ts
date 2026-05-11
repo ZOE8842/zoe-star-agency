@@ -38,7 +38,7 @@ export const INSIDER_CARDS: InsiderCard[] = [
     tone: "killer",
     title: "Stille in den ersten 60 Sekunden",
     body: "Algo entscheidet in Min. 1 wer noch Reach kriegt. Wer da still ist, kriegt nichts mehr.",
-    why: "Watchtime + Interaktion in 60 Sek = Algo-Decision",
+    why: "Beobachtung aus Agency-Praxis · von TikTok nicht offiziell dokumentiert",
   },
   {
     tone: "killer",
@@ -104,8 +104,8 @@ export const INSIDER_CARDS: InsiderCard[] = [
   },
   {
     tone: "topmove",
-    title: "61+ Minuten am Stueck",
-    body: "Gueltiger LIVE-Tag braucht 25 Min. Aber Algo-Sweet-Spot ist 61+ Min ohne Stop.",
+    title: "Lang am Stueck statt Stop+Restart",
+    body: "Offiziell: ab 25 Min real-time zaehlt der LIVE-Tag fuer Boni. Erfahrungswert: durchgaengige 60-90 Min performen meist besser als mehrere kurze Streams — TikTok bestaetigt das nicht offiziell.",
   },
   {
     tone: "topmove",
@@ -137,7 +137,7 @@ export const INSIDER_CARDS: InsiderCard[] = [
   {
     tone: "tip",
     title: "Stories als LIVE-Ankuendigung",
-    body: "30 Min vor LIVE-Start eine Story posten = doppelte Klickrate beim Stream-Start.",
+    body: "Erfahrungswert: 30 Min vor LIVE-Start eine Story posten hebt die Start-Klickrate spuerbar. Keine offizielle TikTok-Zahl.",
   },
 ];
 

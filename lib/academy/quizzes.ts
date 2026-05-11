@@ -57,15 +57,15 @@ export const QUIZZES: Quiz[] = [
         explanation: "Ab 50 stabilen Zuschauern wird Mod-Pflicht — Spam + Hate brauchen sofortige Reaktion.",
       },
       {
-        q: "Soft-Shadowban — wie lange dauert es?",
+        q: "Wie lange dauert ein Soft-Reach-Limit typischerweise?",
         options: [
-          "1 Stunde",
-          "24-72h",
-          "Min. 30 Tage",
-          "Permanent",
+          "Genau 24h (TikTok-Doku)",
+          "1-3 Tage · Erfahrungswert · TikTok bestaetigt es nicht offiziell",
+          "Genau 30 Tage",
+          "Nicht klar definiert",
         ],
         correct: 1,
-        explanation: "Soft-Limit ist meist 24-72h. Wenn ignoriert, kann es zu Hard-Limit eskalieren.",
+        explanation: "TikTok dokumentiert das nicht offiziell. Aus Agency-Praxis: meist 1-3 Tage. Wer Hard-Strike riskiert, sollte Account Status im Creator Center pruefen — das ist die offizielle Sicht.",
       },
       {
         q: "Erster Schritt bei Sperre-Verdacht?",
@@ -476,7 +476,7 @@ export const QUIZZES: Quiz[] = [
           "Drei sind besser fuer Algo",
         ],
         correct: 1,
-        explanation: "Stop + Restart = Algo-Reset. Lange Streams haben akkumulierte Watchtime + besseren Algo-Score. 61+ Min ist sweet spot.",
+        explanation: "Offiziell zaehlt ein Stream ab 25 Min real-time fuer Boni (Creator-Center). Erfahrungswert aus Agency-Praxis: durchgaengige 60-90 Min performen meist besser als mehrere kurze Stream-Stuecke. TikTok bestaetigt das aber nicht offiziell.",
       },
       {
         q: "Was ist die wichtigste Wochen-Mission fuer kleine Streamer?",

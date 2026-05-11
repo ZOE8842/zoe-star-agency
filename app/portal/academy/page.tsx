@@ -81,11 +81,23 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
         <h1 className="font-display italic text-cream text-4xl md:text-5xl leading-[1.05] tracking-[-0.02em] mb-4">
           Alles was du fuer <span className="text-champagne">starkes LIVE</span> wissen musst.
         </h1>
-        <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-8 max-w-2xl">
+        <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
           Praktisches Wissen aus Backstage-Schulungen, dem TikTok LIVE
           Deutschland-Account und ZOE-Standards. Quiz dich durch + sammle
           deinen Fortschritt.
         </p>
+
+        {/* Quellen-Transparenz · ehrliche Kennzeichnung */}
+        <div className="mb-8 border-l border-champagne/30 pl-4 py-1 text-cream/55 text-xs md:text-sm leading-relaxed max-w-2xl">
+          <p>
+            <span className="text-champagne font-medium">Quellen-Hinweis:</span>{" "}
+            Wir trennen klar zwischen offiziellen TikTok-Angaben (z.B.
+            25-Min-LIVE-Tag fuer Boni) und Agency-Erfahrungswerten
+            (z.B. typische Stream-Laenge, Hook-Strategien). Erfahrungswerte
+            sind im Text als solche markiert — bitte nicht als TikTok-
+            Garantie verstehen.
+          </p>
+        </div>
 
         {/* Progress-Bar */}
         <div className="border border-champagne/15 p-4 md:p-5 mb-8">
