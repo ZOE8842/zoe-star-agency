@@ -5,6 +5,7 @@ import { PortalNav } from "@/components/PortalNav";
 import { AvatarStack } from "@/components/AvatarStack";
 import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock";
 import { FollowPromptCard } from "@/components/dashboard/FollowPromptCard";
+import { ShowcaseInterestBanner } from "@/components/dashboard/ShowcaseInterestBanner";
 // ZoeAppCodeBox bleibt im Repo (Component existiert), wird aber nicht mehr
 // im Dashboard gerendert. Backend-Routes /api/zoe-app/request-code +
 // zoe_app_connection_codes Tabelle bleiben als Legacy-Bridge intern.
@@ -77,6 +78,22 @@ export default async function DashboardPage() {
   const recentMessages = recentMessagesRes.data ?? [];
   const nextEvent = nextEventRes.data;
   const latestPushStatus = activePushRes.data?.status as string | undefined;
+
+  // Interest-Status fuer Showcase + Kooperationen (Banner-Anzeige).
+  // Fallback: wenn Spalte noch nicht migriert ist, gilt 'pending' nur
+  // wenn auch allow_*=false ist (sonst implizit accepted).
+  const p = profile as typeof profile & {
+    showcase_interest_status?: string | null;
+    cooperation_interest_status?: string | null;
+    allow_website_showcase?: boolean | null;
+    allow_partner_cooperations?: boolean | null;
+  };
+  const showcaseStatus = p.showcase_interest_status
+    ?? (p.allow_website_showcase ? "accepted" : "pending");
+  const coopStatus = p.cooperation_interest_status
+    ?? (p.allow_partner_cooperations ? "accepted" : "pending");
+  const showcasePending = showcaseStatus === "pending";
+  const coopPending = coopStatus === "pending";
 
   // Setup-Progress (5 Schritte)
   const profileComplete = !!(profile.display_name && profile.tiktok_username && profile.country && profile.language);
@@ -194,6 +211,14 @@ export default async function DashboardPage() {
             </div>
           </div>
         </section>
+
+        {/* SHOWCASE-INTEREST · Banner-Card · zeigt wenn Showcase oder
+            Kooperationen noch ungeklaert sind. Verschwindet bei accepted
+            oder declined dauerhaft. */}
+        <ShowcaseInterestBanner
+          showcasePending={showcasePending}
+          coopPending={coopPending}
+        />
 
         {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
         <MonthlyMetricsBlock supabase={supabase} profileId={profile.id} />

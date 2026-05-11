@@ -4,6 +4,7 @@ import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { UserActions } from "./UserActions";
 import { CreatorNotes } from "./CreatorNotes";
+import { InterestPanel } from "./InterestPanel";
 
 export default async function CreatorDetailPage({
   params,
@@ -183,9 +184,25 @@ export default async function CreatorDetailPage({
           </section>
         )}
 
+        {/* Sichtbarkeit · Showcase + Kooperationen */}
+        {admin.role === "admin" && (
+          <section className="border-t border-cream/[0.05] pt-12 mt-16">
+            <p className="eyebrow mb-8">Sichtbarkeit</p>
+            <InterestPanel
+              userId={user.id}
+              showcaseStatus={(user.showcase_interest_status as "pending" | "accepted" | "declined") ?? (user.allow_website_showcase ? "accepted" : "pending")}
+              showcaseDecidedAt={user.showcase_interest_decided_at ?? null}
+              showcaseNote={user.showcase_interest_note ?? null}
+              coopStatus={(user.cooperation_interest_status as "pending" | "accepted" | "declined") ?? (user.allow_partner_cooperations ? "accepted" : "pending")}
+              coopDecidedAt={user.cooperation_interest_decided_at ?? null}
+              coopNote={user.cooperation_interest_note ?? null}
+            />
+          </section>
+        )}
+
         {/* Aktionen — Admin-only */}
         {admin.role === "admin" && (
-          <section className="border-t border-cream/[0.05] pt-12">
+          <section className="border-t border-cream/[0.05] pt-12 mt-16">
             <p className="eyebrow mb-8">Aktionen</p>
             <UserActions
               userId={user.id}

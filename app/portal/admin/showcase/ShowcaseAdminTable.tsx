@@ -8,6 +8,7 @@ import {
   deleteShowcaseAdmin,
   updateSortOrder,
 } from "./actions";
+import { ShowcaseEditModal, type EditRowData } from "./ShowcaseEditModal";
 
 interface Row {
   id: string;
@@ -24,6 +25,12 @@ interface Row {
   created_at: string;
   updated_at: string | null;
   approved_at: string | null;
+  // Edit-Felder · optional fuer Backwards-Compat wenn Migration 0027 noch nicht durch
+  brand_safe?: boolean | null;
+  public_note?: string | null;
+  bio?: string | null;
+  region?: string | null;
+  language?: string | null;
 }
 
 function countImages(r: Row): number {
@@ -34,6 +41,7 @@ function countImages(r: Row): number {
 export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [editRow, setEditRow] = useState<EditRowData | null>(null);
 
   function run(fn: () => Promise<{ ok: boolean; error?: string }>) {
     setError(null);
@@ -43,8 +51,24 @@ export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
     });
   }
 
+  function openEdit(r: Row) {
+    setEditRow({
+      id: r.id,
+      display_name: r.display_name,
+      category: r.category ?? null,
+      bio: r.bio ?? null,
+      region: r.region ?? null,
+      language: r.language ?? null,
+      instagram_url: r.instagram_url ?? null,
+      tiktok_url: r.tiktok_url ?? null,
+      brand_safe: !!r.brand_safe,
+      public_note: r.public_note ?? null,
+    });
+  }
+
   return (
     <div>
+      {editRow && <ShowcaseEditModal row={editRow} onClose={() => setEditRow(null)} />}
       {error && <div className="border border-red-500/40 bg-red-500/10 px-4 py-2 text-red-300 text-sm mb-4">{error}</div>}
       <div className="grid gap-3">
         {rows.map((r) => (
@@ -146,6 +170,14 @@ export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
                   </button>
                 </>
               )}
+
+              <button
+                onClick={() => openEdit(r)}
+                disabled={isPending}
+                className="px-3 py-1.5 border border-cream/20 text-cream/65 hover:text-champagne hover:border-champagne/40 text-[10px] uppercase tracking-[0.25em] disabled:opacity-50"
+              >
+                Edit
+              </button>
 
               <button
                 onClick={() => {

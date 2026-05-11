@@ -33,6 +33,8 @@ const LABEL_BY_HINT: Record<string, string> = {
   moderation: "Moderation",
   funktionen: "Funktionen",
   enigma: "Enigma",
+  schatz: "Schatztruhe",
+  portal: "Portal",
 };
 
 export function UebersichtSection() {

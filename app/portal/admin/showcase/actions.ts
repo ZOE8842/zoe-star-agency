@@ -135,6 +135,104 @@ export async function updateSortOrder(id: string, sort_order: number): Promise<{
   }
 }
 
+export interface ShowcaseAdminUpdate {
+  category?: string | null;
+  brand_safe?: boolean;
+  public_note?: string | null;
+  tiktok_url?: string | null;
+  instagram_url?: string | null;
+  // profiles-Felder (separater Update-Pfad):
+  bio?: string | null;
+  region?: string | null;
+  language?: string | null;
+}
+
+// Server-Side Validation · Browser-Validation ist keine Sicherheits-Grenze.
+const ALLOWED_CATEGORIES = new Set([
+  "Lifestyle", "Beauty", "Fashion", "Familie",
+  "Gaming", "Comedy", "Talk", "Musik", "Motivation", "Sonstiges",
+]);
+const ALLOWED_REGIONS = new Set(["DE", "AT", "CH", "LI", "EU", "OTHER"]);
+const ALLOWED_LANGUAGES = new Set(["de", "en", "tr", "fr", "ar"]);
+
+function cleanHttpsUrl(v: string | null | undefined, hostSuffix: string): string | null {
+  if (!v || typeof v !== "string") return null;
+  const trimmed = v.trim();
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "https:") return null;
+    if (!url.hostname.endsWith(hostSuffix)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function clip(v: string | null | undefined, max: number): string | null {
+  if (!v || typeof v !== "string") return null;
+  const t = v.trim();
+  return t ? t.slice(0, max) : null;
+}
+
+export async function updateShowcaseAdmin(
+  id: string,
+  patch: ShowcaseAdminUpdate,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const { supabase } = await requireAdminClient();
+
+    // showcase_creators-Felder · validiert
+    const scPatch: Record<string, unknown> = {};
+    if (patch.category !== undefined) {
+      scPatch.category = patch.category && ALLOWED_CATEGORIES.has(patch.category) ? patch.category : null;
+    }
+    if (patch.brand_safe !== undefined) scPatch.brand_safe = !!patch.brand_safe;
+    if (patch.public_note !== undefined) scPatch.public_note = clip(patch.public_note, 500);
+    if (patch.tiktok_url !== undefined) scPatch.tiktok_url = cleanHttpsUrl(patch.tiktok_url, "tiktok.com");
+    if (patch.instagram_url !== undefined) scPatch.instagram_url = cleanHttpsUrl(patch.instagram_url, "instagram.com");
+
+    if (Object.keys(scPatch).length > 0) {
+      const { error } = await supabase
+        .from("showcase_creators")
+        .update(scPatch)
+        .eq("id", id);
+      if (error) return { ok: false, error: `showcase: ${error.message}` };
+    }
+
+    // profiles-Felder ueber profile_id · validiert
+    const profPatch: Record<string, unknown> = {};
+    if (patch.bio !== undefined) profPatch.bio = clip(patch.bio, 240);
+    if (patch.region !== undefined) {
+      profPatch.region = patch.region && ALLOWED_REGIONS.has(patch.region) ? patch.region : null;
+    }
+    if (patch.language !== undefined) {
+      profPatch.language = patch.language && ALLOWED_LANGUAGES.has(patch.language) ? patch.language : null;
+    }
+
+    if (Object.keys(profPatch).length > 0) {
+      const { data: row } = await supabase
+        .from("showcase_creators")
+        .select("profile_id")
+        .eq("id", id)
+        .single();
+      if (row?.profile_id) {
+        const { error } = await supabase
+          .from("profiles")
+          .update(profPatch)
+          .eq("id", row.profile_id);
+        if (error) return { ok: false, error: `profile: ${error.message}` };
+      }
+    }
+
+    revalidatePath("/portal/admin/showcase");
+    revalidatePath("/");
+    return { ok: true };
+  } catch (err: unknown) {
+    return { ok: false, error: err instanceof Error ? err.message : "Fehler." };
+  }
+}
+
 export async function deleteShowcaseAdmin(id: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const { supabase } = await requireAdminClient();

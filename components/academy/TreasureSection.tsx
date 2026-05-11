@@ -1,127 +1,87 @@
-// Schatztruhe-Section · TikTok LIVE Wissens-Modul
-// Inhalte: Mechanik + Strategie + typische Fehler + FAQ
-// Mobile-first, dunkler Premium-Style, klare Trennung
-// TikTok-Fakt vs Agency-Erfahrungswert.
+// Schatztruhe-Section · TikTok LIVE
+// Briefing-konforme harte Fakten · keine Vermischung mit Portal.
 
-interface MechanicCard {
+interface FactCard {
   icon: string;
   title: string;
   body: string;
   badge?: string;
 }
 
-const MECHANICS: MechanicCard[] = [
+const TYPES: FactCard[] = [
   {
-    icon: "⏱️",
-    title: "Timer-System",
-    body: "Die Schatztruhe laeuft mit einem Countdown. Solange der laeuft, sammeln Zuschauer durch Interaktion Punkte und Drops.",
-    badge: "Mechanik",
+    icon: "📦",
+    title: "Standard-Schatztruhe",
+    body: "Vorgefertigtes TikTok-Format mit Standardwerten fuer Muenzen + Countdown.",
+    badge: "Default",
   },
   {
-    icon: "🎁",
-    title: "Drops",
-    body: "Waehrend des Timers koennen kleine Coin-Belohnungen oder virtuelle Geschenke automatisch ausgespielt werden. Zuschauer fuehlen sich belohnt fuer's Dabeibleiben.",
-    badge: "Belohnung",
+    icon: "🛠️",
+    title: "Individuelle Schatztruhe",
+    body: "Du legst Mindestmuenzen, Countdown und Auftritt selbst fest — innerhalb der TikTok-Limits.",
+    badge: "Custom",
+  },
+];
+
+const RULES: FactCard[] = [
+  {
+    icon: "⏱️",
+    title: "Countdown 1-5 Minuten",
+    body: "Du waehlst die Laufzeit zwischen 1 und 5 Minuten. Danach geht die Truhe in den Sammel-Modus.",
+    badge: "1-5 min",
   },
   {
     icon: "🪙",
-    title: "Coins / Rewards",
-    body: "Die Belohnungen sind virtuell und an das TikTok-Coin-System gekoppelt. Sie ersetzen keine Auszahlung — sie binden Aufmerksamkeit.",
-    badge: "Coin-Layer",
+    title: "Max. 10.000 Muenzen pro Truhe",
+    body: "Eine einzelne Schatztruhe kann mit hoechstens 10.000 Muenzen gefuellt werden.",
+    badge: "≤ 10.000",
   },
   {
-    icon: "👀",
-    title: "Watchtime-Boost",
-    body: "Wer mitmacht, bleibt waehrend des Countdowns aktiv im LIVE. Das druckt direkt deine Watchtime + Average-Viewer-Duration hoch.",
-    badge: "Erfahrungswert",
+    icon: "📅",
+    title: "Max. 20.000 Muenzen pro Tag",
+    body: "Tageslimit fuer Schatztruhen-Befuellung pro Account · ueber alle Truhen hinweg.",
+    badge: "≤ 20.000/d",
   },
   {
-    icon: "💬",
-    title: "Engagement-System",
-    body: "Zuschauer interagieren waehrend der Truhe (Kommentar, Tap, Aktion). Engagement-Rate steigt – Algorithmus liest das als 'starker LIVE'.",
-    badge: "Erfahrungswert",
+    icon: "🕙",
+    title: "Truhe laeuft 10 Minuten",
+    body: "Sobald der Countdown abgelaufen ist, koennen Zuschauer 10 Minuten lang einsammeln.",
+    badge: "10 min Pool",
   },
   {
-    icon: "🚪",
-    title: "Teilnahmebedingungen",
-    body: "Feature variiert je nach Region, Account-Stufe und TikTok-Update. Falls bei dir nicht freigeschaltet: Backstage/Support kontaktieren.",
-    badge: "TikTok-abhaengig",
-  },
-];
-
-interface StrategyPoint {
-  title: string;
-  body: string;
-}
-
-const STRATEGY: StrategyPoint[] = [
-  {
-    title: "Truhe gegen Stream-Drops setzen",
-    body: "Wenn Watchtime im Mittelteil abflacht, hilft eine Truhe sofort. Ankuendigung 30-60 Sek vorher, dann starten — bringt Lurker zurueck in Aktion.",
+    icon: "↩️",
+    title: "Rueckerstattung",
+    body: "Muenzen die nicht innerhalb der 10 Minuten eingesammelt werden, gehen automatisch an den Sender zurueck.",
+    badge: "Refund",
   },
   {
-    title: "Ankuendigen statt ueberraschen",
-    body: "Sag im Voraus 'in 5 Minuten Truhe' — gibt Zuschauern einen Grund zu bleiben. Ueberraschungs-Truhe verschenkt diesen Effekt.",
-  },
-  {
-    title: "Mit Battle/Match kombinieren",
-    body: "Truhe waehrend Match-Pause = Zuschauer bleiben, statt zu zappen. Sehr effektiv im Match-Cool-down.",
-  },
-  {
-    title: "Mods aktivieren",
-    body: "Mods sollen Truhe ankuendigen, Stamm-Zuschauer ranholen, neue User abholen. Ohne Mods bleibt Effekt unter Potential.",
+    icon: "📜",
+    title: "Chronologische Anzeige",
+    body: "Alle Truhen-Aktionen + Sammlungen werden in einem Protokoll zeitlich nachvollziehbar gefuehrt.",
+    badge: "Verlauf",
   },
 ];
 
-interface Mistake {
-  title: string;
-  body: string;
-}
-
-const MISTAKES: Mistake[] = [
+const FAQ: { q: string; a: string }[] = [
   {
-    title: "Zu frueh starten",
-    body: "Truhe in Min. 1-3 verpufft. Erst stabilisieren (Begruessungen, Rhythmus), dann Truhe als Push-Move.",
+    q: "Wer kann eine Schatztruhe befuellen?",
+    a: "Zuschauer mit Muenzguthaben. Die Truhe wird gemeinsam mit anderen Sammlern aufgemacht.",
   },
   {
-    title: "Zu oft hintereinander",
-    body: "Mehrere Truhen in kurzer Folge wirken billig. Sparen, dann gezielt einsetzen.",
+    q: "Was sind 'Sammler'?",
+    a: "Zuschauer im LIVE die nach Ablauf des Countdowns einen Anteil aus der Truhe ziehen koennen — je nach Aktivitaet und Zufallsverteilung.",
   },
   {
-    title: "Stumm waehrend Countdown",
-    body: "Truhe laeuft, du redest nicht — Zuschauer dropen. Waehrend des Timers staendig kommentieren, ueber Drops reagieren, Stimmung halten.",
+    q: "Was passiert wenn keiner sammelt?",
+    a: "Nicht eingesammelte Muenzen werden nach 10 Minuten an den urspruenglichen Sender zurueckerstattet.",
   },
   {
-    title: "Kein Follow-up nach Truhe",
-    body: "Truhe endet, Stille kommt. Direkt Anschluss-Thema vorbereitet haben, sonst killt der Drop deinen Reach.",
-  },
-];
-
-interface FaqItem {
-  q: string;
-  a: string;
-}
-
-const FAQ: FaqItem[] = [
-  {
-    q: "Kostet das mich als Creator etwas?",
-    a: "Nein. Die Truhe ist ein TikTok-Mechanik, die Drops kommen aus TikTok's System, nicht aus deinem Konto.",
+    q: "Kann ich pro Stream mehrere Truhen starten?",
+    a: "Ja — solange das Tageslimit von 20.000 Muenzen Befuellung gesamt nicht ueberschritten wird.",
   },
   {
-    q: "Wie oft pro Stream sinnvoll?",
-    a: "Erfahrung: 1-3 mal pro 60-90-Min-Stream. Sparen, dann gezielt setzen — nicht durchballern.",
-  },
-  {
-    q: "Wann ist der beste Moment?",
-    a: "Wenn die Live-Viewer-Linie abflacht. Truhe pushed sie wieder hoch — und bringt sie tendenziell drueber, wenn Engagement passt.",
-  },
-  {
-    q: "Was wenn meine Truhe nicht freigeschaltet ist?",
-    a: "Feature haengt an TikTok-Region + Account-Status. Sprich Backstage/Support an, wenn du sie nicht siehst.",
-  },
-  {
-    q: "Truhe oder Geschenk-Push: was bringt mehr?",
-    a: "Beides erfuellt unterschiedliche Funktionen. Truhe = Watchtime + Engagement. Geschenk-Push = Diamonds. Kombination ist staerker als Einzeleinsatz.",
+    q: "Wo sehe ich meinen Truhen-Verlauf?",
+    a: "Im LIVE-Center → Schatztruhen-Protokoll · chronologische Auflistung aller Aktionen.",
   },
 ];
 
@@ -137,112 +97,45 @@ export function TreasureSection() {
           <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-tight mb-3">
             Die <span className="text-champagne">Schatztruhe</span>.
           </h2>
-          <p className="text-cream/70 text-base md:text-lg leading-relaxed max-w-2xl mb-4">
-            Ein Interaktions-Tool im LIVE, das Watchtime + Zuschauerbindung
-            spuerbar pusht — wenn du es zur richtigen Zeit einsetzt.
+          <p className="text-cream/70 text-base md:text-lg leading-relaxed max-w-2xl">
+            Interaktives LIVE-Tool: Zuschauer befuellen eine Truhe mit Muenzen,
+            nach Countdown laeuft 10 Minuten Sammelzeit · nicht eingesammelte
+            Muenzen gehen zurueck.
           </p>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-champagne/40 bg-champagne/5">
-            <span className="text-champagne text-[10px] uppercase tracking-[0.25em]">
-              Effekt
-            </span>
-            <span className="text-cream/85 text-sm">
-              Watchtime + Engagement steigen massiv
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* MINI-FLOW · So funktioniert es */}
+      {/* TYPEN */}
       <div>
-        <p className="eyebrow mb-4">So funktioniert es</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-          <FlowStep
-            n={1}
-            title="Truhe starten"
-            body="Du triggerst die Schatztruhe ueber das LIVE-Menue. Countdown beginnt."
-          />
-          <FlowStep
-            n={2}
-            title="Interagieren lassen"
-            body="Zuschauer tippen/kommentieren waehrend des Timers. Drops werden ausgespielt."
-          />
-          <FlowStep
-            n={3}
-            title="Effekt einsacken"
-            body="Watchtime + Engagement steigen. Du schliesst mit einem klaren Anschluss-Thema."
-          />
-        </div>
-      </div>
-
-      {/* MECHANIK-KARTEN */}
-      <div>
-        <p className="eyebrow mb-4">Wie sie wirklich funktioniert</p>
+        <p className="eyebrow mb-4">Zwei Schatztruhen-Typen</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          {MECHANICS.map((m) => (
-            <article
-              key={m.title}
-              className="border border-champagne/20 hover:border-champagne/40 transition-colors p-5 flex flex-col"
-            >
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <span className="text-3xl leading-none">{m.icon}</span>
-                {m.badge && (
-                  <span className="shrink-0 px-2 py-0.5 text-[9px] uppercase tracking-[0.22em] border border-champagne/30 text-champagne/80">
-                    {m.badge}
-                  </span>
-                )}
-              </div>
-              <h3 className="font-display italic text-cream text-lg leading-tight mb-2">
-                {m.title}
-              </h3>
-              <p className="text-cream/65 text-sm leading-relaxed">{m.body}</p>
-            </article>
+          {TYPES.map((t) => (
+            <Card key={t.title} f={t} />
           ))}
         </div>
       </div>
 
-      {/* STRATEGIE */}
-      <div className="border-l-2 border-champagne pl-5 md:pl-6">
-        <p className="eyebrow mb-4 text-champagne">Strategie · richtig einsetzen</p>
-        <div className="space-y-4">
-          {STRATEGY.map((s) => (
-            <div key={s.title}>
-              <p className="text-cream font-medium text-base mb-1">{s.title}</p>
-              <p className="text-cream/65 text-sm leading-relaxed">{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* FEHLER */}
+      {/* REGELN · HARTE LIMITS */}
       <div>
-        <p className="eyebrow mb-4 text-red-400/90">Fehler die Creator machen</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {MISTAKES.map((m) => (
-            <article
-              key={m.title}
-              className="border border-red-400/30 bg-red-400/5 p-5"
-            >
-              <p className="text-cream font-medium text-base mb-1.5">
-                {m.title}
-              </p>
-              <p className="text-cream/70 text-sm leading-relaxed">{m.body}</p>
-            </article>
+        <p className="eyebrow mb-4">Harte Regeln</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          {RULES.map((r) => (
+            <Card key={r.title} f={r} />
           ))}
         </div>
       </div>
 
-      {/* WARUM TIKTOK */}
-      <div className="border border-champagne/15 p-5 md:p-6 bg-champagne/[0.02]">
-        <p className="eyebrow mb-3">Warum TikTok das nutzt</p>
-        <p className="text-cream/70 text-sm md:text-base leading-relaxed mb-2">
-          Schatztruhen halten Zuschauer im LIVE — ohne dass die Plattform
-          eigene Coins ausgeben muss. Hohe Watchtime = mehr Werbe-Inventar
-          = mehr Umsatz. Fuer dich heisst es: ein Tool, das deinen Algorithmus-
-          Score direkt aufwertet.
-        </p>
-        <p className="text-cream/45 text-xs italic">
-          Erfahrungswert aus Agency-Praxis · keine offizielle TikTok-Aussage.
-        </p>
+      {/* SCHNELL-REFERENZ · KOMPAKT */}
+      <div className="border-l-2 border-champagne pl-5 md:pl-6">
+        <p className="eyebrow mb-4 text-champagne">Schnell-Referenz</p>
+        <ul className="space-y-1.5 text-cream/75 text-sm md:text-base">
+          <li>Countdown: <span className="text-champagne">1-5 Minuten</span></li>
+          <li>Befuellung pro Truhe: <span className="text-champagne">max 10.000 Muenzen</span></li>
+          <li>Befuellung pro Tag: <span className="text-champagne">max 20.000 Muenzen</span></li>
+          <li>Sammel-Phase: <span className="text-champagne">10 Minuten</span></li>
+          <li>Rueckerstattung: <span className="text-champagne">automatisch fuer nicht eingesammelte Muenzen</span></li>
+          <li>Verlauf: <span className="text-champagne">chronologisch im LIVE-Protokoll</span></li>
+        </ul>
       </div>
 
       {/* FAQ */}
@@ -250,17 +143,10 @@ export function TreasureSection() {
         <p className="eyebrow mb-4">FAQ</p>
         <div className="space-y-2">
           {FAQ.map((f, i) => (
-            <details
-              key={i}
-              className="group border border-champagne/15 hover:border-champagne/30 transition-colors"
-            >
+            <details key={i} className="group border border-champagne/15 hover:border-champagne/30 transition-colors">
               <summary className="cursor-pointer list-none p-4 md:p-5 flex items-start gap-3">
-                <span className="text-champagne font-display italic text-lg leading-none mt-0.5">
-                  +
-                </span>
-                <span className="flex-1 text-cream text-sm md:text-base">
-                  {f.q}
-                </span>
+                <span className="text-champagne font-display italic text-lg leading-none mt-0.5">+</span>
+                <span className="flex-1 text-cream text-sm md:text-base">{f.q}</span>
               </summary>
               <div className="px-4 md:px-5 pb-4 md:pb-5 pt-0 -mt-1 ml-7 md:ml-8">
                 <p className="text-cream/65 text-sm leading-relaxed">{f.a}</p>
@@ -270,27 +156,29 @@ export function TreasureSection() {
         </div>
       </div>
 
-      {/* DISCLAIMER FOOTER */}
       <div className="border-t border-champagne/10 pt-5">
         <p className="text-cream/40 text-xs leading-relaxed">
-          Sicheres Faktum: das Feature existiert in TikTok LIVE und triggert
-          Zuschauer-Interaktion + Drops. Alles zur Frequenz, Timing-Wirkung,
-          Algorithmus-Hebel: ZOE-Erfahrungswerte aus echten Streams. TikTok
-          kommuniziert die Detail-Mechanik nicht offiziell.
+          Limits, Refund-Logik und 10-Minuten-Sammelphase sind TikTok-Mechanik · Werte
+          koennen je nach Region und Update variieren.
         </p>
       </div>
     </section>
   );
 }
 
-function FlowStep({ n, title, body }: { n: number; title: string; body: string }) {
+function Card({ f }: { f: FactCard }) {
   return (
-    <article className="border border-champagne/20 p-5 relative">
-      <div className="absolute -top-3 left-4 px-2 py-0.5 bg-ink border border-champagne text-champagne font-display italic text-sm">
-        Schritt {n}
+    <article className="border border-champagne/20 hover:border-champagne/40 transition-colors p-5">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <span className="text-3xl leading-none">{f.icon}</span>
+        {f.badge && (
+          <span className="shrink-0 px-2 py-0.5 text-[9px] uppercase tracking-[0.22em] border border-champagne/30 text-champagne/80">
+            {f.badge}
+          </span>
+        )}
       </div>
-      <p className="text-cream font-medium text-base mt-3 mb-2">{title}</p>
-      <p className="text-cream/60 text-sm leading-relaxed">{body}</p>
+      <h3 className="font-display italic text-cream text-lg leading-tight mb-2">{f.title}</h3>
+      <p className="text-cream/65 text-sm leading-relaxed">{f.body}</p>
     </article>
   );
 }

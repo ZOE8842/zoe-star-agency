@@ -3,6 +3,7 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { GIFTS, type Gift } from "@/lib/academy/data";
 import { TreasureSection } from "@/components/academy/TreasureSection";
+import { PortalSection } from "@/components/academy/PortalSection";
 import { GiftFaqSection } from "@/components/academy/GiftFaqSection";
 import { EnigmaSection } from "@/components/academy/EnigmaSection";
 import { FunktionenSection } from "@/components/academy/FunktionenSection";
@@ -30,6 +31,7 @@ interface TabDef {
 // selbst gerendert wird. Default-Header wird dann unterdrueckt.
 const CUSTOM_RENDER_TABS = new Set<string>([
   "schatz",
+  "portal",
   "faq",
   "enigma",
   "funktionen",
@@ -68,7 +70,7 @@ const TABS: TabDef[] = [
   },
   { id: "event",      label: "Event Geschenke",     short: "Event",     stub: "soon" },
   { id: "schatz",     label: "Schatztruhe",         short: "Schatz" },
-  { id: "portal",     label: "Portal",              short: "Portal",    stub: "in-arbeit" },
+  { id: "portal",     label: "Portal",              short: "Portal" },
   { id: "coins",      label: "Coin-System",         short: "Coins",     stub: "soon" },
   { id: "enigma",     label: "Enigma",              short: "Enigma" },
   { id: "funktionen", label: "Funktionen",          short: "Funktionen" },
@@ -188,6 +190,8 @@ export default async function AcademyGiftsPage({ searchParams }: PageProps) {
 
           {tab.id === "schatz" ? (
             <TreasureSection />
+          ) : tab.id === "portal" ? (
+            <PortalSection />
           ) : tab.id === "faq" ? (
             <GiftFaqSection />
           ) : tab.id === "enigma" ? (
