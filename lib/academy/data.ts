@@ -23,11 +23,12 @@ export interface Category {
 
 export interface Gift {
   slug: string;
-  name: string;
-  diamonds: number;
+  name_de: string;
   coins: number;
-  description: string;
-  use_case: string;
+  category: "standard" | "team" | "exclusive";
+  exclusive: boolean;
+  required_level?: number;
+  whale?: boolean;
 }
 
 // ============================================================
@@ -615,23 +616,239 @@ export const CATEGORIES: Category[] = [
 //  TIKTOK GESCHENKE
 // ============================================================
 
+// Master-Liste (Stand 2026-05-11) · 143 Standard + 11 Team + 10 Exclusive.
+// Whale-Gifts: speziell markiert fuer optische Hervorhebung im Frontend.
+// Slugs werden deterministisch aus name_de generiert (Umlaut-safe).
+
+const _slug = (n: string): string =>
+  n
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[éèê]/g, "e")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const _WHALES = new Set<string>([
+  "Pegasus",
+  "Feuerphönix",
+  "Donnerfalke",
+  "TikTok Stars",
+  "TikTok Universe+",
+  "Wächter-Nashorn",
+  "Sam, der Wal",
+  "Zeus",
+]);
+
+const _STANDARD: ReadonlyArray<readonly [string, number]> = [
+  ["Fingerherz", 5],
+  ["Flamingo-Schwimmtier", 999],
+  ["3. Jahrestag", 12000],
+  ["Partybus", 2999],
+  ["Piratenschatz", 449],
+  ["Stubenhocker", 500],
+  ["Zeus", 34000],
+  ["Leon und Lili", 9699],
+  ["Du bist fantastisch", 500],
+  ["Future Encounter", 1500],
+  ["Surfender Pinguin", 499],
+  ["Party On&On", 15000],
+  ["Sende Positivität", 199],
+  ["Alle zusammen", 500],
+  ["Abendlichtfahrt", 10000],
+  ["Prinz", 500],
+  ["Herzgitarre", 500],
+  ["TikTok-Shuttle", 20000],
+  ["Geh aufs Ganze, Alpha Dr...", 7700],
+  ["Jollies Land der Herzen", 2199],
+  ["Gaming-Tastatur", 4000],
+  ["Zitronenliebe", 2199],
+  ["Ewige Rose", 399],
+  ["Schlagzeug", 1000],
+  ["Herztelefon", 299],
+  ["City Pop", 450],
+  ["Koffer", 199],
+  ["Rockys Schlag", 2199],
+  ["Cooper fliegt nach Hause", 1999],
+  ["Superstar", 12000],
+  ["Geldmagnet", 549],
+  ["Saxophon", 9000],
+  ["Schattengebundenen-Ab...", 1],
+  ["Diamanten Geschenk", 1500],
+  ["Achtung!", 1800],
+  ["Goldene Boxhandschuhe", 10],
+  ["Sam, der Wal", 30000],
+  ["Discokugel", 1000],
+  ["Eiswaffel", 1],
+  ["Weltraumkatze", 1500],
+  ["Taraxacum Corgi", 400],
+  ["Community-Unterstützung", 15000],
+  ["TikTok Stars", 39999],
+  ["Debüt als Rennfahrer*in", 1500],
+  ["Koralle", 499],
+  ["Bussi", 1],
+  ["Drache", 26999],
+  ["Kaktus-Shuffle", 399],
+  ["Lili, die Leopardin", 6599],
+  ["Ritter-Abzeichen", 1],
+  ["Auf dem Wasser treibend...", 1500],
+  ["Bruderherz", 100],
+  ["Pim Bär", 1500],
+  ["Cabrio", 12000],
+  ["Singender Bär", 399],
+  ["Wächter-Nashorn", 30999],
+  ["Grußkarte", 1500],
+  ["Krasses Mikrofon", 1500],
+  ["Kartoffel isst Spaghetti", 1500],
+  ["Küss dein Herz", 99],
+  ["Jollie, die Spaßbohne", 399],
+  ["Mittleres Fandom", 900],
+  ["Rosie, die Rosenbohne", 399],
+  ["Pyramiden", 15000],
+  ["Capybara", 30],
+  ["Exklusiver Spark", 1099],
+  ["Nächstes Level", 4099],
+  ["Boxhandschuhe", 299],
+  ["Parfüm", 20],
+  ["Muschelenergie", 100],
+  ["T-Rex", 25999],
+  ["Strandtag", 2999],
+  ["Familienzeit", 15000],
+  ["Raumschiff", 13999],
+  ["Auf Traumjagd", 1500],
+  ["Tofu", 5],
+  ["Sage, die smarte Bohne", 399],
+  ["Spark", 20000],
+  ["Verträumte Streichmusik", 249],
+  ["TikTok", 1],
+  ["Singendes Saxofon", 399],
+  ["Freizeitpark", 17000],
+  ["Rocky, die Rockbohne", 399],
+  ["Regenschirm", 150],
+  ["Zeichensprache der Liebe", 49],
+  ["Sommerpass XL", 13500],
+  ["Lupe", 10],
+  ["Spielkonsole", 15000],
+  ["S Blumen", 20],
+  ["Adams Traumwelt", 25999],
+  ["Unter Kontrolle", 1500],
+  ["Papierkranich", 99],
+  ["Flammenherz", 1],
+  ["Magier-Abzeichen", 1],
+  ["Mamma Mia", 1],
+  ["Kartoffel mit Eiswaffel", 10],
+  ["Slay", 1],
+  ["You are on a Roll", 30],
+  ["U make Miso happy!", 30],
+  ["Wassereis", 10],
+  ["Tom, die Tomate", 1],
+  ["Teamherz", 1],
+  ["Schokoladenkeks", 5],
+  ["Cool", 1],
+  ["Luftiges Herz", 1],
+  ["Zwinkern", 1],
+  ["Bravo!", 15],
+  ["Sommersonne", 20],
+  ["Freundschaftshalsband", 10],
+  ["Liebesschweinchen", 10],
+  ["Musik-Freund*in", 299],
+  ["GG", 1],
+  ["Tiny Diny", 10],
+  ["Fruchtfreunde", 299],
+  ["Regenbogen", 1],
+  ["Bagel", 35],
+  ["Dinosaurier-Fußabdruck", 1],
+  ["You are my Jam", 30],
+  ["DJ-Vinyl", 10],
+  ["Pfeife", 10],
+  ["Weiße Rose", 1],
+  ["Pfirsich", 5],
+  ["Zeitlupe", 10],
+  ["Super", 1],
+  ["Blitz", 1],
+  ["Volle Pulle", 1],
+  ["Lebkuchenherz", 1],
+  ["Steven Wingman", 1],
+  ["Überreagieren", 5],
+  ["Freestyle", 1],
+  ["Blauer Alien", 5],
+  ["Morgenblüte", 1],
+  ["Beschützerflügel", 1],
+  ["Namentliche Anerkennung", 5],
+  ["Alien Haustier", 1],
+  ["Daumen hoch", 2],
+  ["Goldener Spieler", 5],
+  ["Hallo Reisender", 5],
+  ["Pop", 1],
+  ["Basketball", 1],
+  ["Tortenstück", 1],
+  ["Reise-Pass", 10],
+  ["Oldies", 1],
+];
+
+const _TEAM: ReadonlyArray<readonly [string, number]> = [
+  ["Beliebt werden", 1],
+  ["Super beliebt", 9],
+  ["Funken zum Erreichen...", 99],
+  ["Grüßendes Herz", 99],
+  ["Erblühendes Herz", 299],
+  ["Blühendes Herz", 1599],
+  ["Hingebungsvolles Herz", 5999],
+  ["Kristallherz", 14999],
+  ["Fliegende Liebe", 19999],
+  ["Unendliches Herz", 23999],
+  ["Angesagte Person", 999],
+];
+
+// [name_de, coins, required_level?] · undefined = unbekanntes Level
+const _EXCLUSIVE: ReadonlyArray<readonly [string, number, number | undefined]> = [
+  ["Fabelhaftes Konfetti", 100, 10],
+  ["Juwelenpistole", 500, 15],
+  ["Leuchtender Heißluftballon", 1000, 20],
+  ["Privatjet", 4888, 25],
+  ["Premium-Shuttle", 20000, 30],
+  ["TikTok Universe+", 34999, 40],
+  ["Donnerfalke", 39999, 43],
+  ["Feuerphönix", 41999, 46],
+  ["Pegasus", 42999, 50],
+  ["Level-Raumschiff", 21000, undefined],
+];
+
 export const GIFTS: Gift[] = [
-  { slug: "rose", name: "Rose", diamonds: 1, coins: 1, description: "Kleinste Geste, perfekt zum Begruessen.", use_case: "Hi-Geschenk, kostet fast nichts" },
-  { slug: "tiktok", name: "TikTok-Logo", diamonds: 1, coins: 1, description: "Klassisches Mini-Gift.", use_case: "Begruessungsritual" },
-  { slug: "finger-heart", name: "Finger Heart", diamonds: 5, coins: 5, description: "Suess, gerne in Gruppen geschickt.", use_case: "Stamm-Stammgast-Gift" },
-  { slug: "ice-cream-cone", name: "Ice Cream Cone", diamonds: 1, coins: 1, description: "Beliebt in lockeren Streams.", use_case: "Casual" },
-  { slug: "perfume", name: "Perfume", diamonds: 20, coins: 20, description: "Mittlere Geste, sichtbar im Stream.", use_case: "Lob, Reaktion auf gute Stelle" },
-  { slug: "doughnut", name: "Doughnut", diamonds: 30, coins: 30, description: "Gut sichtbar, oft im Battle.", use_case: "Battle-Support" },
-  { slug: "paper-crane", name: "Paper Crane", diamonds: 99, coins: 99, description: "Schoene Animation, nicht zu gross.", use_case: "Mittlere Anerkennung" },
-  { slug: "rosa", name: "Rosa", diamonds: 100, coins: 100, description: "Wichtige Marke fuer 'mehr als nur kurz'.", use_case: "Stammgast-Loyalitaet" },
-  { slug: "hand-heart", name: "Hand Heart", diamonds: 100, coins: 100, description: "Cleanere Variante zur Rosa.", use_case: "Romantischer Stream" },
-  { slug: "corgi", name: "Corgi", diamonds: 299, coins: 299, description: "Beliebt im Gaming/Lifestyle.", use_case: "Persoenlicher Support" },
-  { slug: "swan", name: "Swan", diamonds: 699, coins: 699, description: "Show-Geschenk mit grosser Animation.", use_case: "Special-Moment, Gewinn" },
-  { slug: "rhythmic-rocking-horse", name: "Rocking Horse", diamonds: 1000, coins: 1000, description: "Erstes 4-stelliges Gift.", use_case: "Battle-Push, Highlight" },
-  { slug: "sports-car", name: "Sports Car", diamonds: 7000, coins: 7000, description: "Premium-Geste.", use_case: "Schwerer Battle-Push" },
-  { slug: "interstellar", name: "Interstellar", diamonds: 10000, coins: 10000, description: "Sehr sichtbarer Auftritt.", use_case: "Big-Match, VIP-Stamm" },
-  { slug: "tiktok-universe", name: "TikTok Universe", diamonds: 44999, coins: 44999, description: "Top-tier Gift, sehr selten.", use_case: "Mega-Battle, viraler Moment" },
-  { slug: "lion", name: "Lion", diamonds: 29999, coins: 29999, description: "Stark, mit Roar-Animation.", use_case: "Big-Match Climax" },
-  { slug: "yacht", name: "Yacht", diamonds: 25000, coins: 25000, description: "Premium, bringt grosse Animation.", use_case: "Special Event, VIP" },
-  { slug: "diamond-tree", name: "Diamond Tree", diamonds: 5000, coins: 5000, description: "Gerne zum Abschluss eines starken Streams.", use_case: "Stream-Klimax" },
+  ..._STANDARD.map(([name_de, coins]) => {
+    const g: Gift = {
+      slug: _slug(name_de),
+      name_de,
+      coins,
+      category: "standard",
+      exclusive: false,
+    };
+    if (_WHALES.has(name_de)) g.whale = true;
+    return g;
+  }),
+  ..._TEAM.map(([name_de, coins]) => {
+    const g: Gift = {
+      slug: _slug(name_de),
+      name_de,
+      coins,
+      category: "team",
+      exclusive: false,
+    };
+    if (_WHALES.has(name_de)) g.whale = true;
+    return g;
+  }),
+  ..._EXCLUSIVE.map(([name_de, coins, required_level]) => {
+    const g: Gift = {
+      slug: _slug(name_de),
+      name_de,
+      coins,
+      category: "exclusive",
+      exclusive: true,
+    };
+    if (required_level !== undefined) g.required_level = required_level;
+    if (_WHALES.has(name_de)) g.whale = true;
+    return g;
+  }),
 ];

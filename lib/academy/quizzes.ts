@@ -213,16 +213,16 @@ export const QUIZZES: Quiz[] = [
     intro: "5 Fragen ueber Gift-Werte. Schnell-Check fuer Stream-Praxis.",
     questions: [
       {
-        q: "Eine Rose hat wie viele Diamonds?",
+        q: "Wie viele Coins kostet ein Fingerherz?",
         options: ["1", "5", "10", "100"],
-        correct: 0,
-        explanation: "Rose = 1 Diamond. Minigeste.",
+        correct: 1,
+        explanation: "Fingerherz = 5 Coins. Klassische Mini-Geste.",
       },
       {
-        q: "Rocking Horse — wie hoch?",
+        q: "Schlagzeug — wie hoch?",
         options: ["100", "500", "1000", "5000"],
         correct: 2,
-        explanation: "Rocking Horse = 1000 Diamonds. Erstes 4-stelliges Gift.",
+        explanation: "Schlagzeug = 1000 Coins. Solider 4-stelliger Battle-Push.",
       },
       {
         q: "Was bekommst du vom Coin-Preis als Creator?",
@@ -236,10 +236,10 @@ export const QUIZZES: Quiz[] = [
         explanation: "TikTok behaelt grob 50%, du bekommst Diamonds.",
       },
       {
-        q: "TikTok Universe — was kostet das Zuschauer?",
-        options: ["999 Coins", "4999 Coins", "44999 Coins", "100000 Coins"],
+        q: "TikTok Universe+ — was kostet das Zuschauer?",
+        options: ["9999 Coins", "19999 Coins", "34999 Coins", "99999 Coins"],
         correct: 2,
-        explanation: "TikTok Universe = 44999 Coins. Top-Tier-Gift.",
+        explanation: "TikTok Universe+ = 34999 Coins · Exklusiv ab Schenke-Level 40.",
       },
       {
         q: "Wie sollst du Geschenke aktiv einfordern?",
