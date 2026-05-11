@@ -87,6 +87,16 @@ export async function upsertShowcase(input: ShowcaseInput): Promise<{ ok: boolea
       position: idx + 1,
     }));
 
+  // V2 · Pflicht-Check: Wenn Creator Showcase ODER Kooperationen
+  // aktiviert -> mind. 2 Bilder erforderlich.
+  const wantsAny = !!input.request_showcase || !!input.request_cooperations;
+  if (wantsAny && images.length < 2) {
+    return {
+      ok: false,
+      error: "Bitte lade 2 Bilder hoch, damit wir deinen Showcase + die Kooperations-Freigabe pruefen koennen.",
+    };
+  }
+
   const primaryImage = images[0]?.url ?? null;
 
   // 1) showcase_creators upsert

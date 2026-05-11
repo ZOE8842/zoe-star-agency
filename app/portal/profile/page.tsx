@@ -12,14 +12,21 @@ export default async function ProfilePage() {
   // Showcase-Status fuer prominente Card
   const { data: showcase } = await supabase
     .from("showcase_creators")
-    .select("id, is_approved, is_featured")
+    .select("id, is_approved, is_featured, showcase_images")
     .eq("profile_id", profile.id)
     .maybeSingle();
   const showcaseExists = !!showcase;
-  const showcaseLive = !!(showcase?.is_approved && showcase?.is_featured && profile.allow_website_showcase_confirmed);
+  const imageCount = Array.isArray(showcase?.showcase_images)
+    ? (showcase.showcase_images as Array<{ url?: string }>).filter((i) => i?.url).length
+    : 0;
+  const isShowcaseComplete = imageCount >= 2;
+  const showcaseLive = !!(showcase?.is_approved && showcase?.is_featured && profile.allow_website_showcase_confirmed && isShowcaseComplete);
   const showcasePending = showcaseExists && !showcaseLive;
   const coopActive = !!profile.allow_partner_cooperations;
   const coopConfirmed = !!profile.allow_partner_cooperations_confirmed;
+  // Pflicht-Hinweis: wenn Creator Showcase ODER Kooperation aktiv hat,
+  // aber Showcase-Bilder unvollstaendig sind → muss aktiv werden.
+  const incompleteWarning = (profile.allow_website_showcase || profile.allow_partner_cooperations) && !isShowcaseComplete;
 
   // Creator-ID aus uuid generiert, oeffentlich darstellbar (kein PII).
   const creatorId = "ZOE-" + (profile.id.replace(/-/g, "").slice(0, 8).toUpperCase());
@@ -43,6 +50,29 @@ export default async function ProfilePage() {
 
         <AvatarUploader currentUrl={profile.avatar_url} displayName={profile.display_name} />
 
+        {/* PFLICHT-HINWEIS: Showcase unvollstaendig */}
+        {incompleteWarning && (
+          <Link
+            href="/portal/profile/showcase"
+            className="block border border-champagne bg-champagne/10 hover:bg-champagne/15 transition-colors p-4 md:p-5 mb-4 group"
+          >
+            <div className="flex items-baseline justify-between gap-3 mb-2 flex-wrap">
+              <p className="font-display italic text-champagne text-lg md:text-xl">
+                Dein Showcase ist noch nicht vollstaendig.
+              </p>
+              <span className="text-champagne text-xl group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+            <p className="text-cream/70 text-sm leading-relaxed">
+              Bitte lade <span className="text-champagne font-medium">2 Bilder</span> hoch, damit wir
+              deine Showcase-/Kooperations-Freigabe pruefen koennen.
+              Aktuell: {imageCount} von 2 Bildern.
+            </p>
+            <p className="text-champagne text-[10px] uppercase tracking-[0.25em] mt-3">
+              Showcase vervollstaendigen
+            </p>
+          </Link>
+        )}
+
         {/* SHOWCASE + KOOPERATIONEN · prominent oben */}
         <Link
           href="/portal/profile/showcase"
@@ -61,10 +91,16 @@ export default async function ProfilePage() {
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`px-2.5 py-0.5 text-[10px] uppercase tracking-[0.25em] ${
               showcaseLive ? "bg-champagne text-ink"
+              : !isShowcaseComplete && showcaseExists ? "border border-red-400/40 text-red-300/85"
               : showcasePending ? "border border-champagne/40 text-champagne"
               : "border border-cream/20 text-cream/55"
             }`}>
-              Showcase · {showcaseLive ? "LIVE auf zoe-star.de" : showcasePending ? "Pending" : "noch nicht eingerichtet"}
+              Showcase · {
+                showcaseLive ? "LIVE auf zoe-star.de"
+                : !isShowcaseComplete && showcaseExists ? `Unvollstaendig (${imageCount}/2)`
+                : showcasePending ? "Pending Review"
+                : "noch nicht eingerichtet"
+              }
             </span>
             <span className={`px-2.5 py-0.5 text-[10px] uppercase tracking-[0.25em] ${
               coopConfirmed ? "bg-champagne text-ink"

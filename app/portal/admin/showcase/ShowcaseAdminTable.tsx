@@ -15,6 +15,7 @@ interface Row {
   display_name: string;
   category: string | null;
   showcase_image: string | null;
+  showcase_images?: Array<{ url?: string; position?: number }> | null;
   tiktok_url: string | null;
   instagram_url: string | null;
   is_approved: boolean;
@@ -23,6 +24,11 @@ interface Row {
   created_at: string;
   updated_at: string | null;
   approved_at: string | null;
+}
+
+function countImages(r: Row): number {
+  const arr = Array.isArray(r.showcase_images) ? r.showcase_images : [];
+  return arr.filter((i) => i?.url && /^https?:\/\//i.test(i.url)).length;
 }
 
 export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
@@ -58,7 +64,19 @@ export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
 
             {/* Info */}
             <div className="min-w-0">
-              <p className="font-display italic text-cream text-xl md:text-2xl leading-tight truncate">{r.display_name}</p>
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <p className="font-display italic text-cream text-xl md:text-2xl leading-tight truncate">{r.display_name}</p>
+                {countImages(r) < 2 && (
+                  <span className="shrink-0 px-2 py-0.5 text-[9px] uppercase tracking-[0.22em] border border-red-400/40 text-red-300/85">
+                    Unvollstaendig {countImages(r)}/2
+                  </span>
+                )}
+                {countImages(r) >= 2 && !r.is_approved && (
+                  <span className="shrink-0 px-2 py-0.5 text-[9px] uppercase tracking-[0.22em] border border-champagne/40 text-champagne">
+                    Bereit zur Pruefung
+                  </span>
+                )}
+              </div>
               {r.category && <p className="text-cream/55 text-[11px] uppercase tracking-[0.25em] mt-1">{r.category}</p>}
               <div className="flex flex-wrap gap-2 mt-2 text-[11px]">
                 {r.tiktok_url && (

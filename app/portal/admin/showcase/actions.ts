@@ -26,9 +26,18 @@ export async function approveShowcase(id: string, featured: boolean = true): Pro
     // Vorher-Status lesen damit wir Push nur bei echtem Approve-Wechsel triggern
     const { data: prev } = await supabase
       .from("showcase_creators")
-      .select("profile_id, is_approved")
+      .select("profile_id, is_approved, showcase_images")
       .eq("id", id)
       .single();
+
+    // V2 · Pflicht-Check: 2 Bilder
+    const imgs = Array.isArray(prev?.showcase_images)
+      ? (prev.showcase_images as Array<{ url?: string }>)
+      : [];
+    const validCount = imgs.filter((i) => i?.url && /^https?:\/\//i.test(i.url)).length;
+    if (validCount < 2) {
+      return { ok: false, error: `Approve blockiert · nur ${validCount}/2 Bilder. Creator muss erst zweites Bild hochladen.` };
+    }
 
     const { error } = await supabase
       .from("showcase_creators")

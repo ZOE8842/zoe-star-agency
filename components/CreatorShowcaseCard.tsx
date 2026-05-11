@@ -8,6 +8,8 @@ export interface CreatorShowcase {
   displayName: string;
   category?: string;
   imageSrc?: string;
+  /** 2. Bild fuer Hover/Swipe-Wechsel (V2 · 2-Bild-Pflicht). */
+  imageSrc2?: string;
   platform?: "tiktok" | "instagram" | null;
   href?: string;
   visual?: "warm" | "cool" | "champagne" | "ink";
@@ -30,6 +32,7 @@ export function CreatorShowcaseCard({
   displayName,
   category,
   imageSrc,
+  imageSrc2,
   platform,
   href,
   visual = "ink",
@@ -56,12 +59,25 @@ export function CreatorShowcaseCard({
       >
         {/* Echtes Bild ODER Subject-Platzhalter */}
         {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageSrc}
-            alt={displayName}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageSrc}
+              alt={displayName}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out group-hover:opacity-0"
+            />
+            {imageSrc2 && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={imageSrc2}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out"
+              />
+            )}
+          </>
         ) : (
           <>
             {/* Glow-Atmosphere */}

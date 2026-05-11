@@ -8,7 +8,7 @@ export default async function AdminShowcasePage() {
   const { data: rows } = await supabase
     .from("showcase_creators")
     .select(`
-      id, profile_id, display_name, category, showcase_image,
+      id, profile_id, display_name, category, showcase_image, showcase_images,
       tiktok_url, instagram_url, is_approved, is_featured,
       sort_order, created_at, updated_at, approved_at
     `)

@@ -99,10 +99,18 @@ export function ShowcaseEditor({
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setError(null); setInfo(null); setSaving(true);
+    setError(null); setInfo(null);
     const images: ImageEntry[] = [];
     if (imageUrl1) images.push({ url: imageUrl1, type: "image", position: 1 });
     if (imageUrl2) images.push({ url: imageUrl2, type: "image", position: 2 });
+
+    // V2 · Client-Pflicht-Check
+    if ((allowShowcase || allowCooperations) && images.length < 2) {
+      setError("Bitte lade 2 Bilder hoch, damit wir deinen Showcase + die Kooperations-Freigabe pruefen koennen.");
+      return;
+    }
+
+    setSaving(true);
 
     const result = await upsertShowcase({
       display_name: displayName,
