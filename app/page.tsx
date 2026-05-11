@@ -27,32 +27,47 @@ async function fetchFeaturedCreators(): Promise<CreatorShowcase[]> {
   //   2) deren Owner allow_website_showcase_confirmed = true gesetzt hat
   //      (Email-Bestaetigung). Schutz vor "Admin-approved aber User
   //      hat Consent-Mail nie bestaetigt".
-  const { data } = await supabase
+  //
+  // 2-Step statt PostgREST-embed: showcase_creators hat ZWEI FK auf
+  // profiles (profile_id + approved_by). `profiles!inner(...)` wirft
+  // PostgREST-Ambiguity. Daher: erst showcases, dann profiles per IN.
+  const { data: shows } = await supabase
     .from("showcase_creators")
-    .select(
-      "display_name, category, showcase_image, tiktok_url, instagram_url, profiles!inner(allow_website_showcase_confirmed)",
-    )
+    .select("profile_id, display_name, category, showcase_image, tiktok_url, instagram_url, approved_at, sort_order")
     .eq("is_approved", true)
     .eq("is_featured", true)
-    .eq("profiles.allow_website_showcase_confirmed", true)
     .order("sort_order", { ascending: true })
     .order("approved_at", { ascending: false });
 
-  if (!data || data.length === 0) return [];
+  if (!shows || shows.length === 0) return [];
 
-  return data.map((r, i): CreatorShowcase => {
-    const platform: CreatorShowcase["platform"] =
-      r.tiktok_url ? "tiktok" : r.instagram_url ? "instagram" : null;
-    const href = r.tiktok_url || r.instagram_url || undefined;
-    return {
-      displayName: r.display_name,
-      category: r.category ?? undefined,
-      imageSrc: r.showcase_image ?? undefined,
-      platform,
-      href,
-      visual: VISUAL_CYCLE[i % VISUAL_CYCLE.length],
-    };
-  });
+  // Email-Bestaetigung pruefen ueber explizite profile-Query
+  const profileIds = shows.map((s) => s.profile_id).filter(Boolean) as string[];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, allow_website_showcase_confirmed")
+    .in("id", profileIds);
+  const confirmedSet = new Set(
+    (profiles ?? [])
+      .filter((p) => p.allow_website_showcase_confirmed === true)
+      .map((p) => p.id),
+  );
+
+  return shows
+    .filter((r) => r.profile_id && confirmedSet.has(r.profile_id))
+    .map((r, i): CreatorShowcase => {
+      const platform: CreatorShowcase["platform"] =
+        r.tiktok_url ? "tiktok" : r.instagram_url ? "instagram" : null;
+      const href = r.tiktok_url || r.instagram_url || undefined;
+      return {
+        displayName: r.display_name,
+        category: r.category ?? undefined,
+        imageSrc: r.showcase_image ?? undefined,
+        platform,
+        href,
+        visual: VISUAL_CYCLE[i % VISUAL_CYCLE.length],
+      };
+    });
 }
 
 // Fallback wenn DB leer: NUR Agency selbst, keine erfundenen Creator-Profile.
