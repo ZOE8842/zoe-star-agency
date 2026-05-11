@@ -7,13 +7,46 @@ const ALLOWED_STATUSES = [
   "requested", "in_review", "partner_found", "scheduled", "done", "rejected",
 ] as const;
 
+type Status = (typeof ALLOWED_STATUSES)[number];
+
+// Welche Statuswechsel triggern eine Creator-Notification?
+function notificationFor(status: Status): { title: string; body: string } | null {
+  switch (status) {
+    case "partner_found":
+      return {
+        title: "ZOE hat einen passenden Big-Match-Partner gefunden",
+        body: "Wir haben einen Gegner fuer dich — Details folgen sobald der Termin steht.",
+      };
+    case "scheduled":
+      return {
+        title: "Dein Big Match wurde geplant",
+        body: "Termin steht. Schau in den Big-Match-Bereich fuer die Details.",
+      };
+    case "rejected":
+      return {
+        title: "Big-Match-Anfrage abgelehnt",
+        body: "Wir haben aktuell keinen passenden Gegner. Du kannst eine neue Anfrage stellen.",
+      };
+    default:
+      return null;
+  }
+}
+
 export async function updateBigMatch(input: {
   id: string;
-  status?: (typeof ALLOWED_STATUSES)[number];
+  status?: Status;
   admin_note?: string;
   scheduled_for?: string | null;
 }): Promise<{ ok: boolean; error?: string }> {
   const { supabase, profile } = await requireAdmin();
+
+  // Vorher-Status lesen damit wir Wechsel detecten
+  const { data: prev } = await supabase
+    .from("match_requests")
+    .select("id, profile_id, status, scheduled_for")
+    .eq("id", input.id)
+    .single();
+  if (!prev) return { ok: false, error: "Anfrage nicht gefunden." };
 
   const update: Record<string, unknown> = {
     reviewed_by: profile.id,
@@ -42,8 +75,37 @@ export async function updateBigMatch(input: {
 
   if (error) return { ok: false, error: error.message };
 
+  // Notification + Activity-Feed nur bei echtem Status-Wechsel
+  const statusChanged = input.status && input.status !== prev.status;
+  if (statusChanged) {
+    const notif = notificationFor(input.status!);
+    if (notif) {
+      await supabase.from("notifications").insert({
+        user_id: prev.profile_id,
+        type: "match",
+        title: notif.title,
+        body: notif.body,
+        link: `/portal/services/big-match`,
+        channel: ["in_app"],
+        status: "unread",
+      });
+    }
+    // activity_feed nur bei scheduled (positive Public-Info, ohne Personen-Detail)
+    if (input.status === "scheduled") {
+      await supabase.from("activity_feed").insert({
+        type: "match_scheduled",
+        actor_id: prev.profile_id,
+        payload: {
+          scheduled_for: input.scheduled_for ?? prev.scheduled_for ?? null,
+        },
+        visibility: "all_creators",
+      });
+    }
+  }
+
   revalidatePath("/portal/admin/services/big-match");
   revalidatePath(`/portal/admin/services/big-match/${input.id}`);
   revalidatePath("/portal/services/big-match");
+  revalidatePath("/portal/inbox");
   return { ok: true };
 }

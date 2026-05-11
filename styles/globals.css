@@ -26,10 +26,28 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* iOS Tap-Highlight raus — wir setzen eigene champagne-Hover-Effekte */
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-ink text-cream font-sans;
+    /* iOS-Safe-Area-Padding bottom (Home-Indicator) */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Tap-Target-Mindestgroesse fuer Touch-UI — 44px (iOS HIG) */
+  button, a[role="button"], input[type="submit"], input[type="button"] {
+    min-height: 44px;
+  }
+  /* Ausnahme: inline-text-links die innerhalb von <p> stehen */
+  p a, li a, span a {
+    min-height: 0;
+  }
+
+  /* iOS-Safari verhindert font-size <16px auf Inputs (sonst auto-zoom) */
+  input, select, textarea {
+    font-size: 16px;
   }
 
   ::selection {

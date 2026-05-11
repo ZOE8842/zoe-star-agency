@@ -50,7 +50,7 @@ export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
             <div className="w-20 aspect-[3/4] border border-champagne/20 bg-ink overflow-hidden shrink-0">
               {r.showcase_image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={r.showcase_image} alt="" className="w-full h-full object-cover" />
+                <img src={r.showcase_image} alt="" loading="lazy" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-cream/30 text-xs">—</div>
               )}

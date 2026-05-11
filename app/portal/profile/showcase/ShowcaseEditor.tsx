@@ -316,7 +316,7 @@ export function ShowcaseEditor({
         {imageUrl2 && (
           <div className="mt-6 max-w-[320px]">
             <p className="eyebrow mb-2">Zweites Bild</p>
-            <img src={imageUrl2} alt="" className="w-full aspect-[3/4] object-cover border border-champagne/20" />
+            <img src={imageUrl2} alt="" loading="lazy" className="w-full aspect-[3/4] object-cover border border-champagne/20" />
           </div>
         )}
       </div>
@@ -348,7 +348,7 @@ function ImageSlot({
       {url ? (
         <div className="space-y-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="" className="w-full aspect-[3/4] object-cover border border-champagne/20" />
+          <img src={url} alt="" loading="lazy" className="w-full aspect-[3/4] object-cover border border-champagne/20" />
           <button
             type="button" onClick={onRemove}
             className="text-cream/45 hover:text-red-300/80 text-[10px] uppercase tracking-[0.25em]"

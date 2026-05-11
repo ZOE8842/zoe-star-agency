@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY!);
   const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@zoe-star.de";
 
-  const stats = { unread: 0, ack: 0, slots: 0, support: 0, errors: [] as string[] };
+  const stats = { unread: 0, ack: 0, slots: 0, support: 0, backstage_alert: 0, errors: [] as string[] };
   const now = new Date();
   const _24h = new Date(now.getTime() - 24 * 3600 * 1000).toISOString();
   const _12h = new Date(now.getTime() - 12 * 3600 * 1000).toISOString();
@@ -164,6 +164,70 @@ export async function GET(request: NextRequest) {
         stats.errors.push(`support/${ticket.id}: ${e.message}`);
       }
     }
+  }
+
+  // ===== 5. BACKSTAGE-SYNC ALERT — 2 Tage in Folge fail =====
+  // Wenn der lokale Backstage-Daily-Sync 2 Tage in Folge ok=false hat,
+  // bekommen Admins eine Resend-Mail. Dedupe via notifications-Table:
+  // pro Admin max 1× pro 24 h.
+  try {
+    const _2d = new Date(now.getTime() - 2 * 24 * 3600 * 1000).toISOString();
+    const { data: recent } = await supabase
+      .from("data_source_health")
+      .select("ok, created_at")
+      .eq("source", "backstage_sync")
+      .gte("created_at", _2d)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const runs = recent ?? [];
+    // 2 Tage in Folge fail = ALLE in den letzten 2 Tagen sind ok=false UND
+    // mindestens 2 Runs vorhanden (sonst ist es nur ein einmaliger Fail).
+    const failingStreak = runs.length >= 2 && runs.every((r) => r.ok === false);
+
+    if (failingStreak) {
+      const { data: admins } = await supabase.from("profiles")
+        .select("id, email, display_name")
+        .eq("role", "admin").eq("status", "active");
+
+      for (const admin of admins || []) {
+        // Dedupe: hat der Admin in den letzten 24 h schon einen
+        // backstage-Alert bekommen?
+        const { data: dup } = await supabase.from("notifications")
+          .select("id")
+          .eq("user_id", admin.id)
+          .eq("type", "reminder")
+          .eq("link", "/portal/admin/analyse/health")
+          .gte("created_at", _24h)
+          .maybeSingle();
+        if (dup) continue;
+
+        try {
+          await resend.emails.send({
+            from: `ZOE Star Agency <${fromEmail}>`,
+            to: admin.email,
+            subject: "⚠ Backstage-Sync faellt seit 2 Tagen aus",
+            text: `Hi ${admin.display_name},\n\nder Backstage-Daily-Sync hat in den letzten 2 Tagen kein einziges Mal sauber durchgelaufen.\n\nMoegliche Ursachen:\n- zoeapp Chrome-Profile ausgeloggt\n- TikTok-Backstage-Layout geaendert\n- Windows-Task-Scheduler haengt\n\nCheck: ${process.env.NEXT_PUBLIC_SITE_URL}/portal/admin/analyse/health\nDetails: data_source_health Tabelle, source='backstage_sync'\n\nZOE Star Agency`,
+          });
+          await supabase.from("notifications").insert({
+            user_id: admin.id,
+            type: "reminder",
+            title: "Backstage-Sync 2 Tage offline",
+            body: "Daily-Sync hat 2× in Folge fehlgeschlagen — bitte Admin-Health pruefen.",
+            link: "/portal/admin/analyse/health",
+            channel: ["email"],
+            status: "unread",
+          });
+          stats.backstage_alert++;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          stats.errors.push(`backstage_alert/${admin.id}: ${msg}`);
+        }
+      }
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    stats.errors.push(`backstage_alert_check: ${msg}`);
   }
 
   return NextResponse.json({

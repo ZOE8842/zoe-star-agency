@@ -167,7 +167,7 @@ export default async function AccountAnalyseDetail({ params }: Props) {
                     img.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <div key={i} className="border border-champagne/15 p-2">
-                        <img src={img.url} alt="" className="w-full aspect-square object-cover mb-2" />
+                        <img src={img.url} alt="" loading="lazy" className="w-full aspect-square object-cover mb-2" />
                         {img.note && <p className="text-cream/55 text-xs">{img.note}</p>}
                       </div>
                     ) : null,
