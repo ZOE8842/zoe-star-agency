@@ -88,6 +88,7 @@ export default async function AdminPage() {
   // OPERATIONS-OVERVIEW · alle offenen Anfragen / Reviews zentral
   // Admin-only, kein Manager-Scoping noetig.
   let ops = {
+    creators_pending: 0,
     tiktok_push: 0,
     phone_request: 0,
     live_absence: 0,
@@ -102,9 +103,11 @@ export default async function AdminPage() {
   if (isAdmin) {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const [
-      pushRes, phoneRes, absRes, contentRes, matchRes,
+      pendingRes, pushRes, phoneRes, absRes, contentRes, matchRes,
       aaRes, lpRes, showcaseRes, dmQueueRes, dmFailRes,
     ] = await Promise.all([
+      supabase.from("profiles").select("id", { head: true, count: "exact" })
+        .eq("role", "creator").eq("status", "pending"),
       supabase.from("tiktok_push_requests").select("id", { head: true, count: "exact" })
         .eq("status", "submitted"),
       supabase.from("phone_call_requests").select("id", { head: true, count: "exact" })
@@ -127,6 +130,7 @@ export default async function AdminPage() {
         .eq("status", "failed"),
     ]);
     ops = {
+      creators_pending: pendingRes.count ?? 0,
       tiktok_push: pushRes.count ?? 0,
       phone_request: phoneRes.count ?? 0,
       live_absence: absRes.count ?? 0,
@@ -196,6 +200,7 @@ export default async function AdminPage() {
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
+              <OpsTile href="/portal/admin/pending" label="Creator pending" count={ops.creators_pending} />
               <OpsTile href="/portal/admin/services/tiktok-push" label="TikTok-Push" count={ops.tiktok_push} />
               <OpsTile href="/portal/admin/services/phone-requests" label="Telefon" count={ops.phone_request} />
               <OpsTile href="/portal/admin/services/live-absences" label="Abmeldung" count={ops.live_absence} />
@@ -219,6 +224,7 @@ export default async function AdminPage() {
               <>
                 <AdminTile href="/portal/admin/invites" title="Invites" hint="Codes generieren" />
                 <AdminTile href="/portal/admin/showcase" title="Showcase" hint="Creator-Cards · Approve" />
+                <AdminTile href="/portal/admin/pending" title="Creator Aufnahme" hint="Pending freigeben" />
                 <AdminTile href="/portal/admin/services/big-match" title="Big Match" hint="Match-Anfragen · Queue" />
                 <AdminTile href="/portal/admin/notifications-queue" title="TikTok-DM Queue" hint="External-Push · Status · Retry" />
                 <AdminTile href="/portal/admin/analyse/account" title="Account Analyse" hint="Profil-Reviews · Queue" />

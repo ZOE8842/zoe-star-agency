@@ -82,13 +82,16 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Profile anlegen
+  // V2-A: Creator starten in 'pending' — Admin muss nach Onboarding approven.
+  // Admin/Manager-Invites werden sofort 'active' (Operations-Rollen).
+  const initialStatus = invite.intended_role === "creator" ? "pending" : "active";
   const { error: profErr } = await admin.from("profiles").insert({
     id: user_id,
     email,
     tiktok_username,
     display_name,
     role: invite.intended_role,
-    status: "active",
+    status: initialStatus,
     country,
     language,
   });

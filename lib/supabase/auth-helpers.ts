@@ -3,16 +3,18 @@
 //
 // V3 Member-Onboarding-Gate:
 //   - Creator ohne onboarding_completed → /portal/onboarding
+//   - Creator mit completed=true aber status='pending' → /portal/pending
 //   - Admin/Manager NIE blockieren (Operative-Rollen)
-//   - /portal/onboarding selbst ist whitelisted
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "./server";
 
 const ONBOARDING_PATH = "/portal/onboarding";
-const ONBOARDING_WHITELIST = [
+const PENDING_PATH = "/portal/pending";
+const GATE_WHITELIST = [
   ONBOARDING_PATH,
+  PENDING_PATH,
   "/portal/logout",
   "/portal/profile/security",
 ];
@@ -51,19 +53,22 @@ export async function getAuthedProfile() {
     redirect("/portal/login?error=profile_missing");
   }
 
-  // V3 Onboarding-Gate: nur fuer Creator (nicht admin/manager).
+  // V3 Gate-Logic: nur fuer Creator (nicht admin/manager).
   // Admin/Manager wurden in Migration 0008 auf onboarding_completed=true
-  // gesetzt → der Block hier ist Defense-in-Depth.
+  // gesetzt → die Blocks hier sind Defense-in-Depth.
   const isCreatorRole = profile.role === "creator";
   const path = await currentPath();
-  const onWhitelist = ONBOARDING_WHITELIST.some((p) => path.startsWith(p));
+  const onWhitelist = GATE_WHITELIST.some((p) => path.startsWith(p));
 
-  if (
-    isCreatorRole &&
-    profile.onboarding_completed === false &&
-    !onWhitelist
-  ) {
-    redirect(ONBOARDING_PATH);
+  if (isCreatorRole && !onWhitelist) {
+    // 1. Onboarding zuerst
+    if (profile.onboarding_completed === false) {
+      redirect(ONBOARDING_PATH);
+    }
+    // 2. Pending-Approval danach
+    if (profile.status === "pending") {
+      redirect(PENDING_PATH);
+    }
   }
 
   return { supabase, user, profile };

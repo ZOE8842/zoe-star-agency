@@ -68,19 +68,20 @@ export function MobileNavDrawer({
         </svg>
       </button>
 
-      {/* Overlay — schwerer Black + starker Blur damit Dashboard nicht durchscheint */}
+      {/* Overlay — bg-black/90 + starker Blur, deckt alles ab */}
       <div
         onClick={() => setOpen(false)}
         aria-hidden
-        className={`fixed inset-0 bg-black/85 backdrop-blur-md z-[60] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/90 backdrop-blur-lg z-[100] transition-opacity duration-300 ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       />
 
-      {/* Drawer — solides Schwarz, kein transluzentes ink-Layer mehr */}
+      {/* Drawer — solides Schwarz · hoher z-index ueber Header (z-50) + Overlay (z-100) */}
       <aside
         role="dialog" aria-modal="true" aria-label="Hauptmenue"
-        className={`fixed inset-y-0 right-0 w-[86%] max-w-[420px] bg-[#050505] border-l border-[#3a2a18] shadow-2xl shadow-black/80 overflow-y-auto z-[61] transform transition-transform duration-300 ease-out ${
+        style={{ boxShadow: "0 0 80px rgba(0,0,0,0.95)" }}
+        className={`fixed inset-y-0 right-0 w-[86%] max-w-[420px] bg-[#050505] border-l border-[#6f5a2d] overflow-y-auto z-[110] transform transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -117,16 +118,16 @@ export function MobileNavDrawer({
           </div>
         </div>
 
-        <nav className="px-3 py-3">
+        <nav className="relative bg-[#050505]">
           {items.map((it) => {
             const active = pathname === it.href || (it.href !== "/portal" && pathname?.startsWith(it.href));
             return (
               <Link
                 key={it.href}
                 href={it.href}
-                className={`block px-4 py-4 text-base transition-colors ${
+                className={`block w-full text-left py-5 px-6 text-base transition-colors border-b border-[#1f1a12] ${
                   active
-                    ? "text-champagne bg-[#111111]"
+                    ? "bg-[#14100a] text-[#d5b76b]"
                     : "text-[#f5e7ce] hover:bg-[#111111] active:bg-[#161616]"
                 }`}
               >
@@ -137,18 +138,18 @@ export function MobileNavDrawer({
           {(isAdmin || isManager) && (
             <Link
               href={isAdmin ? "/portal/admin" : "/portal/manager"}
-              className="block px-4 py-4 text-base text-champagne hover:bg-champagne/[0.06] border-t border-champagne/10 mt-2"
+              className="block w-full text-left py-5 px-6 text-base text-[#d5b76b] hover:bg-[#111111] border-b border-[#1f1a12]"
             >
               {isAdmin ? "Admin" : "Manager"}
             </Link>
           )}
         </nav>
 
-        <div className="px-3 pb-6 pt-2 border-t border-champagne/10 mt-2">
+        <div className="px-3 pb-6 pt-2 bg-[#050505]">
           <form action="/portal/logout" method="post">
             <button
               type="submit"
-              className="w-full text-left px-4 py-4 text-cream/55 hover:text-champagne text-sm"
+              className="w-full text-left px-4 py-4 text-cream/55 hover:text-[#d5b76b] text-sm"
             >
               Logout
             </button>
