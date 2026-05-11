@@ -401,8 +401,13 @@ export async function processContentReview(
     const note = locked.manual_note as string | null;
 
     // IMAGE · Claude Vision
-    if (kind === "image" && locked.video_storage_path) {
-      const url = publicImageUrl(supabase, locked.video_storage_path);
+    if (kind === "image") {
+      // Bild kann via creator-content storage_path ODER direkter URL kommen
+      const url =
+        locked.video_storage_path
+          ? publicImageUrl(supabase, locked.video_storage_path)
+          : (locked.video_url as string | null) || (locked.source_url as string | null);
+      if (!url) throw new Error("Kein Bild-Pfad oder URL gefunden");
       const text =
         (note ? `Hinweis vom Creator: "${note}"\n\n` : "") +
         "Analysiere das obige Bild als TikTok-Content-Visual. Folge dem geforderten Format.";
