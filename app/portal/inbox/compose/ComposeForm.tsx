@@ -1,28 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendMessage } from "./actions";
 import { AttachmentField, type UploadedAttachment } from "@/components/AttachmentField";
 
+export interface RecipientOption {
+  id: string;
+  label: string;
+  hint?: string;
+}
+
 export function ComposeForm({
   recipientId,
   recipientName: _recipientName,
+  recipientOptions,
 }: {
   recipientId: string;
   recipientName: string;
+  recipientOptions?: RecipientOption[];
 }) {
   const router = useRouter();
+  const hasPicker = (recipientOptions?.length ?? 0) > 0;
+  const [selectedRecipient, setSelectedRecipient] = useState<string>(
+    hasPicker ? "" : recipientId,
+  );
+  const [recipientQuery, setRecipientQuery] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const filteredRecipients = useMemo(() => {
+    if (!recipientOptions) return [];
+    const q = recipientQuery.trim().toLowerCase();
+    if (!q) return recipientOptions.slice(0, 12);
+    return recipientOptions
+      .filter((r) =>
+        r.label.toLowerCase().includes(q) ||
+        (r.hint?.toLowerCase().includes(q) ?? false),
+      )
+      .slice(0, 12);
+  }, [recipientOptions, recipientQuery]);
+
+  const selectedRecipientLabel = useMemo(() => {
+    if (!hasPicker || !selectedRecipient) return null;
+    return recipientOptions?.find((r) => r.id === selectedRecipient)?.label ?? null;
+  }, [hasPicker, selectedRecipient, recipientOptions]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
+    const targetId = hasPicker ? selectedRecipient : recipientId;
+    if (!targetId) {
+      setError("Bitte einen Empfaenger auswaehlen.");
+      return;
+    }
     if (subject.trim().length < 2) {
       setError("Bitte gib einen Betreff an.");
       return;
@@ -34,7 +69,7 @@ export function ComposeForm({
 
     setLoading(true);
     const result = await sendMessage({
-      recipientId,
+      recipientId: targetId,
       subject: subject.trim(),
       body: body.trim(),
       attachments: attachments.map((a) => a.path),
@@ -52,6 +87,67 @@ export function ComposeForm({
 
   return (
     <form onSubmit={submit} className="space-y-12">
+      {/* Recipient-Picker — nur fuer Admin/Manager mit Optionen */}
+      {hasPicker && (
+        <div>
+          <label htmlFor="recipient-search" className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-4">
+            Empfaenger
+          </label>
+          {selectedRecipient ? (
+            <div className="flex items-center gap-3 mb-3">
+              <span className="border border-champagne/40 text-champagne px-3 py-1.5 text-sm">
+                {selectedRecipientLabel}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedRecipient("");
+                  setRecipientQuery("");
+                }}
+                className="text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.25em]"
+              >
+                aendern
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                id="recipient-search"
+                type="search"
+                value={recipientQuery}
+                onChange={(e) => setRecipientQuery(e.target.value)}
+                placeholder="Creator suchen…"
+                className="w-full bg-transparent border-b border-cream/[0.08] focus:border-champagne/60 px-0 py-3 text-cream/85 text-base focus:outline-none placeholder-cream/30 transition-colors mb-3"
+              />
+              <ul className="space-y-1 max-h-64 overflow-y-auto">
+                {filteredRecipients.map((r) => (
+                  <li key={r.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedRecipient(r.id);
+                        setRecipientQuery("");
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-champagne/5 border border-transparent hover:border-champagne/30 transition-colors flex items-baseline justify-between gap-3"
+                    >
+                      <span className="text-cream text-sm">{r.label}</span>
+                      {r.hint && (
+                        <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em] shrink-0">
+                          {r.hint}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+                {filteredRecipients.length === 0 && (
+                  <li className="text-cream/35 text-sm px-3 py-2">Keine Treffer.</li>
+                )}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Subject — als Hero-Input ohne sichtbaren Border */}
       <div>
         <label htmlFor="subject" className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-4">
