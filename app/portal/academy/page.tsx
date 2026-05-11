@@ -23,13 +23,26 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
     .from("academy_lesson_reads")
     .select("category_slug, lesson_slug")
     .eq("profile_id", profile.id);
+
+  // Nur Reads zaehlen, die zu aktuell existierenden Lessons gehoeren.
+  // Geist-Rows (umbenannte/entfernte Lessons) wuerden sonst doneLessons
+  // ueber totalLessons treiben → 105% etc.
+  const validLessonSet = new Set<string>();
+  for (const cat of CATEGORIES) {
+    for (const l of cat.lessons) validLessonSet.add(`${cat.slug}::${l.slug}`);
+  }
   const completedSet = new Set(
-    (progressRows ?? []).map((r) => `${r.category_slug}::${r.lesson_slug}`),
+    (progressRows ?? [])
+      .map((r) => `${r.category_slug}::${r.lesson_slug}`)
+      .filter((k) => validLessonSet.has(k)),
   );
 
   const totalLessons = CATEGORIES.reduce((sum, c) => sum + c.lessons.length, 0);
-  const doneLessons = (progressRows ?? []).length;
-  const pct = totalLessons === 0 ? 0 : Math.round((doneLessons / totalLessons) * 100);
+  const doneLessons = Math.min(completedSet.size, totalLessons);
+  const pct =
+    totalLessons === 0
+      ? 0
+      : Math.min(100, Math.round((doneLessons / totalLessons) * 100));
 
   // Search-Filter
   const filteredCategories = query
