@@ -17,6 +17,14 @@ interface ServiceCard {
 
 const SERVICES: ServiceCard[] = [
   {
+    title: "Big Match",
+    short: "ZOE organisiert starke Matches",
+    description:
+      "Du willst ein passendes Match? Gib uns Datum, Level und Ziel — wir suchen den richtigen Gegner. Agencygefuehrt, kein Self-Service.",
+    badge: "aktiv",
+    href: "/portal/services/big-match",
+  },
+  {
     title: "TikTok Push",
     short: "Wunschzeiten fuer LIVE-Traffic",
     description:

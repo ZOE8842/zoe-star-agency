@@ -681,7 +681,7 @@ function Step7Done({
         </h1>
         <p className="text-cream/65 text-base md:text-lg leading-relaxed max-w-sm mx-auto mb-12">
           Dein Creator-Profil ist eingerichtet. Ab jetzt findest du
-          alles im Member-Bereich — Slots, Inbox, Events, deine
+          alles im Member-Bereich — Services, Inbox, Events, deine
           Monatszahlen.
         </p>
 

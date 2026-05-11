@@ -32,7 +32,7 @@ export default async function InfoPage() {
 
         <Section title="Erste 15 Minuten · Live-Start">
           <ul className="space-y-3 text-cream/70 leading-relaxed">
-            <li>· Pünktlicher Start (Slot-Anmeldung verbindlich)</li>
+            <li>· Pünktlicher Start zu deinem angekündigten LIVE-Fenster</li>
             <li>· Direkt aktiv sein — keine AFK-Phase, kein Schweigen</li>
             <li>· Begrüßung mit Namen wenn neue Zuschauer kommen</li>
             <li>· Klare Story / Aktion in den ersten 5 Minuten</li>
@@ -69,7 +69,7 @@ export default async function InfoPage() {
 
         <Section title="ZOE-Agency-Standards">
           <ul className="space-y-3 text-cream/70 leading-relaxed">
-            <li>· Slot-Anmeldungen sind verbindlich — Reschedule mind. 6h vorher</li>
+            <li>· Zugesagte LIVE-Zeiten sind verbindlich — bei Absage frühzeitig im Service-Bereich Bescheid geben</li>
             <li>· Pflicht-Nachrichten innerhalb 12h bestätigen</li>
             <li>· Bei Fragen: Support-Ticket, kein DM-Chaos</li>
             <li>· Manager-Kommunikation in der Inbox, nicht über externe Kanäle</li>
