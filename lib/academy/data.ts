@@ -482,6 +482,125 @@ export const CATEGORIES: Category[] = [
       },
     ],
   },
+
+  {
+    slug: "live-psychologie",
+    title: "LIVE Psychologie",
+    intro:
+      "Warum Zuschauer bleiben oder gehen — und wie du Energie, Spannung und Naehe gezielt aufbaust.",
+    lessons: [
+      {
+        slug: "energie-und-naehe",
+        title: "Energie + Naehe",
+        summary: "Wie du als Person rueberkommen musst damit Stream-Bindung entsteht.",
+        reading_minutes: 4,
+        blocks: [
+          { type: "p", text: "TikTok-LIVE wirkt erst dann, wenn die Zuschauer das Gefuehl haben, sie sind in einem Raum mit dir. Das ist keine Show — das ist Begegnung." },
+          { type: "h3", text: "Die 3 Faktoren" },
+          { type: "ul", items: [
+            "Energie: Stimme, Tempo, Mimik — nicht erschoepft wirken, auch bei Mid-Stream",
+            "Naehe: Namen lesen, direkte Reaktion, Augenkontakt zur Kamera",
+            "Berechenbarkeit: Stamm-Rituale (Begruessung, Outro) damit Zuschauer wissen was kommt",
+          ] },
+          { type: "callout", text: "Niemand bleibt fuer einen perfekten Stream. Sie bleiben fuer einen Menschen den sie verstehen." },
+        ],
+      },
+      {
+        slug: "drop-points",
+        title: "Drop-Points im LIVE",
+        summary: "Die Momente in denen Zuschauer wegklicken — und wie du sie verhinderst.",
+        reading_minutes: 3,
+        blocks: [
+          { type: "h3", text: "Klassische Drop-Points" },
+          { type: "ul", items: [
+            "Erste 5 Sekunden: kein Hook, kein klares Thema",
+            "AFK-Phase ueber 30 Sekunden ohne Aktion",
+            "Lange Pause nach Geschenk ohne Reaktion",
+            "Match endet, Stream wirkt 'fertig'",
+          ] },
+          { type: "p", text: "Loesung: Aktiv ueberbruecken — 'Pause-Killer' wie 'Wer ist neu hier?' oder 'kurze Story bis das naechste passiert'." },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: "profil-optimierung",
+    title: "Profil Optimierung",
+    intro:
+      "Dein TikTok-Profil ist deine Visitenkarte. Bio, Display-Name, Profilbild — was wirkt und was nicht.",
+    lessons: [
+      {
+        slug: "bio-die-zieht",
+        title: "Die Bio die zieht",
+        summary: "Hook + Wer-bist-du + LIVE-Zeit in 3-4 Zeilen.",
+        reading_minutes: 3,
+        blocks: [
+          { type: "h3", text: "Aufbau" },
+          { type: "ul", items: [
+            "Zeile 1: Wer bist du in 5 Woertern",
+            "Zeile 2: Was machst du LIVE",
+            "Zeile 3: Wann gehst du LIVE",
+            "Zeile 4: Call-to-Action (folgen, Notification, kommen)",
+          ] },
+          { type: "callout", text: "Linktree weglassen. Klare Sprache statt Buzzwords. Drei Emoji-Anker reichen." },
+        ],
+      },
+      {
+        slug: "profilbild-strategie",
+        title: "Profilbild-Strategie",
+        summary: "Was in 32x32px noch erkennbar sein muss.",
+        reading_minutes: 2,
+        blocks: [
+          { type: "ul", items: [
+            "Gesicht klar im Frame, Augenhoehe",
+            "Hintergrund einfarbig oder unscharf",
+            "Helligkeit hoch genug fuer Mobile-Dark-Mode",
+            "Branding-Element (Stern, Farbe) wiedererkennbar",
+            "Kein Filter der das Gesicht verfremdet",
+          ] },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: "analyse-verstehen",
+    title: "Analyse verstehen",
+    intro:
+      "Klickrate, Watchtime, Geschenkerate — was die Zahlen wirklich bedeuten und was du daraus ableitest.",
+    lessons: [
+      {
+        slug: "die-wichtigsten-kennzahlen",
+        title: "Die wichtigsten Kennzahlen",
+        summary: "Klickrate, Wiedergabezeit, Geschenkerate — Definition + Zielzahlen.",
+        reading_minutes: 4,
+        blocks: [
+          { type: "h3", text: "Klickrate" },
+          { type: "p", text: "Von 100 Zuschauern denen TikTok deinen Stream zeigt, wie viele klicken rein? Unter 15% = Cover/Titel zieht nicht. Ueber 25% solide." },
+          { type: "h3", text: "Wiedergabezeit" },
+          { type: "p", text: "Wie lange jemand im Schnitt bei dir bleibt. Unter 30 Sek = sofortiges Wegklicken. Ueber 1 Min gut, ueber 3 Min stark." },
+          { type: "h3", text: "Geschenkerate" },
+          { type: "p", text: "Von 100 Zuschauern wie viele schenken dir was? 1-2% ok, 3%+ gut, 5%+ stark." },
+        ],
+      },
+      {
+        slug: "was-du-machst-wenn",
+        title: "Was du machst wenn …",
+        summary: "Konkrete Hebel je nach Schwachstelle.",
+        reading_minutes: 3,
+        blocks: [
+          { type: "ul", items: [
+            "Klickrate niedrig -> Cover/Erste-3-Sekunden ueberarbeiten",
+            "Wiedergabezeit niedrig -> Hook + erste 30 Sek planen",
+            "Geschenkerate niedrig -> Geschenkgeber persoenlich begruessen, Reaktion zeigen",
+            "Klickrate hoch, Wiedergabezeit niedrig -> Erwartung erfuellt sich nicht",
+            "Wenige neue Follower -> CTA fehlt, kein Grund zu folgen",
+          ] },
+        ],
+      },
+    ],
+  },
 ];
 
 // ============================================================

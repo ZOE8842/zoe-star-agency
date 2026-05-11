@@ -38,6 +38,27 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
       })
     : CATEGORIES;
 
+  // V2: Aktive Weekly Challenge + Leaderboard Top 5
+  const nowIso = new Date().toISOString();
+  const [{ data: activeChallenges }, { data: leaderboard }] = await Promise.all([
+    supabase
+      .from("academy_challenges")
+      .select("id, slug, title, description, reward_label, starts_at, ends_at")
+      .eq("is_active", true)
+      .or(`ends_at.gt.${nowIso},ends_at.is.null`)
+      .order("starts_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("academy_creator_xp")
+      .select("profile_id, display_name, tiktok_username, avatar_url, xp_total, lessons_read, quizzes_passed")
+      .gt("xp_total", 0)
+      .order("xp_total", { ascending: false })
+      .limit(5),
+  ]);
+  const challenge = activeChallenges?.[0] ?? null;
+  const lbRows = leaderboard ?? [];
+  const myXp = lbRows.find((r) => r.profile_id === profile.id) ?? null;
+
   return (
     <>
       <PortalNav
@@ -80,6 +101,65 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
             {QUIZZES.length > 0 && <> · {QUIZZES.length} Quiz verfuegbar</>}
           </p>
         </div>
+
+        {/* Weekly Challenge */}
+        {challenge && (
+          <section className="mb-8 border border-champagne bg-champagne/5 p-5 md:p-6">
+            <div className="flex items-baseline justify-between gap-3 mb-2 flex-wrap">
+              <p className="eyebrow text-champagne">Aktuelle Challenge</p>
+              {challenge.reward_label && (
+                <span className="px-2.5 py-0.5 text-[10px] uppercase tracking-[0.25em] bg-champagne text-ink">
+                  {challenge.reward_label}
+                </span>
+              )}
+            </div>
+            <h2 className="font-display italic text-cream text-xl md:text-2xl leading-tight mb-2">
+              {challenge.title}
+            </h2>
+            <p className="text-cream/65 text-sm md:text-base leading-relaxed mb-3">
+              {challenge.description}
+            </p>
+            {challenge.ends_at && (
+              <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em]">
+                Endet {new Date(challenge.ends_at).toLocaleDateString("de-DE", { day: "2-digit", month: "long" })}
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* Leaderboard */}
+        {lbRows.length > 0 && (
+          <section className="mb-8 border border-champagne/15 p-5 md:p-6">
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="eyebrow">Leaderboard · Top 5</p>
+              {myXp && (
+                <span className="text-cream/55 text-[10px] uppercase tracking-[0.25em]">
+                  Dein XP: {myXp.xp_total}
+                </span>
+              )}
+            </div>
+            <ul className="space-y-2.5">
+              {lbRows.map((r, i) => {
+                const isMe = r.profile_id === profile.id;
+                return (
+                  <li key={r.profile_id} className={`flex items-center gap-3 ${isMe ? "text-champagne" : "text-cream/80"}`}>
+                    <span className="shrink-0 font-display italic text-lg w-6 text-cream/45">{i + 1}</span>
+                    <span className="flex-1 min-w-0 truncate text-sm">
+                      {r.display_name || `@${r.tiktok_username}`}
+                      {isMe && <span className="text-champagne/70 text-[10px] ml-2 uppercase tracking-[0.22em]">du</span>}
+                    </span>
+                    <span className="shrink-0 text-xs text-cream/55">
+                      {r.lessons_read}L · {r.quizzes_passed}Q · {r.xp_total} XP
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-4 leading-relaxed">
+              XP-Formel: 1 Lektion = 5 XP · 1 Quiz bestanden = 25 XP · 1 Challenge-Sieg = 100 XP
+            </p>
+          </section>
+        )}
 
         {/* Search */}
         <form method="get" action="/portal/academy" className="mb-8">

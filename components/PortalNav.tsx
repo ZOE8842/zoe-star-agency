@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { InboxIndicator } from "./InboxIndicator";
+import { MobileNavDrawer } from "./MobileNavDrawer";
 
 // V3 Nav-Reduktion: Showcase ist Profil-Toggle (Profile-Reiter),
 // Support ist Card unter /portal/services. Top-Nav konzentriert auf
@@ -42,16 +43,17 @@ export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isMana
 
   return (
     <header className="border-b border-champagne/10 sticky top-0 bg-ink/95 backdrop-blur z-50">
-      <div className="container-luxe py-4 flex items-center justify-between gap-6">
+      <div className="container-luxe py-4 flex items-center justify-between gap-4 md:gap-6">
         <Link href="/portal" aria-label="ZOE Star Agency" className="shrink-0">
-          <Logo variant="horizontal" className="h-8" />
+          <Logo variant="horizontal" className="h-7 md:h-8" />
         </Link>
 
-        <div className="flex items-center gap-4 shrink-0">
-          <span className="hidden sm:block text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[180px]">
+        {/* Desktop / Tablet ab md: voller User-Block + Logout */}
+        <div className="hidden md:flex items-center gap-4 shrink-0">
+          <span className="text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[180px]">
             {displayName || (tiktokUsername ? `@${tiktokUsername}` : "Creator")}
           </span>
-          <ThemeToggle className="hidden sm:inline-flex" />
+          <ThemeToggle />
           <Link
             href="/portal/profile"
             aria-label="Profile"
@@ -62,6 +64,7 @@ export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isMana
               <img
                 src={avatarUrl}
                 alt=""
+                loading="lazy"
                 className="w-9 h-9 rounded-full object-cover border border-champagne/30 hover:border-champagne transition"
               />
             ) : (
@@ -76,9 +79,20 @@ export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isMana
             </button>
           </form>
         </div>
+
+        {/* Mobile: Burger-Drawer */}
+        <MobileNavDrawer
+          items={navItems.map(({ href, label }) => ({ href, label }))}
+          isAdmin={isAdmin}
+          isManager={isManager}
+          displayName={displayName}
+          tiktokUsername={tiktokUsername}
+          avatarUrl={avatarUrl}
+        />
       </div>
 
-      <nav className="container-luxe pb-1 -mt-1 flex items-center gap-5 overflow-x-auto">
+      {/* Desktop-Sub-Nav · Mobile hidden */}
+      <nav className="hidden md:flex container-luxe pb-1 -mt-1 items-center gap-5 overflow-x-auto">
         {navItems.map(({ href, label, indicator }) => (
           <Link
             key={href}
