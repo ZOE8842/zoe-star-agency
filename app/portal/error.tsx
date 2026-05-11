@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 
 export default function PortalError({
   error,
@@ -12,6 +13,10 @@ export default function PortalError({
 }) {
   useEffect(() => {
     console.error("[Portal-Error]", error);
+    Sentry.withScope((scope) => {
+      scope.setTag("boundary", "portal");
+      Sentry.captureException(error);
+    });
   }, [error]);
 
   return (
