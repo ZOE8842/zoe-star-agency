@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { AdminTriggerPanel } from "./AdminTriggerPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -40,15 +41,17 @@ export default async function ContentHelperDetailPage({ params }: Props) {
   const { id } = await params;
   const { supabase, profile } = await getAuthedProfile();
 
-  const { data: job } = await supabase
+  // Admin darf alle Reviews sehen · Creator nur eigene
+  const isAdmin = profile.role === "admin";
+  let q = supabase
     .from("content_reviews")
     .select(
       "id, profile_id, kind, source_url, video_url, video_storage_path, manual_note, status, ai_score, ai_provider, ai_model, cost_usd, error_message, summary, created_at, processing_started_at, reviewed_at",
     )
-    .eq("id", id)
-    .eq("profile_id", profile.id)
-    .maybeSingle();
+    .eq("id", id);
+  if (!isAdmin) q = q.eq("profile_id", profile.id);
 
+  const { data: job } = await q.maybeSingle();
   if (!job) notFound();
 
   const aiScore = (job.ai_score as Record<string, unknown> | null) ?? null;
@@ -91,6 +94,20 @@ export default async function ContentHelperDetailPage({ params }: Props) {
             Eingereicht {new Date(job.created_at).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })}
           </span>
         </div>
+
+        {isAdmin && (
+          <AdminTriggerPanel
+            id={job.id}
+            kind={job.kind}
+            status={job.status}
+            costUsd={job.cost_usd}
+            processingStartedAt={job.processing_started_at}
+            reviewedAt={job.reviewed_at}
+            errorMessage={job.error_message}
+            aiProvider={job.ai_provider}
+            aiModel={job.ai_model}
+          />
+        )}
 
         {(job.source_url || job.video_url) && (
           <div className="border border-champagne/15 p-4 md:p-5 mb-6">
