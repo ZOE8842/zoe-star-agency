@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { queuePlatformNotification } from "@/lib/notifications/platform";
 
 const ALLOWED_STATUSES = [
   "requested", "in_review", "partner_found", "scheduled", "done", "rejected",
@@ -99,6 +100,26 @@ export async function updateBigMatch(input: {
           scheduled_for: input.scheduled_for ?? prev.scheduled_for ?? null,
         },
         visibility: "all_creators",
+      });
+    }
+
+    // Platform-Notification (TikTok-DM-Bridge) — Worker-Queue
+    const dmType =
+      input.status === "scheduled" ? "match_scheduled"
+      : input.status === "partner_found" ? "match_partner_found"
+      : input.status === "rejected" ? "match_rejected" : null;
+    if (dmType && notif) {
+      await queuePlatformNotification(supabase, {
+        profile_id: prev.profile_id,
+        type: dmType,
+        title: notif.title,
+        body: dmType === "match_scheduled"
+          ? "Hey 👋 dein Big Match wurde geplant. Schau bitte kurz in deine ZOE Inbox."
+          : dmType === "match_partner_found"
+          ? "Hey 👋 wir haben einen passenden Big-Match-Partner fuer dich. Details im ZOE Portal."
+          : "Hey 👋 deine Big-Match-Anfrage konnten wir aktuell nicht matchen. Stell gerne eine neue Anfrage.",
+        context_url: "/portal/services/big-match",
+        priority: 3,
       });
     }
   }

@@ -26,6 +26,7 @@ import {
   backstageBlock,
 } from "./data-sources";
 import { getTikTokPublic, formatTikTokBlock } from "./tiktok-public";
+import { queuePlatformNotification } from "@/lib/notifications/platform";
 
 interface ProcessResult {
   ok: boolean;
@@ -157,6 +158,16 @@ export async function processAccountAnalysis(
 
     // 5) Notification
     await notifyCreator(supabase, locked.profile_id, `/portal/analyse/account/${id}`, "Account-Analyse");
+
+    // 5b) Platform-Notification (TikTok-DM-Bridge)
+    await queuePlatformNotification(supabase, {
+      profile_id: locked.profile_id,
+      type: "analysis_ready",
+      title: "Deine Account-Analyse ist fertig",
+      body: "Deine Analyse ist fertig ✨ Du findest sie jetzt im ZOE Portal.",
+      context_url: `/portal/analyse/account/${id}`,
+      priority: 4,
+    });
 
     // 6) Worker-Health
     await supabase.from("data_source_health").insert({
@@ -302,6 +313,15 @@ export async function processLiveReport(
     if (upErr) throw new Error(upErr.message);
 
     await notifyCreator(supabase, locked.profile_id, `/portal/analyse/live/${id}`, "LIVE-Performance");
+
+    await queuePlatformNotification(supabase, {
+      profile_id: locked.profile_id,
+      type: "analysis_ready",
+      title: "Dein LIVE-Performance-Report ist fertig",
+      body: "Dein neuer LIVE-Report ist fertig ✨ Du findest ihn jetzt im ZOE Portal.",
+      context_url: `/portal/analyse/live/${id}`,
+      priority: 4,
+    });
 
     await supabase.from("data_source_health").insert({
       source: "claude_worker",

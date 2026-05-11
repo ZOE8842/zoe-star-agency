@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { queuePlatformNotification } from "@/lib/notifications/platform";
 
 async function requireAdminClient() {
   const supabase = await createClient();
@@ -20,6 +21,14 @@ async function requireAdminClient() {
 export async function approveShowcase(id: string, featured: boolean = true): Promise<{ ok: boolean; error?: string }> {
   try {
     const { supabase, userId } = await requireAdminClient();
+
+    // Vorher-Status lesen damit wir Push nur bei echtem Approve-Wechsel triggern
+    const { data: prev } = await supabase
+      .from("showcase_creators")
+      .select("profile_id, is_approved")
+      .eq("id", id)
+      .single();
+
     const { error } = await supabase
       .from("showcase_creators")
       .update({
@@ -30,6 +39,19 @@ export async function approveShowcase(id: string, featured: boolean = true): Pro
       })
       .eq("id", id);
     if (error) return { ok: false, error: error.message };
+
+    // Bei Wechsel false → true: Platform-Notification (TikTok-DM-Bridge)
+    if (prev && !prev.is_approved && featured) {
+      await queuePlatformNotification(supabase, {
+        profile_id: prev.profile_id,
+        type: "showcase_approved",
+        title: "Dein Showcase wurde bestaetigt",
+        body: "Dein Showcase wurde bestaetigt ⭐ Du bist jetzt im naechsten Schritt.",
+        context_url: "/portal/profile/showcase",
+        priority: 3,
+      });
+    }
+
     revalidatePath("/portal/admin/showcase");
     revalidatePath("/");
     return { ok: true };
