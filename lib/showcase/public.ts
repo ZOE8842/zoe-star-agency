@@ -39,6 +39,51 @@ function admin() {
   });
 }
 
+// showcase_images-Spalte ist jsonb · echtes Format kann zwei Schemas haben:
+//   - alt: string[]                      ["https://...png", ...]
+//   - neu: { url, type, position }[]     [{url, position: 1}, ...]
+// Diese Helper normalisiert beides zu sortiertem string[] und entfernt
+// Duplikate. Fallback: zeigt mindestens showcase_image-Singular.
+function parseShowcaseImages(
+  raw: unknown,
+  fallbackSingle: string | null,
+): string[] {
+  const collected: { url: string; position: number }[] = [];
+
+  if (Array.isArray(raw)) {
+    raw.forEach((item, i) => {
+      if (typeof item === "string" && item.length > 0) {
+        collected.push({ url: item, position: i + 1 });
+        return;
+      }
+      if (item && typeof item === "object") {
+        const obj = item as { url?: unknown; position?: unknown };
+        if (typeof obj.url === "string" && obj.url.length > 0) {
+          const pos = typeof obj.position === "number" ? obj.position : i + 1;
+          collected.push({ url: obj.url, position: pos });
+        }
+      }
+    });
+  }
+
+  collected.sort((a, b) => a.position - b.position);
+
+  // Dedupe by url
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const c of collected) {
+    if (seen.has(c.url)) continue;
+    seen.add(c.url);
+    urls.push(c.url);
+  }
+
+  // Wenn Array leer aber showcase_image vorhanden → Fallback
+  if (urls.length === 0 && fallbackSingle) {
+    return [fallbackSingle];
+  }
+  return urls;
+}
+
 // Basis-Query: alle approved+featured+confirmed Creators.
 // 2-Step (showcase → profiles via IN) wegen FK-Embed-Ambiguity.
 async function fetchApprovedConfirmed(
@@ -82,9 +127,7 @@ async function fetchApprovedConfirmed(
     .filter((s) => s.profile_id && byId.has(s.profile_id))
     .map((s) => {
       const p = byId.get(s.profile_id)!;
-      const images = Array.isArray(s.showcase_images)
-        ? (s.showcase_images as string[])
-        : [];
+      const images = parseShowcaseImages(s.showcase_images, s.showcase_image);
       return {
         profileId: s.profile_id,
         displayName: s.display_name,
@@ -142,9 +185,7 @@ export async function fetchCreatorByUsername(
 
   if (!s) return null;
 
-  const images = Array.isArray(s.showcase_images)
-    ? (s.showcase_images as string[])
-    : [];
+  const images = parseShowcaseImages(s.showcase_images, s.showcase_image);
 
   return {
     profileId: s.profile_id,
