@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { ActivityFeed } from "@/components/inbox/ActivityFeed";
+import { SystemNotificationsList } from "@/components/inbox/SystemNotificationsList";
+import { InboxRealtime } from "@/components/inbox/InboxRealtime";
 
 export const dynamic = "force-dynamic";
 
@@ -68,9 +70,13 @@ export default async function InboxPage({
         isManager={profile.role === "manager"}
       />
 
+      <InboxRealtime userId={profile.id} />
+
       <main className="container-luxe py-16 md:py-24 max-w-3xl mx-auto">
         <ActivityFeed supabase={supabase} />
-        <div className="mt-12 mb-12 border-t border-champagne/10" />
+        <div className="mt-12 mb-8 border-t border-champagne/10" />
+        <SystemNotificationsList supabase={supabase} userId={profile.id} />
+        <div className="mb-12 border-t border-champagne/10" />
         <div className="flex items-start justify-between gap-6 mb-4">
           <div>
             <p className="eyebrow mb-4">Postfach</p>
@@ -117,9 +123,16 @@ export default async function InboxPage({
         </form>
 
         {(!messages || messages.length === 0) && (
-          <div className="py-20 text-center">
-            <p className="font-display italic text-cream/30 text-2xl">
-              Hier ist es noch ruhig.
+          <div className="py-16 text-center">
+            <p className="font-display italic text-cream/45 text-xl md:text-2xl mb-3">
+              Keine offenen Nachrichten.
+            </p>
+            <p className="text-cream/35 text-xs md:text-sm">
+              Sobald ZOE schreibt oder ein System-Hinweis kommt, taucht er hier auf.
+              Du kannst auch selbst einen{" "}
+              <Link href="/portal/inbox/compose" className="text-champagne hover:text-champagne-300 underline-offset-2 hover:underline">
+                Brief verfassen
+              </Link>.
             </p>
           </div>
         )}

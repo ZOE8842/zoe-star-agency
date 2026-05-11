@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { queuePlatformNotification } from "@/lib/notifications/platform";
+import { queueInboxNotification, pushActivityFeed } from "@/lib/notifications/inbox";
 
 const ALLOWED_STATUSES = [
   "requested", "in_review", "partner_found", "scheduled", "done", "rejected",
@@ -81,25 +82,23 @@ export async function updateBigMatch(input: {
   if (statusChanged) {
     const notif = notificationFor(input.status!);
     if (notif) {
-      await supabase.from("notifications").insert({
+      // Bundle-Key 'match' — mehrere Big-Match-Updates in 24h kollabieren
+      await queueInboxNotification(supabase, {
         user_id: prev.profile_id,
         type: "match",
         title: notif.title,
         body: notif.body,
-        link: `/portal/services/big-match`,
-        channel: ["in_app"],
-        status: "unread",
+        link: "/portal/services/big-match",
+        bundle_key: "match",
       });
     }
     // activity_feed nur bei scheduled (positive Public-Info, ohne Personen-Detail)
     if (input.status === "scheduled") {
-      await supabase.from("activity_feed").insert({
+      await pushActivityFeed(supabase, {
         type: "match_scheduled",
         actor_id: prev.profile_id,
-        payload: {
-          scheduled_for: input.scheduled_for ?? prev.scheduled_for ?? null,
-        },
-        visibility: "all_creators",
+        headline: "Big Match geplant",
+        extra: { scheduled_for: input.scheduled_for ?? prev.scheduled_for ?? null },
       });
     }
 

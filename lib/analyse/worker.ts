@@ -27,6 +27,7 @@ import {
 } from "./data-sources";
 import { getTikTokPublic, formatTikTokBlock } from "./tiktok-public";
 import { queuePlatformNotification } from "@/lib/notifications/platform";
+import { queueInboxNotification, pushActivityFeed } from "@/lib/notifications/inbox";
 
 interface ProcessResult {
   ok: boolean;
@@ -42,14 +43,14 @@ async function notifyCreator(
   link: string,
   module: "Account-Analyse" | "LIVE-Performance",
 ) {
-  await supabase.from("notifications").insert({
+  // Bundle-Key 'analysis' — Account + LIVE-Reports in 24h kollabieren
+  await queueInboxNotification(supabase, {
     user_id: profile_id,
     type: "analysis",
     title: `Deine ${module} ist fertig`,
     body: "Aura hat den Report fuer dich zusammengestellt. Schau ihn dir an wenn du Zeit hast.",
     link,
-    channel: ["in_app"],
-    status: "unread",
+    bundle_key: "analysis",
   });
 }
 

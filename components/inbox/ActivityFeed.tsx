@@ -18,21 +18,33 @@ interface Props {
 const TYPE_LABEL: Record<string, string> = {
   creator_live: "Creator LIVE",
   match_call: "Match-Anfrage",
+  match_scheduled: "Big Match geplant",
   event_started: "Event gestartet",
   academy_lesson: "Neue Academy-Lektion",
-  tiktok_push_selected: "Push-Slot bestaetigt",
+  tiktok_push_selected: "Push bestaetigt",
   agency_news: "Agency Update",
   creator_joined: "Neuer Creator",
+  showcase_approved: "Showcase freigegeben",
+  analysis_done: "Analyse fertig",
+  creator_milestone: "Meilenstein",
+  academy_winner: "Academy-Gewinner",
+  agency_announcement: "Announcement",
 };
 
 const TYPE_DOT: Record<string, string> = {
   creator_live: "bg-red-400",
   match_call: "bg-champagne",
+  match_scheduled: "bg-champagne",
   event_started: "bg-blue-400",
   academy_lesson: "bg-emerald-400",
   tiktok_push_selected: "bg-champagne",
   agency_news: "bg-cream/55",
   creator_joined: "bg-cream/55",
+  showcase_approved: "bg-champagne",
+  analysis_done: "bg-emerald-400",
+  creator_milestone: "bg-champagne",
+  academy_winner: "bg-emerald-400",
+  agency_announcement: "bg-cream/55",
 };
 
 function formatRelative(d: Date): string {
@@ -68,13 +80,64 @@ export async function ActivityFeed({ supabase }: Props) {
   }
 
   if (rows.length === 0) {
+    // Anti-Tot-Zustand: 3 Fallback-Cards mit kommenden Events +
+    // Academy-Featured + ZOE-Highlight statt leerer Section.
+    const now = new Date().toISOString();
+    const [{ data: nextEvents }, { data: nextLessons }] = await Promise.all([
+      supabase
+        .from("events")
+        .select("id, title, start_at, kind")
+        .gte("start_at", now)
+        .eq("status", "open")
+        .order("start_at", { ascending: true })
+        .limit(2),
+      supabase
+        .from("academy_lessons")
+        .select("id, title")
+        .order("order_index", { ascending: false })
+        .limit(1),
+    ]);
+
     return (
-      <section className="border border-champagne/10 p-5 md:p-6">
-        <p className="eyebrow mb-3">Activity-Feed</p>
-        <p className="text-cream/45 text-sm italic">
-          Hier erscheint was im Network passiert — Creator LIVE,
-          Match-Anfragen, Events, neue Academy-Lektionen.
-        </p>
+      <section className="border border-champagne/15 p-5 md:p-6">
+        <p className="eyebrow mb-4">Network · gerade jetzt</p>
+        <ul className="space-y-3">
+          {(nextEvents ?? []).map((e) => (
+            <li key={e.id} className="flex gap-3 items-start">
+              <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="text-cream text-sm md:text-base">
+                  Naechstes Event: {e.title}
+                </p>
+                <p className="text-cream/45 text-xs mt-0.5">
+                  {new Date(e.start_at).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })}
+                </p>
+              </div>
+            </li>
+          ))}
+          {(nextLessons ?? []).map((l) => (
+            <li key={l.id} className="flex gap-3 items-start">
+              <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="text-cream text-sm md:text-base">
+                  Academy-Highlight: {l.title}
+                </p>
+                <p className="text-cream/45 text-xs mt-0.5">Frische Lektion verfuegbar</p>
+              </div>
+            </li>
+          ))}
+          <li className="flex gap-3 items-start">
+            <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-champagne" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="text-cream text-sm md:text-base">
+                Big Match offen — du kannst eine Anfrage stellen
+              </p>
+              <p className="text-cream/45 text-xs mt-0.5">
+                ZOE sucht den passenden Gegner fuer dich.
+              </p>
+            </div>
+          </li>
+        </ul>
       </section>
     );
   }

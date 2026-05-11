@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { queuePlatformNotification } from "@/lib/notifications/platform";
+import { queueInboxNotification, pushActivityFeed } from "@/lib/notifications/inbox";
 
 async function requireAdminClient() {
   const supabase = await createClient();
@@ -40,8 +41,20 @@ export async function approveShowcase(id: string, featured: boolean = true): Pro
       .eq("id", id);
     if (error) return { ok: false, error: error.message };
 
-    // Bei Wechsel false → true: Platform-Notification (TikTok-DM-Bridge)
+    // Bei Wechsel false → true: Inbox + Activity-Feed + External-Push-Queue
     if (prev && !prev.is_approved && featured) {
+      await queueInboxNotification(supabase, {
+        user_id: prev.profile_id,
+        type: "badge",
+        title: "Dein Showcase wurde bestaetigt",
+        body: "Dein Showcase wurde bestaetigt ⭐ Du bist jetzt im naechsten Schritt.",
+        link: "/portal/profile/showcase",
+      });
+      await pushActivityFeed(supabase, {
+        type: "showcase_approved",
+        actor_id: prev.profile_id,
+        headline: "Showcase freigegeben",
+      });
       await queuePlatformNotification(supabase, {
         profile_id: prev.profile_id,
         type: "showcase_approved",
