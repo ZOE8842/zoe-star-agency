@@ -20,7 +20,7 @@ const SERVICES: ServiceCard[] = [
     title: "Big Match",
     short: "ZOE organisiert starke Matches",
     description:
-      "Du willst ein passendes Match? Gib uns Datum, Level und Ziel — wir suchen den richtigen Gegner. Agencygefuehrt, kein Self-Service.",
+      "Datum, Level, Ziel — wir suchen den Gegner. Agencygefuehrt, kein Self-Service.",
     badge: "aktiv",
     href: "/portal/services/big-match",
   },
@@ -28,7 +28,7 @@ const SERVICES: ServiceCard[] = [
     title: "TikTok Push",
     short: "Wunschzeiten fuer LIVE-Traffic",
     description:
-      "Melde deine geplanten LIVE-Zeiten fuer moeglichen TikTok-Traffic an. Immer fuer die naechste Woche, max drei Wuensche.",
+      "Geplante LIVE-Zeiten anmelden. Naechste Woche, max drei Wuensche.",
     badge: "aktiv",
     href: "/portal/services/tiktok-push",
   },
@@ -36,7 +36,7 @@ const SERVICES: ServiceCard[] = [
     title: "Telefon-Termin",
     short: "Rueckruf vom Management",
     description:
-      "Wenn du was besprechen willst — Rueckruf-Fenster waehlen, wir melden uns ueber den Kanal deiner Wahl.",
+      "Rueckruf-Fenster waehlen. Wir melden uns ueber deinen Kanal.",
     badge: "aktiv",
     href: "/portal/services/phone-request",
   },
@@ -44,7 +44,7 @@ const SERVICES: ServiceCard[] = [
     title: "LIVE-Abmeldung",
     short: "Krank, Technik, privat",
     description:
-      "Sauber abmelden wenn du nicht LIVE gehen kannst. Grund + Zeitraum reichen — kein langer Brief noetig.",
+      "Grund + Zeitraum reichen. Kein langer Brief noetig.",
     badge: "aktiv",
     href: "/portal/services/live-absence",
   },
@@ -52,7 +52,7 @@ const SERVICES: ServiceCard[] = [
     title: "Content Helfer",
     short: "Video- und Profil-Feedback",
     description:
-      "Reiche Video, Bild oder Link ein. Wir analysieren Hook, Schnitt, Licht, Ton, TikTok-Tauglichkeit + geben konkrete Verbesserungen.",
+      "Hook, Schnitt, Licht, Ton — und was dir noch fehlt.",
     badge: "aktiv",
     href: "/portal/services/content-helper",
   },
@@ -86,11 +86,10 @@ export default async function ServicesHubPage() {
       <main className="container-luxe relative z-10 py-12 md:py-16 max-w-3xl">
         <p className="eyebrow mb-3">Creator Services</p>
         <h1 className="font-display italic text-cream text-4xl md:text-5xl leading-[1.05] tracking-[-0.02em] mb-4">
-          Alles, was du <span className="text-champagne">brauchst.</span>
+          Deine <span className="text-champagne">Tools.</span>
         </h1>
         <p className="text-cream/60 text-base md:text-lg leading-relaxed mb-12 max-w-xl">
-          LIVE-Push anmelden, Telefon-Termin anfragen, LIVE-Abmeldung
-          weitergeben — alles was du operativ mit ZOE klaerst, an einem Ort.
+          Alles Operative mit ZOE — an einem Ort.
         </p>
 
         <div className="grid gap-3 md:gap-4">
@@ -115,14 +114,14 @@ export default async function ServicesHubPage() {
                 {s.description}
               </p>
               <p className="mt-3 text-champagne text-[10px] uppercase tracking-[0.25em] group-hover:text-champagne-300">
-                Oeffnen →
+                →
               </p>
             </Link>
           ))}
         </div>
 
         <p className="text-cream/35 text-xs mt-12 leading-relaxed">
-          Bei Fragen melde dich beim Management.
+          Fragen? Schreib dem <Link href="/portal/support" className="text-cream/55 hover:text-champagne">Support</Link>.
         </p>
       </main>
     </>

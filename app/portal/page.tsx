@@ -12,12 +12,12 @@ import { ShowcaseInterestBanner } from "@/components/dashboard/ShowcaseInterestB
 
 function greeting(): string {
   const h = new Date().getHours();
-  if (h < 5) return "Späte Stunde";
-  if (h < 11) return "Guten Morgen";
-  if (h < 14) return "Mahlzeit";
-  if (h < 18) return "Guten Tag";
-  if (h < 22) return "Guten Abend";
-  return "Späte Stunde";
+  if (h < 5) return "Nacht";
+  if (h < 11) return "Morgen";
+  if (h < 14) return "Mittag";
+  if (h < 18) return "Nachmittag";
+  if (h < 22) return "Abend";
+  return "Nacht";
 }
 
 export default async function DashboardPage() {
@@ -146,10 +146,10 @@ export default async function DashboardPage() {
   } else {
     featured = {
       eyebrow: "Creator Services",
-      headline: "Alles ruhig.",
-      tagline: "Keine offenen Punkte. Schau dir die Creator Services an oder oeffne dein Postfach.",
+      headline: "Nichts offen.",
+      tagline: "Alle Punkte erledigt. Zeit fuer den naechsten Schritt — Services oder Academy.",
       href: "/portal/services",
-      cta: "Services oeffnen",
+      cta: "Services",
       accent: "—",
     };
   }
@@ -264,10 +264,10 @@ export default async function DashboardPage() {
                 eyebrow="TikTok Push"
                 label={
                   latestPushStatus === "selected"
-                    ? "Ausgewaehlt"
+                    ? "Bestaetigt"
                     : latestPushStatus === "submitted" || latestPushStatus === "reviewed"
                     ? "Eingereicht"
-                    : "Wunschzeit eintragen"
+                    : "Wunschzeit setzen"
                 }
                 hint={
                   latestPushStatus === "selected"
@@ -320,8 +320,8 @@ export default async function DashboardPage() {
           <p className="eyebrow mb-5 md:mb-6">Aktionen</p>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
             {[
-              { href: "/portal/services", label: "Creator Services" },
-              { href: "/portal/inbox/compose", label: "Nachricht senden" },
+              { href: "/portal/services", label: "Services" },
+              { href: "/portal/inbox/compose", label: "Schreiben" },
               { href: "/portal/events", label: "Events" },
               { href: "/portal/academy", label: "Academy" },
               { href: "/portal/support", label: "Support" },
@@ -343,7 +343,7 @@ export default async function DashboardPage() {
             <div>
               <p className="eyebrow mb-3">ZOE Roster</p>
               <p className="text-cream/70 text-sm md:text-base leading-relaxed mb-5 max-w-[44ch]">
-                Du bist Teil der ersten Welle der ZOE Star Agency. TikTok Elite Agency Club Deutschland. Persönliches Creator-Management mit LIVE-Fokus.
+                Erste Welle der ZOE Star Agency. TikTok Elite Agency Club Deutschland. Creator-Management mit LIVE-Fokus.
               </p>
               <AvatarStack size="md" caption="Roster im Aufbau" />
             </div>
@@ -368,7 +368,7 @@ export default async function DashboardPage() {
             <div className="flex items-baseline justify-between mb-5">
               <div>
                 <p className="eyebrow mb-1">Dein Setup</p>
-                <p className="text-cream/55 text-sm">Noch {progressItems.length - progressDone} Schritte bis fertig.</p>
+                <p className="text-cream/55 text-sm">{progressItems.length - progressDone} Punkte offen.</p>
               </div>
               <span className="text-champagne font-display italic text-3xl">{progressPct}%</span>
             </div>
