@@ -85,6 +85,62 @@ export default async function AdminPage() {
   const recentInvites = recentInvitesRes.data ?? [];
   const recentTickets = recentTicketsRes.data ?? [];
 
+  // OPERATIONS-OVERVIEW · alle offenen Anfragen / Reviews zentral
+  // Admin-only, kein Manager-Scoping noetig.
+  let ops = {
+    tiktok_push: 0,
+    phone_request: 0,
+    live_absence: 0,
+    content_helper: 0,
+    big_match: 0,
+    account_analyse: 0,
+    live_report: 0,
+    showcase_pending: 0,
+    dm_queue: 0,
+    dm_failed: 0,
+  };
+  if (isAdmin) {
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const [
+      pushRes, phoneRes, absRes, contentRes, matchRes,
+      aaRes, lpRes, showcaseRes, dmQueueRes, dmFailRes,
+    ] = await Promise.all([
+      supabase.from("tiktok_push_requests").select("id", { head: true, count: "exact" })
+        .eq("status", "submitted"),
+      supabase.from("phone_call_requests").select("id", { head: true, count: "exact" })
+        .eq("status", "open"),
+      supabase.from("live_absences").select("id", { head: true, count: "exact" })
+        .eq("status", "submitted"),
+      supabase.from("content_reviews").select("id", { head: true, count: "exact" })
+        .in("status", ["submitted", "queued", "processing"]),
+      supabase.from("match_requests").select("id", { head: true, count: "exact" })
+        .in("status", ["requested", "in_review", "partner_found"]),
+      supabase.from("account_analyses").select("id", { head: true, count: "exact" })
+        .in("status", ["submitted", "queued", "processing"]),
+      supabase.from("live_performance_reports").select("id", { head: true, count: "exact" })
+        .in("status", ["submitted", "queued", "processing"]),
+      supabase.from("showcase_creators").select("id", { head: true, count: "exact" })
+        .eq("is_approved", false),
+      supabase.from("platform_notifications").select("id", { head: true, count: "exact" })
+        .eq("status", "queued"),
+      supabase.from("platform_notifications").select("id", { head: true, count: "exact" })
+        .eq("status", "failed"),
+    ]);
+    ops = {
+      tiktok_push: pushRes.count ?? 0,
+      phone_request: phoneRes.count ?? 0,
+      live_absence: absRes.count ?? 0,
+      content_helper: contentRes.count ?? 0,
+      big_match: matchRes.count ?? 0,
+      account_analyse: aaRes.count ?? 0,
+      live_report: lpRes.count ?? 0,
+      showcase_pending: showcaseRes.count ?? 0,
+      dm_queue: dmQueueRes.count ?? 0,
+      dm_failed: dmFailRes.count ?? 0,
+    };
+  }
+  const opsTotal = Object.values(ops).reduce((s, n) => s + n, 0);
+
   return (
     <>
       <PortalNav
@@ -129,6 +185,30 @@ export default async function AdminPage() {
             <Stat label="Tickets offen" value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
           )}
         </section>
+
+        {/* OPERATIONS-COCKPIT — alle offenen Anfragen auf einen Blick */}
+        {isAdmin && (
+          <section className="mb-12">
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="eyebrow">Operations · offen ({opsTotal})</p>
+              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+                Stand jetzt
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
+              <OpsTile href="/portal/admin/services/tiktok-push" label="TikTok-Push" count={ops.tiktok_push} />
+              <OpsTile href="/portal/admin/services/phone-requests" label="Telefon" count={ops.phone_request} />
+              <OpsTile href="/portal/admin/services/live-absences" label="Abmeldung" count={ops.live_absence} />
+              <OpsTile href="/portal/admin/services/content-helper" label="Content-Helfer" count={ops.content_helper} />
+              <OpsTile href="/portal/admin/services/big-match" label="Big Match" count={ops.big_match} />
+              <OpsTile href="/portal/admin/analyse/account" label="Account-Analyse" count={ops.account_analyse} />
+              <OpsTile href="/portal/admin/analyse/live" label="LIVE-Report" count={ops.live_report} />
+              <OpsTile href="/portal/admin/showcase" label="Showcase pending" count={ops.showcase_pending} />
+              <OpsTile href="/portal/admin/notifications-queue" label="DM-Queue" count={ops.dm_queue} />
+              <OpsTile href="/portal/admin/notifications-queue" label="DM-Fail" count={ops.dm_failed} warn={ops.dm_failed > 0} />
+            </div>
+          </section>
+        )}
 
         {/* QUICK ACTIONS */}
         <section className="mb-12">
@@ -261,6 +341,32 @@ function Stat({ label, value, href, highlight }: { label: string; value: number;
     >
       <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-4 leading-tight">{label}</p>
       <p className={`font-display italic font-black text-4xl md:text-5xl ${highlight ? "text-champagne" : "text-cream group-hover:text-champagne"} transition-colors`}>{value}</p>
+    </Link>
+  );
+}
+
+function OpsTile({ href, label, count, warn }: { href: string; label: string; count: number; warn?: boolean }) {
+  const highlight = count > 0;
+  const isWarn = warn && count > 0;
+  return (
+    <Link
+      href={href}
+      className={`group border p-3 md:p-4 transition-colors ${
+        isWarn
+          ? "border-red-400/40 bg-red-400/5"
+          : highlight
+          ? "border-champagne bg-champagne/5"
+          : "border-champagne/10 hover:border-champagne/30"
+      }`}
+    >
+      <p className={`text-[9px] uppercase tracking-[0.22em] mb-2 ${highlight ? "text-champagne" : "text-cream/45"}`}>
+        {label}
+      </p>
+      <p className={`font-display italic font-black text-2xl md:text-3xl leading-none ${
+        isWarn ? "text-red-300/85" : highlight ? "text-champagne" : "text-cream/55"
+      }`}>
+        {count}
+      </p>
     </Link>
   );
 }
