@@ -5,6 +5,9 @@ import { PortalNav } from "@/components/PortalNav";
 import { AdminTriggerPanel } from "./AdminTriggerPanel";
 
 export const dynamic = "force-dynamic";
+// Server Action triggert Worker via after() — braucht Zeit nach Response,
+// damit der Hintergrund-Job nicht von Vercel gekillt wird.
+export const maxDuration = 60;
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Eingereicht",
