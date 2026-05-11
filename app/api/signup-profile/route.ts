@@ -40,6 +40,13 @@ export async function POST(req: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
+  // Helper: Reject → Auth-User cleanup (vermeidet Ghost-User wenn
+  // signUp() bereits durchgelaufen ist aber Validation hier failt).
+  async function rejectAndCleanup(status: number, message: string) {
+    await admin.auth.admin.deleteUser(user_id).catch(() => {});
+    return NextResponse.json({ error: message }, { status });
+  }
+
   // 1. Verifizieren dass der User wirklich grade angelegt wurde
   const { data: userData, error: userErr } = await admin.auth.admin.getUserById(user_id);
   if (userErr || !userData?.user) {
@@ -48,10 +55,10 @@ export async function POST(req: NextRequest) {
 
   // Email-Match-Check — Schutz gegen ID-Forgery
   if (userData.user.email !== email) {
-    return NextResponse.json({ error: "Email stimmt nicht mit Account überein." }, { status: 400 });
+    return rejectAndCleanup(400, "Email stimmt nicht mit Account überein.");
   }
 
-  // 2. Invite holen + validieren
+  // 2. Invite holen + validieren · cleanup bei jedem reject
   const { data: invite, error: inviteErr } = await admin
     .from("invites")
     .select("id, intended_role, expires_at, used_at")
@@ -59,15 +66,15 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   if (inviteErr || !invite) {
-    return NextResponse.json({ error: "Ungültiger Invite-Code." }, { status: 400 });
+    return rejectAndCleanup(400, "Dieser Einladungscode ist ungueltig. Bitte fordere einen neuen Code an.");
   }
 
   if (invite.used_at) {
-    return NextResponse.json({ error: "Invite-Code wurde bereits verwendet." }, { status: 400 });
+    return rejectAndCleanup(400, "Dieser Einladungscode wurde bereits verwendet. Bitte fordere einen neuen Code an.");
   }
 
   if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
-    return NextResponse.json({ error: "Invite-Code ist abgelaufen." }, { status: 400 });
+    return rejectAndCleanup(400, "Dieser Einladungscode ist abgelaufen. Bitte fordere einen neuen Code an.");
   }
 
   // 3. Prüfen ob TikTok-Username schon vergeben (UNIQUE-Constraint, aber friendly error)
@@ -78,7 +85,7 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   if (existing) {
-    return NextResponse.json({ error: "Dieser TikTok-Username ist bereits registriert." }, { status: 400 });
+    return rejectAndCleanup(400, "Dieser TikTok-Username ist bereits registriert.");
   }
 
   // 4. Profile anlegen

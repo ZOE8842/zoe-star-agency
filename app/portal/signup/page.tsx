@@ -58,6 +58,23 @@ function SignupForm() {
       ? form.tiktok_username.slice(1)
       : form.tiktok_username;
 
+    // PRE-CHECK · Invite + TikTok-Username VOR auth.signUp() validieren.
+    // Verhindert Ghost-User (Auth ohne Profile).
+    const preCheck = await fetch("/api/check-invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        invite_code: form.invite.trim().toUpperCase(),
+        tiktok_username: tiktokClean,
+      }),
+    });
+    const preResult = await preCheck.json().catch(() => ({}));
+    if (!preCheck.ok) {
+      setError(preResult.error || "Einladungscode konnte nicht geprueft werden.");
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
 
     // 1. Auth-Account erstellen (sendet Verify-Mail, KEINE Session)
