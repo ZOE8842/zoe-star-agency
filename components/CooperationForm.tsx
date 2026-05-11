@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const TYPES = [
   { value: "live_campaign", label: "TikTok LIVE Kampagne" },
@@ -11,7 +11,18 @@ const TYPES = [
   { value: "other", label: "Sonstiges" },
 ];
 
-export function CooperationForm() {
+interface CooperationFormProps {
+  /** TikTok-Username falls von Creator-Detail-Seite gekommen. */
+  initialCreator?: string;
+}
+
+interface CreatorContext {
+  username: string;
+  displayName?: string;
+  profileId?: string;
+}
+
+export function CooperationForm({ initialCreator = "" }: CooperationFormProps) {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -24,6 +35,27 @@ export function CooperationForm() {
     budget: "",
     honeypot: "",
   });
+  const [creator, setCreator] = useState<CreatorContext | null>(
+    initialCreator ? { username: initialCreator.replace(/^@/, "") } : null,
+  );
+
+  // Wenn auf der Kooperationen-Seite ein Creator-Card-Button klickt,
+  // sendet die Grid-Komponente ein CustomEvent. Wir fuellen Creator-
+  // Context + scrollen ist schon dort uebernommen.
+  useEffect(() => {
+    function onPrefill(e: Event) {
+      const ce = e as CustomEvent<{ tiktokUsername: string; displayName: string; profileId: string }>;
+      const d = ce.detail;
+      if (!d?.tiktokUsername) return;
+      setCreator({
+        username: d.tiktokUsername.replace(/^@/, ""),
+        displayName: d.displayName,
+        profileId: d.profileId,
+      });
+    }
+    window.addEventListener("zoe:coop-prefill", onPrefill);
+    return () => window.removeEventListener("zoe:coop-prefill", onPrefill);
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -37,10 +69,20 @@ export function CooperationForm() {
     setError(null);
     setLoading(true);
 
+    const payload = creator
+      ? {
+          ...form,
+          creator_username: creator.username,
+          creator_display_name: creator.displayName ?? null,
+          creator_id: creator.profileId ?? null,
+          creator_url: `${typeof window !== "undefined" ? window.location.origin : ""}/creator/${encodeURIComponent(creator.username)}`,
+        }
+      : form;
+
     const res = await fetch("/api/cooperation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     const json = await res.json().catch(() => ({}));
     setLoading(false);
@@ -68,6 +110,27 @@ export function CooperationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {creator && (
+        <div className="border border-champagne/30 bg-champagne/[0.04] p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">
+              Anfrage fuer Creator
+            </p>
+            <p className="text-champagne font-display italic text-lg">
+              {creator.displayName ? `${creator.displayName} ` : ""}
+              <span className="text-cream/65 text-sm">@{creator.username}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCreator(null)}
+            className="text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.25em] shrink-0"
+          >
+            entfernen
+          </button>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-4 md:gap-5">
         <Field label="Vorname" required>
           <input
@@ -192,13 +255,11 @@ export function CooperationForm() {
       </button>
 
       <p className="text-cream/50 text-xs leading-relaxed">
-        Antwort innerhalb von 24–48 Stunden. Für detaillierte LIVE-Daten,
-        Mediadaten oder spezifische Creator-Anfragen kannst du uns auch direkt
-        unter{" "}
-        <a href="mailto:info@zoe-star.de" className="text-champagne hover:underline">
-          info@zoe-star.de
-        </a>{" "}
-        kontaktieren.
+        Antwort innerhalb von 24–48 Stunden. Anfragen gehen direkt an{" "}
+        <a href="mailto:nesip.vural@zoe-star.de" className="text-champagne hover:underline">
+          nesip.vural@zoe-star.de
+        </a>
+        . Direkter Creator-Kontakt nicht moeglich — alles laeuft ueber die Agency.
       </p>
 
       <style jsx>{`

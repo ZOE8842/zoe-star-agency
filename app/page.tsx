@@ -11,73 +11,19 @@ import { SectionNumber } from "@/components/SectionNumber";
 import { CreatorShowcaseCard, type CreatorShowcase } from "@/components/CreatorShowcaseCard";
 import { FeaturedCreatorsStrip } from "@/components/FeaturedCreatorsStrip";
 import { HeroParallax } from "@/components/HeroParallax";
-import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import {
+  fetchHomepageCreators,
+  toShowcaseCard,
+  randomTake,
+} from "@/lib/showcase/public";
 import {
   TikTokIcon,
   InstagramIcon,
   ArrowExternalIcon,
 } from "@/components/SocialIcons";
 
-const VISUAL_CYCLE: NonNullable<CreatorShowcase["visual"]>[] = ["champagne", "warm", "cool", "ink"];
-
-async function fetchFeaturedCreators(): Promise<CreatorShowcase[]> {
-  // Public-Showcase darf NUR Cards zeigen die:
-  //   1) is_approved + is_featured durch Admin sind  UND
-  //   2) deren Owner allow_website_showcase_confirmed = true gesetzt hat
-  //      (Email-Bestaetigung). Schutz vor "Admin-approved aber User
-  //      hat Consent-Mail nie bestaetigt".
-  //
-  // RLS-Problem fuer Anon: profiles ist RLS-protected, anon kann
-  // confirmed-Flag nicht lesen. Wir nutzen Service-Role direkt fuer
-  // diese READ-only Public-Query — kein Risiko weil wir auf approved
-  // + featured + confirmed filtern.
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  const supabase = createAdminClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-  void createServerClient;
-  // 2-Step Query: showcase_creators -> profiles via IN
-  // (statt embed-Ambiguity wegen 2 FKs auf profiles).
-  const { data: shows } = await supabase
-    .from("showcase_creators")
-    .select("profile_id, display_name, category, showcase_image, tiktok_url, instagram_url, approved_at, sort_order")
-    .eq("is_approved", true)
-    .eq("is_featured", true)
-    .order("sort_order", { ascending: true })
-    .order("approved_at", { ascending: false });
-
-  if (!shows || shows.length === 0) return [];
-
-  // Email-Bestaetigung pruefen ueber explizite profile-Query
-  const profileIds = shows.map((s) => s.profile_id).filter(Boolean) as string[];
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, allow_website_showcase_confirmed")
-    .in("id", profileIds);
-  const confirmedSet = new Set(
-    (profiles ?? [])
-      .filter((p) => p.allow_website_showcase_confirmed === true)
-      .map((p) => p.id),
-  );
-
-  return shows
-    .filter((r) => r.profile_id && confirmedSet.has(r.profile_id))
-    .map((r, i): CreatorShowcase => {
-      const platform: CreatorShowcase["platform"] =
-        r.tiktok_url ? "tiktok" : r.instagram_url ? "instagram" : null;
-      const href = r.tiktok_url || r.instagram_url || undefined;
-      return {
-        displayName: r.display_name,
-        category: r.category ?? undefined,
-        imageSrc: r.showcase_image ?? undefined,
-        platform,
-        href,
-        visual: VISUAL_CYCLE[i % VISUAL_CYCLE.length],
-      };
-    });
-}
+// Public-Showcase-Queries leben in lib/showcase/public.ts (zentral genutzt von
+// Homepage, /creator und /kooperationen).
 
 // Fallback wenn DB leer: NUR Agency selbst, keine erfundenen Creator-Profile.
 // Echte Creator erscheinen erst wenn Member-Bereich live ist und Admin
@@ -103,8 +49,11 @@ const APPLY_URL =
   "https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756";
 
 export default async function HomePage() {
-  const fetched = await fetchFeaturedCreators();
-  const featured = fetched.length > 0 ? fetched : FALLBACK_CARDS;
+  const all = await fetchHomepageCreators();
+  // Random-Pick max 6 — bei jedem Reload leicht anders.
+  const picked = all.length > 0 ? randomTake(all, 6).map(toShowcaseCard) : [];
+  const featured = picked.length > 0 ? picked : FALLBACK_CARDS;
+  const fetched = picked; // erhaelt Existing-Code-Logik ("fetched.length > 0 ? ...")
   return (
     <>
       <Header />

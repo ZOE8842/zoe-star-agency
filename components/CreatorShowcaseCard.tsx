@@ -2,6 +2,7 @@
 // KEIN TikTok-UI, KEINE Likes/Comments/Shares/LIVE/Viewer-Zahlen.
 // Vertikales Frame als Magazin-Cover. Subject = Bild ODER Z-Brand-Mark.
 
+import Link from "next/link";
 import { ArrowExternalIcon, TikTokIcon, InstagramIcon } from "./SocialIcons";
 
 export interface CreatorShowcase {
@@ -12,6 +13,8 @@ export interface CreatorShowcase {
   imageSrc2?: string;
   platform?: "tiktok" | "instagram" | null;
   href?: string;
+  /** Interne Detail-URL · hat Vorrang ueber externe href. */
+  profileHref?: string;
   visual?: "warm" | "cool" | "champagne" | "ink";
 }
 
@@ -35,24 +38,16 @@ export function CreatorShowcaseCard({
   imageSrc2,
   platform,
   href,
+  profileHref,
   visual = "ink",
   className = "",
   rotation = 0,
 }: Props) {
-  const Wrapper = href ? "a" : "div";
-  const wrapperProps = href
-    ? { href, target: "_blank", rel: "noopener noreferrer" }
-    : {};
-
   const platformLabel = platform === "tiktok" ? "TikTok" : platform === "instagram" ? "Instagram" : null;
   const PlatformIcon = platform === "tiktok" ? TikTokIcon : platform === "instagram" ? InstagramIcon : null;
 
-  return (
-    <Wrapper
-      {...wrapperProps}
-      className={`group relative block ${href ? "cursor-pointer" : ""} ${className}`}
-      style={{ transform: `rotate(${rotation}deg)` }}
-    >
+  const inner = (
+    <>
       <div
         className="relative w-full aspect-[3/4] border border-champagne/15 group-hover:border-champagne overflow-hidden transition-all duration-500"
         style={imageSrc ? undefined : { background: VISUAL_BG[visual] }}
@@ -142,6 +137,36 @@ export function CreatorShowcaseCard({
           )}
         </div>
       </div>
-    </Wrapper>
+    </>
+  );
+
+  const wrapperStyle = { transform: `rotate(${rotation}deg)` };
+  const wrapperClass = `group relative block ${profileHref || href ? "cursor-pointer" : ""} ${className}`;
+
+  // Internal-Detail (Next-Link) > external (a) > div
+  if (profileHref) {
+    return (
+      <Link href={profileHref} className={wrapperClass} style={wrapperStyle}>
+        {inner}
+      </Link>
+    );
+  }
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={wrapperClass}
+        style={wrapperStyle}
+      >
+        {inner}
+      </a>
+    );
+  }
+  return (
+    <div className={wrapperClass} style={wrapperStyle}>
+      {inner}
+    </div>
   );
 }

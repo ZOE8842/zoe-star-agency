@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
@@ -8,6 +7,12 @@ import { SectionNumber } from "@/components/SectionNumber";
 import { Marquee } from "@/components/Marquee";
 import { MailIcon, ArrowExternalIcon } from "@/components/SocialIcons";
 import { CooperationForm } from "@/components/CooperationForm";
+import {
+  KooperationenCreatorGrid,
+  type CoopCreatorItem,
+  type FilterOption,
+} from "@/components/KooperationenCreatorGrid";
+import { fetchCooperationCreators } from "@/lib/showcase/public";
 
 export const metadata: Metadata = {
   title: "Kooperationen — TikTok LIVE Reichweite",
@@ -52,7 +57,45 @@ const SECTORS = [
   "Events",
 ];
 
-export default function KooperationenPage() {
+export const dynamic = "force-dynamic";
+
+function countBy(items: CoopCreatorItem[], key: keyof CoopCreatorItem): FilterOption[] {
+  const map = new Map<string, number>();
+  for (const it of items) {
+    const v = it[key];
+    if (typeof v !== "string" || !v) continue;
+    map.set(v, (map.get(v) ?? 0) + 1);
+  }
+  return [...map.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+}
+
+interface SearchProps {
+  searchParams: Promise<{ creator?: string }>;
+}
+
+export default async function KooperationenPage({ searchParams }: SearchProps) {
+  const sp = await searchParams;
+  const initialCreator = (sp.creator ?? "").trim();
+
+  const all = await fetchCooperationCreators();
+  const items: CoopCreatorItem[] = all
+    .filter((c) => c.tiktokUsername)
+    .map((c) => ({
+      profileId: c.profileId,
+      displayName: c.displayName || c.tiktokUsername!,
+      tiktokUsername: c.tiktokUsername!,
+      category: c.category,
+      language: c.language,
+      region: c.region,
+      showcaseImage: c.showcaseImage,
+    }));
+
+  const filterCategories = countBy(items, "category");
+  const filterLanguages = countBy(items, "language");
+  const filterRegions = countBy(items, "region");
+
   return (
     <>
       <Header />
@@ -276,12 +319,50 @@ export default function KooperationenPage() {
         </section>
 
         {/* ============================================================
-            05 · KOOPERATION ANFRAGEN — echtes Formular
+            05 · CREATOR-AUSWAHL — alle approved + coop-confirmed
+            ============================================================ */}
+        <section className="relative bg-ink py-20 md:py-28 overflow-hidden border-b border-champagne/10">
+          <div className="absolute pointer-events-none select-none -top-[6%] -left-[3%] z-0">
+            <SectionNumber number="05" rotation={-2} className="text-[260px] md:text-[480px] lg:text-[600px]" />
+          </div>
+          <div className="container-luxe relative z-10">
+            <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-10 md:mb-14 items-end">
+              <div className="md:col-span-7">
+                <MotionReveal>
+                  <p className="eyebrow mb-5">Creator-Auswahl</p>
+                </MotionReveal>
+                <MotionReveal delay={0.08}>
+                  <h2 className="leading-[0.92] tracking-[-0.02em]">
+                    <span className="block mixed-type-line-1 text-cream/90 text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px]">Alle Creator</span>
+                    <span className="block mixed-type-line-2 text-champagne -mt-1 text-[48px] sm:text-[68px] md:text-[88px]">fuer Kooperationen.</span>
+                  </h2>
+                </MotionReveal>
+              </div>
+              <div className="md:col-span-5">
+                <MotionReveal delay={0.15}>
+                  <p className="text-cream/65 text-base md:text-lg leading-relaxed">
+                    Vollstaendige Liste der opt-in Creator. Direkter Creator-Kontakt nicht moeglich — Anfragen laufen ueber Agency.
+                  </p>
+                </MotionReveal>
+              </div>
+            </div>
+
+            <KooperationenCreatorGrid
+              creators={items}
+              filterCategories={filterCategories}
+              filterLanguages={filterLanguages}
+              filterRegions={filterRegions}
+            />
+          </div>
+        </section>
+
+        {/* ============================================================
+            06 · KOOPERATION ANFRAGEN — echtes Formular
             ============================================================ */}
         <section id="anfrage" className="relative bg-ink py-24 md:py-36 overflow-hidden">
           <div className="hero-glow-mesh" aria-hidden />
           <div className="absolute pointer-events-none select-none -bottom-[12%] -left-[4%] z-0">
-            <SectionNumber number="05" rotation={-3} className="text-[300px] md:text-[560px] lg:text-[700px]" />
+            <SectionNumber number="06" rotation={-3} className="text-[300px] md:text-[560px] lg:text-[700px]" />
           </div>
 
           <div className="container-luxe relative z-10">
@@ -317,7 +398,7 @@ export default function KooperationenPage() {
               </div>
               <div className="lg:col-span-7">
                 <MotionReveal delay={0.15}>
-                  <CooperationForm />
+                  <CooperationForm initialCreator={initialCreator} />
                 </MotionReveal>
               </div>
             </div>

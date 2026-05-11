@@ -1,0 +1,195 @@
+// Zentrale Public-Showcase-Queries · Service-Role-Client.
+// Genutzt von:
+//   - app/page.tsx          → Homepage (random 6 featured)
+//   - app/creator/page.tsx  → Creator-Liste (random 6)
+//   - app/creator/[username]/page.tsx → Einzelprofil
+//   - app/kooperationen     → alle coop-confirmed
+
+import { createClient } from "@supabase/supabase-js";
+import type { CreatorShowcase } from "@/components/CreatorShowcaseCard";
+
+const VISUAL_CYCLE: NonNullable<CreatorShowcase["visual"]>[] = [
+  "champagne",
+  "warm",
+  "cool",
+  "ink",
+];
+
+export interface PublicCreator {
+  profileId: string;
+  displayName: string | null;
+  tiktokUsername: string | null;
+  category: string | null;
+  language: string | null;
+  region: string | null;
+  showcaseImage: string | null;
+  showcaseImages: string[];
+  tiktokUrl: string | null;
+  instagramUrl: string | null;
+  bio: string | null;
+  approvedAt: string | null;
+  sortOrder: number | null;
+}
+
+function admin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+// Basis-Query: alle approved+featured+confirmed Creators.
+// 2-Step (showcase → profiles via IN) wegen FK-Embed-Ambiguity.
+async function fetchApprovedConfirmed(
+  filter: "featured" | "cooperation",
+): Promise<PublicCreator[]> {
+  const c = admin();
+
+  const { data: shows, error: showErr } = await c
+    .from("showcase_creators")
+    .select(
+      "profile_id, display_name, category, showcase_image, showcase_images, tiktok_url, instagram_url, approved_at, sort_order",
+    )
+    .eq("is_approved", true)
+    .eq("is_featured", true)
+    .order("sort_order", { ascending: true })
+    .order("approved_at", { ascending: false });
+
+  if (showErr || !shows || shows.length === 0) return [];
+
+  const ids = shows.map((s) => s.profile_id).filter(Boolean) as string[];
+  if (ids.length === 0) return [];
+
+  const confirmField =
+    filter === "featured"
+      ? "allow_website_showcase_confirmed"
+      : "allow_partner_cooperations_confirmed";
+
+  const { data: profiles } = await c
+    .from("profiles")
+    .select(
+      `id, tiktok_username, language, region, bio, allow_website_showcase_confirmed, allow_partner_cooperations_confirmed`,
+    )
+    .in("id", ids)
+    .eq(confirmField, true);
+
+  const byId = new Map(
+    (profiles ?? []).map((p) => [p.id as string, p] as const),
+  );
+
+  return shows
+    .filter((s) => s.profile_id && byId.has(s.profile_id))
+    .map((s) => {
+      const p = byId.get(s.profile_id)!;
+      const images = Array.isArray(s.showcase_images)
+        ? (s.showcase_images as string[])
+        : [];
+      return {
+        profileId: s.profile_id,
+        displayName: s.display_name,
+        tiktokUsername: p.tiktok_username,
+        category: s.category,
+        language: p.language,
+        region: p.region,
+        showcaseImage: s.showcase_image,
+        showcaseImages: images,
+        tiktokUrl: s.tiktok_url,
+        instagramUrl: s.instagram_url,
+        bio: p.bio ?? null,
+        approvedAt: s.approved_at,
+        sortOrder: s.sort_order,
+      };
+    });
+}
+
+export async function fetchHomepageCreators(): Promise<PublicCreator[]> {
+  return fetchApprovedConfirmed("featured");
+}
+
+export async function fetchCooperationCreators(): Promise<PublicCreator[]> {
+  return fetchApprovedConfirmed("cooperation");
+}
+
+export async function fetchCreatorByUsername(
+  username: string,
+): Promise<PublicCreator | null> {
+  const c = admin();
+  const u = username.trim().toLowerCase().replace(/^@/, "");
+  if (!u) return null;
+
+  // Profile via tiktok_username case-insensitive
+  const { data: profile } = await c
+    .from("profiles")
+    .select(
+      `id, tiktok_username, language, region, bio, allow_website_showcase_confirmed, allow_partner_cooperations_confirmed`,
+    )
+    .ilike("tiktok_username", u)
+    .maybeSingle();
+
+  if (!profile) return null;
+  if (!profile.allow_website_showcase_confirmed) return null;
+
+  const { data: s } = await c
+    .from("showcase_creators")
+    .select(
+      "profile_id, display_name, category, showcase_image, showcase_images, tiktok_url, instagram_url, approved_at, sort_order",
+    )
+    .eq("profile_id", profile.id)
+    .eq("is_approved", true)
+    .eq("is_featured", true)
+    .maybeSingle();
+
+  if (!s) return null;
+
+  const images = Array.isArray(s.showcase_images)
+    ? (s.showcase_images as string[])
+    : [];
+
+  return {
+    profileId: s.profile_id,
+    displayName: s.display_name,
+    tiktokUsername: profile.tiktok_username,
+    category: s.category,
+    language: profile.language,
+    region: profile.region,
+    showcaseImage: s.showcase_image,
+    showcaseImages: images,
+    tiktokUrl: s.tiktok_url,
+    instagramUrl: s.instagram_url,
+    bio: profile.bio ?? null,
+    approvedAt: s.approved_at,
+    sortOrder: s.sort_order,
+  };
+}
+
+// Map PublicCreator → CreatorShowcase fuer Card-Component.
+export function toShowcaseCard(p: PublicCreator, i: number): CreatorShowcase {
+  const platform: CreatorShowcase["platform"] = p.tiktokUrl
+    ? "tiktok"
+    : p.instagramUrl
+    ? "instagram"
+    : null;
+  const href = p.tiktokUrl || p.instagramUrl || undefined;
+  return {
+    displayName: p.displayName ?? p.tiktokUsername ?? "Creator",
+    category: p.category ?? undefined,
+    imageSrc: p.showcaseImage ?? undefined,
+    imageSrc2: p.showcaseImages[1] ?? undefined,
+    platform,
+    href,
+    visual: VISUAL_CYCLE[i % VISUAL_CYCLE.length],
+    profileHref: p.tiktokUsername ? `/creator/${p.tiktokUsername}` : undefined,
+  };
+}
+
+// Random-Pick · Fisher-Yates Shuffle, dann slice.
+// HINWEIS: nicht deterministisch — bei jeder Server-Render-Anfrage neu.
+export function randomTake<T>(arr: T[], n: number): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, n);
+}
