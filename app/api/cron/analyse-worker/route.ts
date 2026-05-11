@@ -7,6 +7,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { runWorkerBatch } from "@/lib/analyse/worker";
 
 export const runtime = "nodejs";
@@ -54,7 +55,11 @@ export async function GET(request: NextRequest) {
 }
 
 // POST mit { id, kind } um eine einzelne Analyse manuell zu triggern
-// (z.B. aus Admin-UI). Kind = "account" | "live".
+// (z.B. aus Admin-UI). Kind = "account" | "live" | "content_review".
+//
+// Antwortet sofort mit 202 Accepted und arbeitet die eigentliche Analyse
+// in `after()` ab. Damit blockiert der Aufrufer (Server Action) nicht auf
+// dem Anthropic-Call. Der Worker hat seine eigenen maxDuration=60s.
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -67,24 +72,45 @@ export async function POST(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
-  let body: { id?: string; kind?: string };
+  let body: { id?: string; kind?: string; sync?: boolean };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const { id, kind } = body;
+  const { id, kind, sync } = body;
   if (!id || (kind !== "account" && kind !== "live" && kind !== "content_review")) {
     return NextResponse.json({ error: "id + kind ('account' | 'live' | 'content_review') erforderlich" }, { status: 400 });
   }
 
   const { processAccountAnalysis, processLiveReport, processContentReview } = await import("@/lib/analyse/worker");
-  const r =
-    kind === "account"
-      ? await processAccountAnalysis(supabase, id)
-      : kind === "live"
-      ? await processLiveReport(supabase, id)
-      : await processContentReview(supabase, id);
 
-  return NextResponse.json(r);
+  // sync=true: alter sync-Pfad (fuer Tests / Cron-Selbsttrigger)
+  if (sync) {
+    const r =
+      kind === "account"
+        ? await processAccountAnalysis(supabase, id)
+        : kind === "live"
+        ? await processLiveReport(supabase, id)
+        : await processContentReview(supabase, id);
+    return NextResponse.json(r);
+  }
+
+  // Default: async via after() — Caller wird nicht geblockt.
+  after(async () => {
+    try {
+      if (kind === "account") {
+        await processAccountAnalysis(supabase, id);
+      } else if (kind === "live") {
+        await processLiveReport(supabase, id);
+      } else {
+        await processContentReview(supabase, id);
+      }
+    } catch (e) {
+      // Worker hat eigenes try/catch + failed-Write; hier nur Fallback-Log.
+      console.error("[analyse-worker] after() processing failed:", e);
+    }
+  });
+
+  return NextResponse.json({ accepted: true, id, kind }, { status: 202 });
 }

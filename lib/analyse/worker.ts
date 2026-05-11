@@ -412,11 +412,13 @@ export async function processContentReview(
         (note ? `Hinweis vom Creator: "${note}"\n\n` : "") +
         "Analysiere das obige Bild als TikTok-Content-Visual. Folge dem geforderten Format.";
 
+      // 1500 Tokens reichen fuer strukturiertes JSON-Output;
+      // grosser Token-Cap macht Anthropic-Latency unnoetig hoch.
       const c = await claudeAnalyzeVision({
         systemPrompt: CONTENT_IMAGE_SYSTEM,
         imageUrls: [url],
         text,
-        maxTokens: 2500,
+        maxTokens: 1500,
       });
 
       if (!c.ok) throw new Error(c.error || "Claude-Vision fehlgeschlagen");

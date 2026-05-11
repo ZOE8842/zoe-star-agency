@@ -2,7 +2,12 @@
 // Port von opus_analyze() aus bot_zoeapp.py.
 
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
-const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-7";
+// Sonnet ist 3-5x schneller als Opus bei vergleichbarer Vision-Qualität für
+// Content-Scoring. Opus kann per env ueberschrieben werden wenn noetig.
+const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+// Hartes Timeout je Anthropic-Call. Liegt klar unter Vercel-Function-maxDuration
+// damit der Worker selbst die Kontrolle behaelt und failed-State schreibt.
+const ANTHROPIC_TIMEOUT_MS = Number(process.env.ANTHROPIC_TIMEOUT_MS ?? 50_000);
 
 // Pricing in USD pro Million Tokens — Stand 2026.
 // Falls Anthropic-Preise sich aendern, hier anpassen oder per env injecten.
@@ -58,6 +63,9 @@ export async function claudeAnalyzeVision(args: {
   };
 
   try {
+    // AbortSignal sorgt dafuer dass wir nie laenger als ANTHROPIC_TIMEOUT_MS
+    // auf Anthropic warten — sonst wuerde Vercel die Function killen ohne
+    // dass unser try/catch greift.
     const r = await fetch(ANTHROPIC_API, {
       method: "POST",
       headers: {
@@ -66,6 +74,7 @@ export async function claudeAnalyzeVision(args: {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(ANTHROPIC_TIMEOUT_MS),
     });
     if (!r.ok) {
       const txt = await r.text();
@@ -78,11 +87,14 @@ export async function claudeAnalyzeVision(args: {
     const text = res.content?.[0]?.text || "";
     const inTok = res.usage?.input_tokens ?? 0;
     const outTok = res.usage?.output_tokens ?? 0;
-    const p = PRICING[model] ?? PRICING["claude-opus-4-7"];
+    const p = PRICING[model] ?? PRICING["claude-sonnet-4-6"];
     const cost = (inTok * p.in + outTok * p.out) / 1_000_000;
     return { ok: true, text, cost_usd: cost, in_tokens: inTok, out_tokens: outTok, model };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const isAbort = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+    const msg = isAbort
+      ? `Anthropic-Timeout nach ${Math.round(ANTHROPIC_TIMEOUT_MS / 1000)}s`
+      : (e instanceof Error ? e.message : String(e));
     return { ok: false, text: "", cost_usd: 0, in_tokens: 0, out_tokens: 0, model, error: msg };
   }
 }
@@ -123,6 +135,7 @@ export async function claudeAnalyze(args: {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(ANTHROPIC_TIMEOUT_MS),
     });
     if (!r.ok) {
       const txt = await r.text();
@@ -143,7 +156,7 @@ export async function claudeAnalyze(args: {
     const text = res.content?.[0]?.text || "";
     const inTok = res.usage?.input_tokens ?? 0;
     const outTok = res.usage?.output_tokens ?? 0;
-    const p = PRICING[model] ?? PRICING["claude-opus-4-7"];
+    const p = PRICING[model] ?? PRICING["claude-sonnet-4-6"];
     const cost = (inTok * p.in + outTok * p.out) / 1_000_000;
     return {
       ok: true,
@@ -154,7 +167,10 @@ export async function claudeAnalyze(args: {
       model,
     };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const isAbort = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+    const msg = isAbort
+      ? `Anthropic-Timeout nach ${Math.round(ANTHROPIC_TIMEOUT_MS / 1000)}s`
+      : (e instanceof Error ? e.message : String(e));
     return {
       ok: false,
       text: "",

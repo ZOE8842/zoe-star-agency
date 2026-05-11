@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   adminTriggerContentReview,
   adminResetContentReview,
@@ -31,18 +32,35 @@ export function AdminTriggerPanel({
   aiProvider,
   aiModel,
 }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<"ok" | "err">("ok");
   const [manualText, setManualText] = useState("");
 
-  function run(label: string, fn: () => Promise<{ ok: boolean; error?: string; cost_usd?: number }>) {
+  // Auto-Refresh waehrend der Worker laeuft: queued/processing pollt alle 4s
+  // bis ein Endstatus erreicht ist. Verhindert dass die UI ewig "queued" zeigt.
+  useEffect(() => {
+    if (status !== "queued" && status !== "processing") return;
+    const t = setInterval(() => {
+      router.refresh();
+    }, 4_000);
+    return () => clearInterval(t);
+  }, [status, router]);
+
+  function run(
+    label: string,
+    fn: () => Promise<{ ok: boolean; error?: string; cost_usd?: number; queued?: boolean }>,
+  ) {
     setFeedback(null);
     startTransition(async () => {
       const r = await fn();
       if (!r.ok) {
         setFeedbackTone("err");
         setFeedback(`${label}: ${r.error ?? "Fehler"}`);
+      } else if (r.queued) {
+        setFeedbackTone("ok");
+        setFeedback(`${label} gestartet · läuft im Hintergrund`);
       } else {
         setFeedbackTone("ok");
         const costNote = typeof r.cost_usd === "number" && r.cost_usd > 0
@@ -50,10 +68,12 @@ export function AdminTriggerPanel({
           : "";
         setFeedback(`${label} OK${costNote}`);
       }
+      router.refresh();
     });
   }
 
   const isImage = kind === "image";
+  const isRunning = status === "queued" || status === "processing";
 
   return (
     <section className="border border-champagne/40 bg-champagne/[0.04] p-5 md:p-6 mb-8">
@@ -90,11 +110,15 @@ export function AdminTriggerPanel({
                 adminTriggerContentReview(id),
               )
             }
-            disabled={isPending}
+            disabled={isPending || isRunning}
             className="btn-cta btn-shimmer disabled:opacity-40"
           >
-            {isPending ? "Laeuft…" : status === "done" ? "Erneut analysieren" : "Analyse starten"}
-            {!isPending && <span className="btn-cta-arrow" aria-hidden>→</span>}
+            {isRunning
+              ? (status === "queued" ? "In Warteschlange…" : "Analyse läuft…")
+              : isPending
+                ? "Starte…"
+                : status === "done" ? "Erneut analysieren" : "Analyse starten"}
+            {!isPending && !isRunning && <span className="btn-cta-arrow" aria-hidden>→</span>}
           </button>
         ) : (
           <button

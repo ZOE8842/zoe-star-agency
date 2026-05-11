@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient as createSsr } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { processContentReview } from "@/lib/analyse/worker";
 
 async function requireAdmin() {
   const supabase = await createSsr();
@@ -26,15 +25,87 @@ function admin() {
   );
 }
 
+function siteUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://www.zoe-star.de")
+  );
+}
+
+// Queued-Trigger: setzt Row auf "queued" und feuert den Worker via HTTP
+// (eigene Function-Invocation mit eigenen 60s). Die Server Action selbst
+// returnt nach ~1-2s — kein Vercel-Timeout mehr beim Anthropic-Call.
 export async function adminTriggerContentReview(
   id: string,
-): Promise<{ ok: boolean; cost_usd?: number; error?: string }> {
+): Promise<{ ok: boolean; queued?: boolean; error?: string }> {
   try {
     await requireAdmin();
     const sb = admin();
-    const r = await processContentReview(sb, id);
+
+    // 1) Existenz + Kind ermitteln (fuer korrekten Worker-Dispatch)
+    const { data: row, error: rowErr } = await sb
+      .from("content_reviews")
+      .select("id, kind, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (rowErr || !row) {
+      return { ok: false, error: rowErr?.message || "Row nicht gefunden." };
+    }
+
+    // 2) Row auf "queued" setzen — auch bei Re-Run aus done/failed.
+    const { error: qErr } = await sb
+      .from("content_reviews")
+      .update({
+        status: "queued",
+        processing_started_at: null,
+        reviewed_at: null,
+        error_message: null,
+      })
+      .eq("id", id);
+    if (qErr) return { ok: false, error: qErr.message };
+
     revalidatePath(`/portal/services/content-helper/${id}`);
-    return { ok: r.ok, cost_usd: r.cost_usd, error: r.error };
+
+    // 3) Worker via HTTP triggern. Worker antwortet sofort mit 202 und
+    //    verarbeitet via after() in eigener Function-Invocation weiter.
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+      return { ok: false, error: "CRON_SECRET fehlt im Backend." };
+    }
+    const workerUrl = `${siteUrl()}/api/cron/analyse-worker`;
+
+    try {
+      const r = await fetch(workerUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${cronSecret}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, kind: "content_review" }),
+        cache: "no-store",
+        // Falls Worker-Endpoint nicht innerhalb 8s mit 202 acked → abbrechen.
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (!r.ok && r.status !== 202) {
+        const txt = await r.text().catch(() => "");
+        // Row bleibt auf "queued" — naechster Cron-Tick uebernimmt.
+        return {
+          ok: false,
+          queued: true,
+          error: `Worker-Trigger HTTP ${r.status}${txt ? `: ${txt.slice(0, 200)}` : ""}`,
+        };
+      }
+    } catch (e) {
+      // Trigger gescheitert (Timeout/Netz). Row bleibt "queued",
+      // Cron arbeitet sie spaeter ab.
+      return {
+        ok: false,
+        queued: true,
+        error: e instanceof Error ? `Worker-Trigger: ${e.message}` : "Worker-Trigger fehlgeschlagen",
+      };
+    }
+
+    return { ok: true, queued: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
   }
