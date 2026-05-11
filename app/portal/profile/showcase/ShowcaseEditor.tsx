@@ -188,7 +188,7 @@ export function ShowcaseEditor({
               onRemove={() => handleImageRemove(2)}
             />
           </div>
-          <p className="text-cream/40 text-xs mt-2">JPEG/PNG/WebP. Max 5 MB. Hochformat 3:4 ideal.</p>
+          <p className="text-cream/40 text-xs mt-2">JPEG, PNG oder WebP · max 20 MB · High-Quality Showcase empfohlen · Hochformat 3:4 ideal.</p>
         </div>
 
         <div>

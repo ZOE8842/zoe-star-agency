@@ -68,19 +68,19 @@ export function MobileNavDrawer({
         </svg>
       </button>
 
-      {/* Overlay */}
+      {/* Overlay — schwerer Black + starker Blur damit Dashboard nicht durchscheint */}
       <div
         onClick={() => setOpen(false)}
         aria-hidden
-        className={`fixed inset-0 bg-ink/85 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/85 backdrop-blur-md z-[60] transition-opacity duration-300 ${
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       />
 
-      {/* Drawer */}
+      {/* Drawer — solides Schwarz, kein transluzentes ink-Layer mehr */}
       <aside
         role="dialog" aria-modal="true" aria-label="Hauptmenue"
-        className={`fixed inset-y-0 right-0 w-full max-w-sm bg-ink border-l border-champagne/15 z-[61] transform transition-transform duration-300 ease-out ${
+        className={`fixed inset-y-0 right-0 w-[86%] max-w-[420px] bg-[#050505] border-l border-[#3a2a18] shadow-2xl shadow-black/80 overflow-y-auto z-[61] transform transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -126,8 +126,8 @@ export function MobileNavDrawer({
                 href={it.href}
                 className={`block px-4 py-4 text-base transition-colors ${
                   active
-                    ? "text-champagne bg-champagne/[0.06]"
-                    : "text-cream/85 hover:text-champagne hover:bg-champagne/[0.04]"
+                    ? "text-champagne bg-[#111111]"
+                    : "text-[#f5e7ce] hover:bg-[#111111] active:bg-[#161616]"
                 }`}
               >
                 {it.label}

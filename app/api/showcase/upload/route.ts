@@ -9,7 +9,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = 20 * 1024 * 1024; // 20 MB · High-Quality Showcase
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
 
 export async function POST(req: NextRequest) {

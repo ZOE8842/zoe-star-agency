@@ -29,8 +29,8 @@ export function AvatarUploader({
     if (!file) return;
     setError(null);
 
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Datei zu groß. Max 2 MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Datei zu groß. Max 5 MB.");
       return;
     }
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -133,7 +133,7 @@ export function AvatarUploader({
             )}
           </div>
           <p className="text-cream/40 text-xs mt-3 leading-relaxed">
-            JPEG, PNG oder WebP · max 2 MB · quadratisch empfohlen
+            JPEG, PNG oder WebP · max 5 MB · quadratisch empfohlen
           </p>
         </div>
       </div>
