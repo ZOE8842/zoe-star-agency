@@ -8,6 +8,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  sendOnboardingReminder,
+  sendPendingApproveReminder,
+  sendShowcaseIncompleteReminder,
+  type OnboardingStage,
+} from "@/lib/email/reminder-mails";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,11 +33,29 @@ export async function GET(request: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY!);
   const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@zoe-star.de";
 
-  const stats = { unread: 0, ack: 0, slots: 0, support: 0, backstage_alert: 0, errors: [] as string[] };
+  const stats = {
+    unread: 0,
+    ack: 0,
+    slots: 0,
+    support: 0,
+    backstage_alert: 0,
+    onboarding_drip: 0,
+    pending_approve: 0,
+    showcase_incomplete: 0,
+    errors: [] as string[],
+  };
+  // Cap fuer die neuen Drip-Bloecke (Block 6-8). Schuetzt vor
+  // Resend-Free-Tier 100/Tag-Limit bei wachsender Creator-Anzahl.
+  // Alte Bloecke (1, 2, 4, 5) haben eigene limit(...)-Clauses.
+  const DRIP_MAIL_CAP = 80;
+  let dripMailsSent = 0;
   const now = new Date();
   const _24h = new Date(now.getTime() - 24 * 3600 * 1000).toISOString();
   const _12h = new Date(now.getTime() - 12 * 3600 * 1000).toISOString();
   const _6h_future = new Date(now.getTime() + 6 * 3600 * 1000).toISOString();
+  const _3d = new Date(now.getTime() - 3 * 24 * 3600 * 1000).toISOString();
+  const _7d = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
+  const _72h = new Date(now.getTime() - 72 * 3600 * 1000).toISOString();
 
   // ===== 1. UNREAD MESSAGES > 24h =====
   // Hole Messages älter als 24h
@@ -229,6 +253,246 @@ export async function GET(request: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e);
     stats.errors.push(`backstage_alert_check: ${msg}`);
   }
+
+  // ===== 6. ONBOARDING-DRIP (3 Stufen) =====
+  // Creator ohne abgeschlossenes Onboarding bekommen Reminder bei
+  // 24-72h (Stage 1), 72h-7d (Stage 2), >7d (Stage 3).
+  // Dedup: Lock-Insert ZUERST, dann Mail-Send (verhindert Spam-Retry
+  // bei Insert-Failure).
+  try {
+    const { data: onbCreators } = await supabase
+      .from("profiles")
+      .select("id, email, display_name, created_at, status")
+      .eq("role", "creator")
+      .eq("onboarding_completed", false)
+      .in("status", ["pending", "active"])
+      .not("email", "is", null)
+      .lt("created_at", _24h)
+      .limit(200);
+
+    for (const p of onbCreators || []) {
+      if (!p.email) continue;
+      if (dripMailsSent >= DRIP_MAIL_CAP) {
+        stats.errors.push("onboarding_drip: DRIP_MAIL_CAP reached");
+        break;
+      }
+
+      const ageMs = now.getTime() - new Date(p.created_at).getTime();
+      const ageDays = ageMs / (24 * 3600 * 1000);
+
+      let stage: OnboardingStage;
+      if (ageDays < 3) stage = 1;
+      else if (ageDays < 7) stage = 2;
+      else stage = 3;
+
+      const dedupLink = `/portal/onboarding#drip-${stage}`;
+
+      const { data: existing } = await supabase
+        .from("notifications")
+        .select("id")
+        .eq("user_id", p.id)
+        .eq("type", "reminder")
+        .eq("link", dedupLink)
+        .maybeSingle();
+      if (existing) continue;
+
+      // Lock-Insert ZUERST — bei Insert-Failure kein Send (kein Spam).
+      const { error: lockErr } = await supabase.from("notifications").insert({
+        user_id: p.id,
+        type: "reminder",
+        title: `Onboarding-Erinnerung (Stage ${stage})`,
+        body: stage === 3 ? "Letzte Erinnerung" : "Profil abschliessen",
+        link: dedupLink,
+        channel: ["email"],
+        status: "read",
+        read_at: now.toISOString(),
+      });
+      if (lockErr) {
+        stats.errors.push(`onboarding_drip_lock/${p.id}: ${lockErr.message}`);
+        continue;
+      }
+
+      try {
+        await sendOnboardingReminder({
+          email: p.email,
+          display_name: p.display_name,
+          stage,
+        });
+        stats.onboarding_drip++;
+        dripMailsSent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        stats.errors.push(`onboarding_drip/${p.id}: ${msg}`);
+        // Lock-Row bleibt drin — Stage geht beim naechsten Run NICHT
+        // erneut raus. Akzeptabel: Stage wird verbraucht, Creator
+        // bekommt naechste Stage zum richtigen Zeitpunkt.
+      }
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    stats.errors.push(`onboarding_drip_block: ${msg}`);
+  }
+
+  // ===== 7. PENDING-APPROVE ADMIN-REMINDER =====
+  // Creator die Onboarding abgeschlossen haben aber >3d in pending
+  // sind, erzeugen einen Admin-Reminder. Dedup pro Creator alle 7d.
+  // Lock-Insert ZUERST (gleich wie Block 6).
+  try {
+    const { data: stale } = await supabase
+      .from("profiles")
+      .select("id, email, display_name, created_at")
+      .eq("role", "creator")
+      .eq("status", "pending")
+      .eq("onboarding_completed", true)
+      .not("email", "is", null)
+      .lt("created_at", _3d)
+      .limit(100);
+
+    if ((stale || []).length > 0) {
+      const { data: admins } = await supabase
+        .from("profiles")
+        .select("id, email, display_name")
+        .eq("role", "admin")
+        .eq("status", "active")
+        .not("email", "is", null);
+
+      for (const creator of stale || []) {
+        const waiting_days = Math.floor(
+          (now.getTime() - new Date(creator.created_at).getTime()) / (24 * 3600 * 1000),
+        );
+
+        for (const admin of admins || []) {
+          if (!admin.email) continue;
+          if (dripMailsSent >= DRIP_MAIL_CAP) {
+            stats.errors.push("pending_approve: DRIP_MAIL_CAP reached");
+            break;
+          }
+
+          const dedupLink = `/portal/admin/pending#approve-${creator.id}`;
+          const { data: dup } = await supabase
+            .from("notifications")
+            .select("id")
+            .eq("user_id", admin.id)
+            .eq("type", "reminder")
+            .eq("link", dedupLink)
+            .gte("created_at", _7d)
+            .maybeSingle();
+          if (dup) continue;
+
+          const { error: lockErr } = await supabase.from("notifications").insert({
+            user_id: admin.id,
+            type: "reminder",
+            title: `Pending-Approve faellig (${waiting_days}d)`,
+            body: `${creator.display_name || creator.email} wartet auf Freigabe`,
+            link: dedupLink,
+            channel: ["email"],
+            status: "unread",
+          });
+          if (lockErr) {
+            stats.errors.push(`pending_approve_lock/${admin.id}: ${lockErr.message}`);
+            continue;
+          }
+
+          try {
+            await sendPendingApproveReminder({
+              admin_email: admin.email,
+              admin_name: admin.display_name,
+              creator_display_name: creator.display_name,
+              creator_email: creator.email,
+              waiting_days,
+            });
+            stats.pending_approve++;
+            dripMailsSent++;
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            stats.errors.push(`pending_approve/${admin.id}/${creator.id}: ${msg}`);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    stats.errors.push(`pending_approve_block: ${msg}`);
+  }
+
+  // ===== 8. SHOWCASE-INCOMPLETE-REMINDER =====
+  // Creator mit allow_website_showcase=true aber <2 Bildern bekommen
+  // nach 24h eine Erinnerung. Dedup alle 7d. Lock-Insert ZUERST.
+  try {
+    const { data: showcased } = await supabase
+      .from("profiles")
+      .select("id, email, display_name, created_at, allow_website_showcase")
+      .eq("role", "creator")
+      .in("status", ["pending", "active"])
+      .eq("allow_website_showcase", true)
+      .not("email", "is", null)
+      .lt("created_at", _24h)
+      .limit(200);
+
+    for (const p of showcased || []) {
+      if (!p.email) continue;
+      if (dripMailsSent >= DRIP_MAIL_CAP) {
+        stats.errors.push("showcase_incomplete: DRIP_MAIL_CAP reached");
+        break;
+      }
+
+      // Showcase-Row holen (kann komplett fehlen → images_count=0)
+      const { data: row } = await supabase
+        .from("showcase_creators")
+        .select("showcase_images")
+        .eq("profile_id", p.id)
+        .maybeSingle();
+
+      const images = Array.isArray(row?.showcase_images) ? row.showcase_images : [];
+      if (images.length >= 2) continue;
+
+      const dedupLink = `/portal/profile/showcase#incomplete`;
+      const { data: dup } = await supabase
+        .from("notifications")
+        .select("id")
+        .eq("user_id", p.id)
+        .eq("type", "reminder")
+        .eq("link", dedupLink)
+        .gte("created_at", _7d)
+        .maybeSingle();
+      if (dup) continue;
+
+      const { error: lockErr } = await supabase.from("notifications").insert({
+        user_id: p.id,
+        type: "reminder",
+        title: `Showcase unvollstaendig (${images.length}/2)`,
+        body: "Bilder fuer Public-Card hochladen",
+        link: dedupLink,
+        channel: ["email"],
+        status: "read",
+        read_at: now.toISOString(),
+      });
+      if (lockErr) {
+        stats.errors.push(`showcase_incomplete_lock/${p.id}: ${lockErr.message}`);
+        continue;
+      }
+
+      try {
+        await sendShowcaseIncompleteReminder({
+          email: p.email,
+          display_name: p.display_name,
+          images_count: images.length,
+        });
+        stats.showcase_incomplete++;
+        dripMailsSent++;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        stats.errors.push(`showcase_incomplete/${p.id}: ${msg}`);
+      }
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    stats.errors.push(`showcase_incomplete_block: ${msg}`);
+  }
+
+  // _72h / _12h-Werte werden in spaeteren Bloecken evtl. wieder benutzt,
+  // unten reservieren wir die zur Vermeidung von unused-warnings.
+  void _72h;
 
   return NextResponse.json({
     success: true,
