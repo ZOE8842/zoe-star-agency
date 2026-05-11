@@ -198,6 +198,72 @@ export async function upsertShowcase(input: ShowcaseInput): Promise<{ ok: boolea
   return { ok: true, mail_sent: sent };
 }
 
+export async function resendConsentMail(
+  type: "showcase" | "brand_cooperation",
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Nicht eingeloggt." };
+
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select(
+      "email, display_name, allow_website_showcase, allow_website_showcase_confirmed, allow_partner_cooperations, allow_partner_cooperations_confirmed",
+    )
+    .eq("id", user.id)
+    .single();
+  if (!prof) return { ok: false, error: "Profil nicht gefunden." };
+
+  if (type === "showcase") {
+    if (!prof.allow_website_showcase) {
+      return { ok: false, error: "Showcase-Freigabe ist nicht aktiv." };
+    }
+    if (prof.allow_website_showcase_confirmed) {
+      return { ok: false, error: "Bereits bestaetigt — keine neue Mail noetig." };
+    }
+  } else {
+    if (!prof.allow_partner_cooperations) {
+      return { ok: false, error: "Kooperations-Freigabe ist nicht aktiv." };
+    }
+    if (prof.allow_partner_cooperations_confirmed) {
+      return { ok: false, error: "Bereits bestaetigt — keine neue Mail noetig." };
+    }
+  }
+
+  // Rate-Limit: max 1 Resend pro Minute
+  const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+  const { count } = await supabase
+    .from("consent_tokens")
+    .select("id", { head: true, count: "exact" })
+    .eq("profile_id", user.id)
+    .eq("consent_type", type)
+    .gte("created_at", oneMinuteAgo);
+  if ((count ?? 0) >= 1) {
+    return { ok: false, error: "Bitte ~1 Minute warten, dann erneut probieren." };
+  }
+
+  try {
+    const token = await generateConsentToken(user.id, type);
+    if (type === "showcase") {
+      await sendShowcaseConsentMail({
+        email: prof.email,
+        display_name: prof.display_name || "",
+        token,
+      });
+    } else {
+      await sendCooperationConsentMail({
+        email: prof.email,
+        display_name: prof.display_name || "",
+        token,
+      });
+    }
+    revalidatePath("/portal/profile/showcase");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Mail-Versand fehlgeschlagen." };
+  }
+}
+
 export async function deleteOwnShowcase(): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

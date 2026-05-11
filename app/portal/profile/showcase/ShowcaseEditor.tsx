@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { upsertShowcase, deleteOwnShowcase } from "./actions";
+import { upsertShowcase, deleteOwnShowcase, resendConsentMail } from "./actions";
 import { CreatorShowcaseCard } from "@/components/CreatorShowcaseCard";
 
 interface ImageEntry {
@@ -126,6 +126,16 @@ export function ShowcaseEditor({
     router.refresh();
   }
 
+  async function handleResend(type: "showcase" | "brand_cooperation") {
+    setError(null); setInfo(null);
+    const r = await resendConsentMail(type);
+    if (!r.ok) {
+      setError(r.error || "Mail-Versand fehlgeschlagen.");
+      return;
+    }
+    setInfo(`Bestaetigungs-Mail erneut an ${email} verschickt.`);
+  }
+
   async function handleDelete() {
     if (!confirm("Showcase wirklich loeschen?")) return;
     setError(null); setInfo(null);
@@ -241,6 +251,8 @@ export function ShowcaseEditor({
               : showcaseRequested ? "pending"
               : null
             }
+            resendType={showcaseRequested && !showcaseConfirmed ? "showcase" : null}
+            onResend={() => handleResend("showcase")}
           />
 
           <ConsentToggle
@@ -253,6 +265,8 @@ export function ShowcaseEditor({
               : cooperationRequested ? "pending"
               : null
             }
+            resendType={cooperationRequested && !cooperationConfirmed ? "brand_cooperation" : null}
+            onResend={() => handleResend("brand_cooperation")}
           />
         </div>
 
@@ -357,13 +371,15 @@ function ImageSlot({
 }
 
 function ConsentToggle({
-  checked, onChange, label, description, statusBadge,
+  checked, onChange, label, description, statusBadge, resendType, onResend,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
   description: string;
   statusBadge: "confirmed" | "pending" | null;
+  resendType: "showcase" | "brand_cooperation" | null;
+  onResend: () => void;
 }) {
   return (
     <div className="p-3 -m-3 hover:bg-champagne/5 transition-colors">
@@ -399,6 +415,17 @@ function ConsentToggle({
           </span>
         </span>
       </button>
+      {resendType && (
+        <div className="pl-7 mt-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onResend(); }}
+            className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] underline-offset-2 hover:underline"
+          >
+            Mail erneut senden →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

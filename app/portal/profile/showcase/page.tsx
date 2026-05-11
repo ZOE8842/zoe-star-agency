@@ -46,29 +46,51 @@ export default async function ShowcasePage() {
         </section>
 
         {showcase && (
-          <div className="mb-10 border border-champagne/15 px-5 py-4 flex flex-wrap items-center gap-3">
-            <span
-              className={`inline-block px-3 py-1 text-[10px] uppercase tracking-[0.25em] ${
-                showcase.is_approved && showcase.is_featured && showcaseConfirmed
-                  ? "bg-champagne text-ink"
-                  : "border border-champagne/40 text-champagne"
-              }`}
-            >
-              {showcase.is_approved && showcase.is_featured && showcaseConfirmed
-                ? "LIVE auf zoe-star.de"
-                : showcaseRequested && !showcaseConfirmed
-                ? "Email-Bestaetigung ausstehend"
-                : showcase.is_approved && showcase.is_featured
-                ? "Bestaetigung fehlt"
-                : "Pending Review"}
-            </span>
-            <span className="text-cream/55 text-sm">
-              {showcase.is_approved && showcase.is_featured && showcaseConfirmed
-                ? "Deine Card ist veroeffentlicht."
-                : showcaseRequested && !showcaseConfirmed
-                ? "Schau in dein Postfach — Bestaetigungs-Mail wartet."
-                : "Wartet auf Admin-Freigabe."}
-            </span>
+          <div className="mb-10 border border-champagne/15 px-5 py-4 space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`inline-block px-3 py-1 text-[10px] uppercase tracking-[0.25em] ${
+                  showcase.is_approved && showcase.is_featured && showcaseConfirmed
+                    ? "bg-champagne text-ink"
+                    : "border border-champagne/40 text-champagne"
+                }`}
+              >
+                Showcase ·{" "}
+                {showcase.is_approved && showcase.is_featured && showcaseConfirmed
+                  ? "LIVE auf zoe-star.de"
+                  : showcaseRequested && !showcaseConfirmed
+                  ? "Email-Bestaetigung ausstehend"
+                  : showcase.is_approved && showcase.is_featured
+                  ? "Bestaetigung fehlt"
+                  : "Pending Review"}
+              </span>
+              <span className="text-cream/55 text-sm">
+                {showcase.is_approved && showcase.is_featured && showcaseConfirmed
+                  ? "Deine Card ist veroeffentlicht."
+                  : showcaseRequested && !showcaseConfirmed
+                  ? "Schau in dein Postfach — Bestaetigungs-Mail wartet."
+                  : "Wartet auf Admin-Freigabe."}
+              </span>
+            </div>
+            {cooperationRequested && (
+              <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-champagne/10">
+                <span
+                  className={`inline-block px-3 py-1 text-[10px] uppercase tracking-[0.25em] ${
+                    cooperationConfirmed
+                      ? "bg-champagne text-ink"
+                      : "border border-champagne/40 text-champagne"
+                  }`}
+                >
+                  Brand-Kooperationen ·{" "}
+                  {cooperationConfirmed ? "aktiv" : "Email-Bestaetigung ausstehend"}
+                </span>
+                <span className="text-cream/55 text-sm">
+                  {cooperationConfirmed
+                    ? "Wir koennen dich fuer passende Anfragen vorschlagen."
+                    : "Bitte Bestaetigungs-Mail anklicken."}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

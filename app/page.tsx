@@ -22,11 +22,19 @@ const VISUAL_CYCLE: NonNullable<CreatorShowcase["visual"]>[] = ["champagne", "wa
 
 async function fetchFeaturedCreators(): Promise<CreatorShowcase[]> {
   const supabase = await createServerClient();
+  // Public-Showcase darf NUR Cards zeigen die:
+  //   1) is_approved + is_featured durch Admin sind  UND
+  //   2) deren Owner allow_website_showcase_confirmed = true gesetzt hat
+  //      (Email-Bestaetigung). Schutz vor "Admin-approved aber User
+  //      hat Consent-Mail nie bestaetigt".
   const { data } = await supabase
     .from("showcase_creators")
-    .select("display_name, category, showcase_image, tiktok_url, instagram_url")
+    .select(
+      "display_name, category, showcase_image, tiktok_url, instagram_url, profiles!inner(allow_website_showcase_confirmed)",
+    )
     .eq("is_approved", true)
     .eq("is_featured", true)
+    .eq("profiles.allow_website_showcase_confirmed", true)
     .order("sort_order", { ascending: true })
     .order("approved_at", { ascending: false });
 
