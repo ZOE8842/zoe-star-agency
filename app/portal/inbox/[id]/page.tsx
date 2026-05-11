@@ -95,6 +95,11 @@ export default async function MessageDetailPage({
     correspondence = (chain || []).filter((c) => stripRePrefix(c.subject || "") === baseSubject);
     canReply = true;
     replyTargetId = msg.sender_id === profile.id ? msg.recipient_id : msg.sender_id;
+  } else if (msg.sender_id && msg.recipient_group === "all_creators" && msg.sender_id !== profile.id) {
+    // Broadcast-Reply: Creator antwortet direkt an den Broadcast-Sender (Admin/Manager).
+    // Keine Korrespondenz-Kette — Reply startet einen neuen direct-Thread.
+    canReply = true;
+    replyTargetId = msg.sender_id;
   }
 
   // Sender-Names fuer alle Korrespondenz-Items
