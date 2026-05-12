@@ -66,7 +66,7 @@ export function SignupButtons({
           disabled={isPending}
           className="btn-cta btn-shimmer disabled:opacity-50"
         >
-          {isPending ? "Sende…" : "Jetzt anmelden"}
+          {isPending ? "Sende…" : "Im Portal anmelden"}
           {!isPending && <span className="btn-cta-arrow" aria-hidden>→</span>}
         </button>
       )}

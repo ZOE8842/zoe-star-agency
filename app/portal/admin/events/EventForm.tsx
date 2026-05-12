@@ -197,13 +197,16 @@ export function EventForm({ initial }: { initial?: EventInitial }) {
         </Field>
 
         {source === "tiktok" && (
-          <Field label="Registration-URL (TikTok-Event)" full>
+          <Field label="Registration-URL (TikTok-Event)" required full>
             <input
-              type="url" value={registrationUrl ?? ""}
+              type="url" required value={registrationUrl ?? ""}
               onChange={(e) => setRegistrationUrl(e.target.value)}
               placeholder="https://..."
               className={inputCls}
             />
+            <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em] mt-2">
+              TikTok-Events brauchen einen externen Anmelde-Link. Pflicht.
+            </p>
           </Field>
         )}
 

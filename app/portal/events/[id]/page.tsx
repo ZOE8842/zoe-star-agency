@@ -166,16 +166,27 @@ export default async function EventDetailPage({ params }: Props) {
             )}
           </div>
 
-          {isTikTok && event.registration_url && !isPast ? (
-            <a
-              href={event.registration_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-cta btn-shimmer"
-            >
-              Auf TikTok teilnehmen
-              <span className="btn-cta-arrow" aria-hidden>↗</span>
-            </a>
+          {isTikTok ? (
+            event.registration_url && !isPast ? (
+              <div className="space-y-2">
+                <a
+                  href={event.registration_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-cta btn-shimmer"
+                >
+                  Bei TikTok anmelden
+                  <span className="btn-cta-arrow" aria-hidden>↗</span>
+                </a>
+                <p className="text-cream/45 text-xs">
+                  Anmeldung laeuft direkt ueber TikTok. Kein Portal-Signup noetig.
+                </p>
+              </div>
+            ) : (
+              <p className="text-cream/45 text-sm">
+                {isPast ? "Event ist beendet." : "Kein TikTok-Anmelde-Link gesetzt."}
+              </p>
+            )
           ) : (
             <SignupButtons
               eventId={event.id}
