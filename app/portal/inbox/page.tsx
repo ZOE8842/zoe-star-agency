@@ -206,12 +206,12 @@ export default async function InboxPage({ searchParams }: Props) {
             {messages.length === 0 && (
               <div className="border border-champagne/15 p-8 text-center">
                 <p className="font-display italic text-cream/45 text-xl mb-2">
-                  Keine Nachrichten.
+                  Noch kein Chat.
                 </p>
                 <p className="text-cream/35 text-sm">
-                  Sobald jemand schreibt, taucht es hier auf. Du kannst auch selbst{" "}
+                  Schreib{" "}
                   <Link href="/portal/inbox/compose" className="text-champagne hover:underline">
-                    eine Nachricht verfassen
+                    ZOE Management direkt
                   </Link>.
                 </p>
               </div>
@@ -230,46 +230,46 @@ export default async function InboxPage({ searchParams }: Props) {
                   : msg.sender_id
                   ? senderMap.get(msg.sender_id) || "—"
                   : "—";
+                const initial = (partnerLabel || "?").slice(0, 1).toUpperCase();
+                const preview = msg.subject || msg.body.slice(0, 80);
 
                 return (
                   <li key={msg.id}>
                     <Link
                       href={`/portal/inbox/${msg.id}`}
-                      className="group block py-6 md:py-7 transition-colors hover:bg-cream/[0.015]"
+                      className="group block py-4 md:py-5 transition-colors hover:bg-cream/[0.015]"
                     >
-                      <div className="flex items-start gap-4">
-                        <div className="shrink-0 w-1 self-stretch">
-                          {unread && (
-                            <span
-                              className="block w-1 h-1 rounded-full bg-champagne mt-3"
-                              aria-label="ungelesen"
-                            />
-                          )}
+                      <div className="flex items-center gap-4">
+                        {/* Avatar-Bubble */}
+                        <div className={`shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full border flex items-center justify-center font-display italic text-base transition-colors ${
+                          unread
+                            ? "border-champagne/60 bg-champagne/10 text-champagne"
+                            : "border-cream/15 bg-cream/[0.03] text-cream/55"
+                        }`}>
+                          {initial}
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2 text-[10px] uppercase tracking-[0.25em] flex-wrap">
-                            <span className="text-cream/55">{partnerLabel}</span>
-                            {needsAck && (
-                              <span className="text-champagne">Bestaetigen</span>
-                            )}
-                            <span className="text-cream/30 ml-auto">
-                              {formatRelative(new Date(msg.sent_at))}
-                            </span>
+                          <div className="flex items-baseline justify-between gap-3 mb-1 flex-wrap">
+                            <p className={`text-sm md:text-base ${unread ? "text-cream font-medium" : "text-cream/70"}`}>
+                              {partnerLabel}
+                            </p>
+                            <div className="flex items-center gap-2 shrink-0 text-[10px] uppercase tracking-[0.25em]">
+                              {needsAck && <span className="text-champagne">Bestaetigen</span>}
+                              <span className="text-cream/30">{formatRelative(new Date(msg.sent_at))}</span>
+                            </div>
                           </div>
-
-                          <h2
-                            className={`font-display italic text-xl md:text-2xl mb-2 leading-tight tracking-[-0.01em] transition-colors ${
-                              unread ? "text-cream group-hover:text-champagne" : "text-cream/70 group-hover:text-cream"
-                            }`}
-                          >
-                            {msg.subject || "(ohne Betreff)"}
-                          </h2>
-
-                          <p className="text-cream/45 text-sm leading-relaxed line-clamp-2">
-                            {msg.body}
+                          <p className={`text-sm leading-snug line-clamp-1 ${unread ? "text-cream/75" : "text-cream/45"}`}>
+                            {preview}
                           </p>
                         </div>
+
+                        {unread && (
+                          <span
+                            className="shrink-0 w-1.5 h-1.5 rounded-full bg-champagne"
+                            aria-label="ungelesen"
+                          />
+                        )}
                       </div>
                     </Link>
                   </li>
