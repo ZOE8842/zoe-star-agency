@@ -5,12 +5,29 @@ import { PortalNav } from "@/components/PortalNav";
 
 function greeting(): string {
   const h = new Date().getHours();
-  if (h < 5) return "Spät unterwegs";
-  if (h < 11) return "Guten Morgen";
-  if (h < 14) return "Mahlzeit";
-  if (h < 18) return "Guten Tag";
-  if (h < 22) return "Guten Abend";
-  return "Späte Stunde";
+  if (h < 5) return "Nacht";
+  if (h < 11) return "Morgen";
+  if (h < 14) return "Mittag";
+  if (h < 18) return "Nachmittag";
+  if (h < 22) return "Abend";
+  return "Nacht";
+}
+
+function startOfWeekIso(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay(); // 0=So
+  const diff = day === 0 ? -6 : 1 - day; // Montag als Wochenstart
+  d.setDate(d.getDate() + diff);
+  return d.toISOString();
+}
+
+function threadKey(a: string | null, b: string | null, subject: string | null): string {
+  const x = a ?? "";
+  const y = b ?? "";
+  const pair = x < y ? `${x}|${y}` : `${y}|${x}`;
+  const subj = (subject ?? "").replace(/^(re:\s*)+/i, "").trim().toLowerCase();
+  return `${pair}::${subj}`;
 }
 
 export default async function AdminPage() {
@@ -146,6 +163,98 @@ export default async function AdminPage() {
   }
   const opsTotal = Object.values(ops).reduce((s, n) => s + n, 0);
 
+  // INBOX-WAITING — Threads, deren letzte Message von Non-Admin an Admin ging
+  let inboxWaiting = 0;
+  // KPI-Block: Diese-Woche-Counts + Anthropic-Cost
+  let kpi = {
+    reviews_done: 0,
+    push_selected: 0,
+    matches_planned: 0,
+    cost_usd: 0,
+    avg_review_minutes: 0,
+  };
+  if (isAdmin) {
+    const weekStart = startOfWeekIso();
+    const [
+      recentMsgsRes,
+      adminsRes,
+      reviewsDoneRes,
+      pushSelectedRes,
+      matchesPlannedRes,
+      costContentRes,
+      costAccountRes,
+      reviewSpeedRes,
+    ] = await Promise.all([
+      supabase.from("messages")
+        .select("id, sender_id, recipient_id, recipient_group, subject")
+        .order("sent_at", { ascending: false })
+        .limit(150),
+      supabase.from("profiles").select("id").eq("role", "admin"),
+      supabase.from("content_reviews")
+        .select("id", { head: true, count: "exact" })
+        .in("status", ["done", "reviewed"])
+        .gte("reviewed_at", weekStart),
+      supabase.from("tiktok_push_requests")
+        .select("id", { head: true, count: "exact" })
+        .eq("status", "selected")
+        .gte("created_at", weekStart),
+      supabase.from("match_requests")
+        .select("id", { head: true, count: "exact" })
+        .in("status", ["planned", "done"])
+        .gte("created_at", weekStart),
+      supabase.from("content_reviews")
+        .select("cost_usd")
+        .gte("created_at", weekStart)
+        .not("cost_usd", "is", null),
+      supabase.from("account_analyses")
+        .select("cost_usd")
+        .gte("created_at", weekStart)
+        .not("cost_usd", "is", null),
+      supabase.from("content_reviews")
+        .select("created_at, reviewed_at")
+        .in("status", ["done", "reviewed"])
+        .gte("reviewed_at", weekStart)
+        .not("reviewed_at", "is", null)
+        .limit(50),
+    ]);
+
+    const adminIds = new Set((adminsRes.data ?? []).map((a) => a.id));
+    const seen = new Set<string>();
+    for (const m of recentMsgsRes.data ?? []) {
+      if (m.recipient_group != null || !m.sender_id || !m.recipient_id) continue;
+      const k = threadKey(m.sender_id, m.recipient_id, m.subject);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      if (!adminIds.has(m.sender_id) && adminIds.has(m.recipient_id)) {
+        inboxWaiting++;
+      }
+    }
+
+    const sumCost = (rows: { cost_usd: unknown }[] | null | undefined) =>
+      (rows ?? []).reduce((s, r) => s + (Number(r.cost_usd) || 0), 0);
+    const totalCost = sumCost(costContentRes.data as { cost_usd: unknown }[] | null)
+      + sumCost(costAccountRes.data as { cost_usd: unknown }[] | null);
+
+    const speeds = (reviewSpeedRes.data ?? [])
+      .map((r) => {
+        const created = r.created_at ? new Date(r.created_at).getTime() : 0;
+        const reviewed = r.reviewed_at ? new Date(r.reviewed_at).getTime() : 0;
+        return reviewed > created ? (reviewed - created) / 60000 : null;
+      })
+      .filter((n): n is number => n !== null);
+    const avgMin = speeds.length > 0
+      ? Math.round(speeds.reduce((s, n) => s + n, 0) / speeds.length)
+      : 0;
+
+    kpi = {
+      reviews_done: reviewsDoneRes.count ?? 0,
+      push_selected: pushSelectedRes.count ?? 0,
+      matches_planned: matchesPlannedRes.count ?? 0,
+      cost_usd: Number(totalCost.toFixed(2)),
+      avg_review_minutes: avgMin,
+    };
+  }
+
   return (
     <>
       <PortalNav
@@ -212,6 +321,36 @@ export default async function AdminPage() {
               <OpsTile href="/portal/admin/showcase" label="Showcase pending" count={ops.showcase_pending} />
               <OpsTile href="/portal/admin/notifications-queue" label="DM-Queue" count={ops.dm_queue} />
               <OpsTile href="/portal/admin/notifications-queue" label="DM-Fail" count={ops.dm_failed} warn={ops.dm_failed > 0} />
+              <OpsTile href="/portal/admin/messages?f=waiting" label="Inbox wartet" count={inboxWaiting} />
+            </div>
+          </section>
+        )}
+
+        {/* KPI-Block — diese Woche */}
+        {isAdmin && (
+          <section className="mb-12">
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="eyebrow">Diese Woche</p>
+              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+                Ab Montag
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
+              <KpiTile label="Reviews fertig" value={kpi.reviews_done.toString()} />
+              <KpiTile label="Push bestaetigt" value={kpi.push_selected.toString()} />
+              <KpiTile label="Matches geplant" value={kpi.matches_planned.toString()} />
+              <KpiTile
+                label="AI-Cost USD"
+                value={kpi.cost_usd > 0 ? `$${kpi.cost_usd.toFixed(2)}` : "$0"}
+              />
+              <KpiTile
+                label="Avg Review"
+                value={kpi.avg_review_minutes > 0
+                  ? kpi.avg_review_minutes < 60
+                    ? `${kpi.avg_review_minutes} min`
+                    : `${(kpi.avg_review_minutes / 60).toFixed(1)} h`
+                  : "—"}
+              />
             </div>
           </section>
         )}
@@ -376,6 +515,15 @@ function OpsTile({ href, label, count, warn }: { href: string; label: string; co
         {count}
       </p>
     </Link>
+  );
+}
+
+function KpiTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-champagne/15 p-3 md:p-4">
+      <p className="text-cream/45 text-[9px] uppercase tracking-[0.22em] mb-2">{label}</p>
+      <p className="font-display italic text-cream text-2xl md:text-3xl leading-none">{value}</p>
+    </div>
   );
 }
 
