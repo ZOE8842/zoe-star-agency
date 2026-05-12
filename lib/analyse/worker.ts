@@ -11,7 +11,7 @@
 //   8) Bei Fehler: status='failed' + error_message
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { claudeAnalyze, claudeAnalyzeVision } from "./claude";
+import { claudeAnalyze, claudeAnalyzeVision, ANTHROPIC_VISION_MEDIA, type AnthropicMediaType } from "./claude";
 import {
   ACCOUNT_ANALYSE_SYSTEM,
   LIVE_PERFORMANCE_SYSTEM,
@@ -365,11 +365,9 @@ export async function processLiveReport(
 // kind=profile    → Status auf 'in_review' fuer Admin
 // ─────────────────────────────────────────────────────────────────────────
 
-function publicImageUrl(supabase: SupabaseClient, storagePath: string): string {
-  // creator-content Bucket ist public konfiguriert
-  const { data } = supabase.storage.from("creator-content").getPublicUrl(storagePath);
-  return data.publicUrl;
-}
+// Legacy: publicImageUrl wird nicht mehr genutzt — creator-content Bucket
+// ist privat, daher unzuverlaessig fuer Anthropic. Stattdessen laedt der
+// Worker das Bild direkt per supabase.storage.download().
 
 export async function processContentReview(
   supabase: SupabaseClient,
@@ -402,21 +400,55 @@ export async function processContentReview(
 
     // IMAGE · Claude Vision
     if (kind === "image") {
-      // Bild kann via creator-content storage_path ODER direkter URL kommen
-      const url =
-        locked.video_storage_path
-          ? publicImageUrl(supabase, locked.video_storage_path)
-          : (locked.video_url as string | null) || (locked.source_url as string | null);
-      if (!url) throw new Error("Kein Bild-Pfad oder URL gefunden");
       const text =
         (note ? `Hinweis vom Creator: "${note}"\n\n` : "") +
         "Analysiere das obige Bild als TikTok-Content-Visual. Folge dem geforderten Format.";
+
+      // Storage-Path: direkt via Service-Role-SDK herunterladen (Bucket ist
+      // private; getPublicUrl liefert nicht-erreichbare URLs).
+      // Direkte video_url/source_url: serverseitig per fetch via claudeAnalyzeVision.
+      let images: Array<{ data: string; mediaType: AnthropicMediaType }> | undefined;
+      let imageUrls: string[] | undefined;
+
+      if (locked.video_storage_path) {
+        const { data: blob, error: dlErr } = await supabase.storage
+          .from("creator-content")
+          .download(locked.video_storage_path as string);
+        if (dlErr || !blob) {
+          throw new Error(`Storage-Download fehlgeschlagen: ${dlErr?.message ?? "blob leer"}`);
+        }
+        const buf = Buffer.from(await blob.arrayBuffer());
+        const sizeMb = buf.byteLength / 1024 / 1024;
+        if (sizeMb > 5) throw new Error(`Bild zu gross (${sizeMb.toFixed(1)} MB > 5 MB)`);
+        // Media-Type aus Blob oder Pfad ableiten
+        let mediaType: AnthropicMediaType = "image/jpeg";
+        const blobType = (blob.type || "").split(";")[0].trim().toLowerCase();
+        if ((ANTHROPIC_VISION_MEDIA as readonly string[]).includes(blobType)) {
+          mediaType = blobType as AnthropicMediaType;
+        } else {
+          const ext = (locked.video_storage_path as string).split(".").pop()?.toLowerCase();
+          const map: Record<string, AnthropicMediaType> = {
+            jpg: "image/jpeg",
+            jpeg: "image/jpeg",
+            png: "image/png",
+            gif: "image/gif",
+            webp: "image/webp",
+          };
+          if (ext && map[ext]) mediaType = map[ext];
+        }
+        images = [{ data: buf.toString("base64"), mediaType }];
+      } else {
+        const url = (locked.video_url as string | null) || (locked.source_url as string | null);
+        if (!url) throw new Error("Kein Bild-Pfad oder URL gefunden");
+        imageUrls = [url];
+      }
 
       // 1500 Tokens reichen fuer strukturiertes JSON-Output;
       // grosser Token-Cap macht Anthropic-Latency unnoetig hoch.
       const c = await claudeAnalyzeVision({
         systemPrompt: CONTENT_IMAGE_SYSTEM,
-        imageUrls: [url],
+        images,
+        imageUrls,
         text,
         maxTokens: 1500,
       });

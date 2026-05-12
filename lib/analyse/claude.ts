@@ -32,8 +32,8 @@ interface ClaudeResult {
 // URL-Source fuehrt regelmaessig zu HTTP 400 wenn Supabase-Storage-URLs
 // nicht zuverlaessig fuer Anthropic erreichbar sind — daher base64 als
 // stabile Default-Strategie.
-const ANTHROPIC_VISION_MEDIA = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
-type AnthropicMediaType = (typeof ANTHROPIC_VISION_MEDIA)[number];
+export const ANTHROPIC_VISION_MEDIA = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
+export type AnthropicMediaType = (typeof ANTHROPIC_VISION_MEDIA)[number];
 
 async function fetchImageAsBase64(url: string): Promise<
   | { ok: true; data: string; mediaType: AnthropicMediaType }
@@ -74,12 +74,16 @@ async function fetchImageAsBase64(url: string): Promise<
   }
 }
 
-// Vision-Variante · laedt Bilder serverseitig und sendet sie als base64.
+// Vision-Variante · laedt Bilder serverseitig (URL) oder akzeptiert
+// bereits-base64-encoded Bilder direkt (z.B. aus Supabase-Storage-Download).
 // Nutzt das gleiche Pricing und Token-Tracking wie claudeAnalyze.
 export async function claudeAnalyzeVision(args: {
   systemPrompt: string;
   text: string;
-  imageUrls: string[]; // public HTTPS URLs (werden serverseitig geladen)
+  /** Public HTTPS URLs — werden serverseitig geladen + zu base64 konvertiert. */
+  imageUrls?: string[];
+  /** Bereits-base64-encoded Bilder. Bevorzugt vor imageUrls bei private Buckets. */
+  images?: Array<{ data: string; mediaType: AnthropicMediaType }>;
   maxTokens?: number;
   model?: string;
 }): Promise<ClaudeResult> {
@@ -89,12 +93,22 @@ export async function claudeAnalyzeVision(args: {
     return { ok: false, text: "", cost_usd: 0, in_tokens: 0, out_tokens: 0, model, error: "ANTHROPIC_API_KEY fehlt" };
   }
 
-  // Bilder serverseitig laden + zu base64 konvertieren
   const imageBlocks: Array<{
     type: "image";
     source: { type: "base64"; media_type: AnthropicMediaType; data: string };
   }> = [];
-  for (const url of args.imageUrls.slice(0, 5)) {
+
+  // 1) Direkte base64-Inputs (z.B. aus Supabase-Storage-Download)
+  for (const img of (args.images ?? []).slice(0, 5)) {
+    imageBlocks.push({
+      type: "image",
+      source: { type: "base64", media_type: img.mediaType, data: img.data },
+    });
+  }
+
+  // 2) Public-URLs serverseitig laden + zu base64 konvertieren
+  const urlBudget = Math.max(0, 5 - imageBlocks.length);
+  for (const url of (args.imageUrls ?? []).slice(0, urlBudget)) {
     const conv = await fetchImageAsBase64(url);
     if (!conv.ok) {
       return {
@@ -111,6 +125,10 @@ export async function claudeAnalyzeVision(args: {
       type: "image",
       source: { type: "base64", media_type: conv.mediaType, data: conv.data },
     });
+  }
+
+  if (imageBlocks.length === 0) {
+    return { ok: false, text: "", cost_usd: 0, in_tokens: 0, out_tokens: 0, model, error: "Kein Bild uebergeben." };
   }
 
   const body = {
