@@ -190,21 +190,17 @@ export default async function EventsPage({ searchParams }: SearchProps) {
                     </a>
                   )}
                   {ev.source !== "tiktok" && !userSignup && ev.status === "open" && !isPast && (
-                    <form action={`/portal/events/${ev.id}/signup`} method="post">
-                      <button className="btn-cta btn-shimmer">
-                        Anmelden
-                        <span className="btn-cta-arrow" aria-hidden>→</span>
-                      </button>
-                    </form>
-                  )}
-                  {ev.rules && (
-                    <Link
-                      href={`/portal/events/${ev.id}`}
-                      className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]"
-                    >
-                      Regeln + Details →
+                    <Link href={`/portal/events/${ev.id}`} className="btn-cta btn-shimmer">
+                      Anmelden
+                      <span className="btn-cta-arrow" aria-hidden>→</span>
                     </Link>
                   )}
+                  <Link
+                    href={`/portal/events/${ev.id}`}
+                    className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]"
+                  >
+                    Details →
+                  </Link>
                 </div>
               </article>
             );
