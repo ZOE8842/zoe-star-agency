@@ -33,6 +33,16 @@ export default async function InboxPage({ searchParams }: Props) {
   const tabRaw = params.tab as TabKey | undefined;
   const tab: TabKey = tabRaw === "system" || tabRaw === "activity" ? tabRaw : "messages";
 
+  // System-Tab geoeffnet → alle eigenen unread-Notifications als gelesen markieren.
+  // Erfolgt VOR den Counts, damit das Badge im selben Render aktualisiert ist.
+  if (tab === "system") {
+    await supabase
+      .from("notifications")
+      .update({ status: "read", read_at: new Date().toISOString() })
+      .eq("user_id", profile.id)
+      .eq("status", "unread");
+  }
+
   // Nur fuer Messages-Tab laden — andere Tabs brauchen das nicht
   let messages: Array<{
     id: string;

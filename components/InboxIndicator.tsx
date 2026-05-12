@@ -55,10 +55,15 @@ export async function InboxIndicator({ userId, variant = "dot" }: Props) {
   }
 
   // bell-variant: voller Icon-Button mit Badge
+  // Wenn mehr System-Notifications als Messages ungelesen → System-Tab oeffnen.
+  const target =
+    (notifUnread ?? 0) > msgUnread
+      ? "/portal/inbox?tab=system"
+      : "/portal/inbox";
   const display = total > 99 ? "99+" : String(total);
   return (
     <Link
-      href="/portal/inbox"
+      href={target}
       aria-label={total === 0 ? "Inbox" : `Inbox · ${total} ungelesen`}
       className="relative inline-flex items-center justify-center w-9 h-9 text-cream/65 hover:text-champagne transition-colors"
     >
