@@ -255,6 +255,72 @@ export default async function AdminPage() {
     };
   }
 
+  // CRON-HEALTH — letzter Eintrag pro source (+ optional kind)
+  // Enum-Quellen: 'apify_tiktok', 'backstage_sync', 'claude_worker'.
+  // claude_worker hat zwei Sub-Sources (kind=content_image vs kind=content_cleanup
+  // etc.) — wir tracken die wichtigsten zwei.
+  type HealthRow = {
+    source: string;
+    kind: string | null;
+    ok: boolean;
+    duration_ms: number | null;
+    error_message: string | null;
+    created_at: string;
+  };
+  let cronHealth: Array<{
+    label: string;
+    state: "ok" | "warn" | "fail" | "missing";
+    lastRun: string | null;
+    detail: string | null;
+  }> = [];
+  if (isAdmin) {
+    const since48h = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+    const { data: hRows } = await supabase
+      .from("data_source_health")
+      .select("source, kind, ok, duration_ms, error_message, created_at")
+      .gte("created_at", since48h)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    const rows = (hRows as HealthRow[] | null) ?? [];
+
+    // Helper: hole letzten Eintrag fuer (source, kindPattern)
+    function latest(source: string, kindStartsWith?: string): HealthRow | null {
+      for (const r of rows) {
+        if (r.source !== source) continue;
+        if (kindStartsWith && !(r.kind ?? "").startsWith(kindStartsWith)) continue;
+        return r;
+      }
+      return null;
+    }
+
+    function asHealth(label: string, row: HealthRow | null, maxAgeHours: number): typeof cronHealth[number] {
+      if (!row) return { label, state: "missing", lastRun: null, detail: "Kein Eintrag in 48h" };
+      const ageHours = (Date.now() - new Date(row.created_at).getTime()) / 3600_000;
+      const state: "ok" | "warn" | "fail" =
+        !row.ok ? "fail" : ageHours > maxAgeHours ? "warn" : "ok";
+      const ageLabel = ageHours < 1
+        ? `${Math.round(ageHours * 60)} min`
+        : ageHours < 24
+        ? `${Math.round(ageHours)} h`
+        : `${(ageHours / 24).toFixed(1)} t`;
+      return {
+        label,
+        state,
+        lastRun: ageLabel,
+        detail: row.error_message || (row.duration_ms ? `${(row.duration_ms / 1000).toFixed(1)} s` : null),
+      };
+    }
+
+    cronHealth = [
+      asHealth("Analyse-Worker", latest("claude_worker", "content_image"), 26),
+      asHealth("Account-Analyse", latest("claude_worker", "account"), 26),
+      asHealth("LIVE-Report", latest("claude_worker", "live"), 26),
+      asHealth("Content-Cleanup", latest("claude_worker", "content_cleanup"), 26),
+      asHealth("Apify TikTok", latest("apify_tiktok"), 26),
+      asHealth("Backstage-Sync", latest("backstage_sync"), 26),
+    ];
+  }
+
   return (
     <>
       <PortalNav
@@ -322,6 +388,23 @@ export default async function AdminPage() {
               <OpsTile href="/portal/admin/notifications-queue" label="DM-Queue" count={ops.dm_queue} />
               <OpsTile href="/portal/admin/notifications-queue" label="DM-Fail" count={ops.dm_failed} warn={ops.dm_failed > 0} />
               <OpsTile href="/portal/admin/messages?f=waiting" label="Inbox wartet" count={inboxWaiting} />
+            </div>
+          </section>
+        )}
+
+        {/* CRON-HEALTH — letzter Lauf pro Worker / Sync / Cleanup */}
+        {isAdmin && cronHealth.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="eyebrow">Cron-Health · 48h</p>
+              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+                Letzter Lauf je Job
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+              {cronHealth.map((h) => (
+                <CronTile key={h.label} {...h} />
+              ))}
             </div>
           </section>
         )}
@@ -515,6 +598,53 @@ function OpsTile({ href, label, count, warn }: { href: string; label: string; co
         {count}
       </p>
     </Link>
+  );
+}
+
+function CronTile({
+  label, state, lastRun, detail,
+}: {
+  label: string;
+  state: "ok" | "warn" | "fail" | "missing";
+  lastRun: string | null;
+  detail: string | null;
+}) {
+  const tone =
+    state === "fail" ? "border-red-400/40 bg-red-400/[0.04]"
+    : state === "warn" ? "border-yellow-400/40 bg-yellow-400/[0.04]"
+    : state === "missing" ? "border-cream/15 bg-cream/[0.02]"
+    : "border-champagne/20";
+  const stateLabel =
+    state === "ok" ? "OK"
+    : state === "warn" ? "WARN"
+    : state === "fail" ? "FAIL"
+    : "—";
+  const stateColor =
+    state === "ok" ? "text-champagne"
+    : state === "warn" ? "text-yellow-300/85"
+    : state === "fail" ? "text-red-300/85"
+    : "text-cream/40";
+  return (
+    <div className={`border p-3 md:p-4 ${tone}`}>
+      <div className="flex items-baseline justify-between gap-2 mb-2">
+        <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] truncate">
+          {label}
+        </p>
+        <span className={`text-[10px] uppercase tracking-[0.25em] shrink-0 ${stateColor}`}>
+          {stateLabel}
+        </span>
+      </div>
+      <p className="font-display italic text-cream text-lg md:text-xl leading-tight">
+        {lastRun ?? "Kein Lauf"}
+      </p>
+      {detail && (
+        <p className={`text-[10px] uppercase tracking-[0.2em] mt-2 line-clamp-1 ${
+          state === "fail" ? "text-red-300/65" : "text-cream/35"
+        }`} title={detail}>
+          {detail}
+        </p>
+      )}
+    </div>
   );
 }
 

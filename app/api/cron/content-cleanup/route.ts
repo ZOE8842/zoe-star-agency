@@ -70,9 +70,11 @@ export async function GET(request: NextRequest) {
   const cleaned = results.filter((r) => r.ok).length;
   const failed = results.filter((r) => !r.ok).length;
 
-  // Audit-Log
+  // Audit-Log — source ist auf ('apify_tiktok','backstage_sync','claude_worker')
+  // eingeschraenkt (Check-Constraint), deshalb "claude_worker" mit kind als
+  // Sub-Tag.
   await supabase.from("data_source_health").insert({
-    source: "content_cleanup_cron",
+    source: "claude_worker",
     kind: "content_cleanup",
     ok: failed === 0,
     count_items: cleaned,
