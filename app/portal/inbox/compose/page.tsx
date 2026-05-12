@@ -54,7 +54,9 @@ export default async function ComposePage() {
     }
   }
 
-  const canCompose = isAdmin ? (creatorOptions?.length ?? 0) > 0 : !!defaultRecipientId;
+  // Admin: kann immer (Broadcast funktioniert auch ohne Creator-Liste).
+  // Creator: braucht einen Default-Empfaenger.
+  const canCompose = isAdmin ? true : !!defaultRecipientId;
 
   return (
     <>
@@ -91,6 +93,7 @@ export default async function ComposePage() {
             recipientId={defaultRecipientId ?? ""}
             recipientName={defaultRecipientName}
             recipientOptions={creatorOptions}
+            allowBroadcast={isAdmin}
           />
         ) : (
           <p className="text-cream/40 text-sm">

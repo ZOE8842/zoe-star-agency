@@ -5,13 +5,14 @@ import { createClient as createSrvClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 
 interface SendArgs {
-  recipientId: string;
+  recipientId?: string;
+  recipientGroup?: "all_creators";
   subject: string;
   body: string;
   attachments?: string[];
 }
 
-export async function sendMessage({ recipientId, subject, body, attachments }: SendArgs) {
+export async function sendMessage({ recipientId, recipientGroup, subject, body, attachments }: SendArgs) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -41,9 +42,23 @@ export async function sendMessage({ recipientId, subject, body, attachments }: S
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
+  // Broadcast: nur fuer Admin/Manager. Pruefen.
+  if (recipientGroup === "all_creators") {
+    const { data: senderProfile } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!senderProfile || (senderProfile.role !== "admin" && senderProfile.role !== "manager")) {
+      return { error: "Broadcast nur fuer Admin/Manager." };
+    }
+  }
+  if (!recipientGroup && !recipientId) {
+    return { error: "Empfaenger fehlt." };
+  }
+
   const insertPayload: Record<string, unknown> = {
     sender_id: user.id,
-    recipient_id: recipientId,
     subject: effectiveSubject,
     body: body.trim(),
     // Enum-Wert "general" — Direct-Messages werden ueber recipient_group=null
@@ -51,6 +66,12 @@ export async function sendMessage({ recipientId, subject, body, attachments }: S
     category: "general",
     sent_at: new Date().toISOString(),
   };
+  if (recipientGroup === "all_creators") {
+    insertPayload.recipient_group = "all_creators";
+    insertPayload.category = "general";
+  } else {
+    insertPayload.recipient_id = recipientId;
+  }
   if (attachments && attachments.length > 0) {
     insertPayload.attachments = attachments;
   }

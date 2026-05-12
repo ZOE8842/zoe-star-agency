@@ -11,17 +11,22 @@ export interface RecipientOption {
   hint?: string;
 }
 
+type Target = "single" | "broadcast";
+
 export function ComposeForm({
   recipientId,
   recipientName: _recipientName,
   recipientOptions,
+  allowBroadcast,
 }: {
   recipientId: string;
   recipientName: string;
   recipientOptions?: RecipientOption[];
+  allowBroadcast?: boolean;
 }) {
   const router = useRouter();
   const hasPicker = (recipientOptions?.length ?? 0) > 0;
+  const [target, setTarget] = useState<Target>("single");
   const [selectedRecipient, setSelectedRecipient] = useState<string>(
     hasPicker ? "" : recipientId,
   );
@@ -53,8 +58,9 @@ export function ComposeForm({
     e.preventDefault();
     setError(null);
 
+    const isBroadcast = target === "broadcast" && allowBroadcast;
     const targetId = hasPicker ? selectedRecipient : recipientId;
-    if (!targetId) {
+    if (!isBroadcast && !targetId) {
       setError("Bitte einen Empfaenger auswaehlen.");
       return;
     }
@@ -65,7 +71,9 @@ export function ComposeForm({
 
     setLoading(true);
     const result = await sendMessage({
-      recipientId: targetId,
+      ...(isBroadcast
+        ? { recipientGroup: "all_creators" as const }
+        : { recipientId: targetId }),
       subject: subject.trim(),
       body: body.trim(),
       attachments: attachments.map((a) => a.path),
@@ -91,8 +99,45 @@ export function ComposeForm({
 
   return (
     <form onSubmit={submit} className="space-y-12">
-      {/* Recipient-Picker — nur fuer Admin/Manager mit Optionen */}
-      {hasPicker && (
+      {/* Target-Switch — nur fuer Admin/Manager mit Broadcast-Recht */}
+      {allowBroadcast && (
+        <div>
+          <p className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-4">Ziel</p>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setTarget("single")}
+              className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors ${
+                target === "single"
+                  ? "bg-champagne text-ink border-champagne"
+                  : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
+              }`}
+            >
+              Einzelner Creator
+            </button>
+            <button
+              type="button"
+              onClick={() => setTarget("broadcast")}
+              className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors ${
+                target === "broadcast"
+                  ? "bg-champagne text-ink border-champagne"
+                  : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
+              }`}
+            >
+              Broadcast an alle Creator
+            </button>
+          </div>
+          {target === "broadcast" && (
+            <p className="text-cream/55 text-xs mt-3">
+              Erscheint bei allen Creatorn im Postfach. Antworten kommen
+              als Direct-Message zurueck.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Recipient-Picker — nur fuer Admin/Manager mit Optionen + single-Mode */}
+      {hasPicker && target === "single" && (
         <div>
           <label htmlFor="recipient-search" className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-4">
             Empfaenger
