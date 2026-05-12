@@ -194,7 +194,7 @@ export default async function MessageDetailPage({
         isManager={profile.role === "manager"}
       />
 
-      <main className="container-luxe py-20 md:py-32 max-w-[640px] mx-auto">
+      <main className="container-luxe py-10 md:py-16 max-w-[640px] mx-auto">
         <Link
           href="/portal/inbox"
           className="inline-flex items-center gap-2 text-cream/40 hover:text-champagne text-[10px] uppercase tracking-[0.3em] mb-12 transition-colors"
@@ -239,57 +239,57 @@ export default async function MessageDetailPage({
           </div>
         </div>
 
-        {/* Editorial-Korrespondenz-Timeline */}
-        <article>
-          {items.map((item, idx) => {
-            const isFirst = idx === 0;
-            const senderName = item.sender_id ? senderMap.get(item.sender_id) : null;
-            const isFromMe = item.sender_id === profile.id;
+        {/* Subject als kleiner Kontext-Header — nur wenn nicht autogeneriert aus Body */}
+        {baseSubject && !baseSubject.endsWith("...") && (
+          <p className="text-cream/45 text-[11px] uppercase tracking-[0.3em] mb-6">
+            Betreff · {baseSubject}
+          </p>
+        )}
 
+        {/* Chat-Timeline mit Bubbles */}
+        <article className="space-y-4 mb-12">
+          {items.map((item) => {
+            const isFromMe = item.sender_id === profile.id;
+            const senderName = item.sender_id ? senderMap.get(item.sender_id) : null;
             return (
               <div
                 key={item.id}
-                className={idx > 0 ? "mt-32 md:mt-40 pt-20 md:pt-24 border-t border-cream/[0.04]" : ""}
+                className={`flex ${isFromMe ? "justify-end" : "justify-start"}`}
               >
-                {/* Meta */}
-                <div className="mb-10 text-[10px] uppercase tracking-[0.3em] text-cream/40">
-                  <span>{senderName || (isFromMe ? "Du" : "—")}</span>
-                  <span className="mx-3 text-cream/25">·</span>
-                  <span className="text-cream/35">{formatLongDate(item.sent_at)}</span>
-                  {!isFirst && (
-                    <>
-                      <span className="mx-3 text-cream/25">·</span>
-                      <span className="text-cream/35">
-                        {CATEGORY_LABEL[item.category] || item.category}
-                      </span>
-                    </>
+                <div className={`max-w-[85%] md:max-w-[75%] ${isFromMe ? "items-end" : "items-start"} flex flex-col`}>
+                  {!isFromMe && senderName && (
+                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mb-1.5 px-1">
+                      {senderName}
+                    </p>
+                  )}
+                  <div className={`px-4 py-3 md:px-5 md:py-4 leading-relaxed whitespace-pre-wrap text-sm md:text-base ${
+                    isFromMe
+                      ? "bg-champagne text-ink"
+                      : "bg-cream/[0.05] text-cream/90 border border-cream/[0.08]"
+                  }`}>
+                    {item.body}
+                  </div>
+                  <p className={`text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-1.5 px-1 ${isFromMe ? "text-right" : ""}`}>
+                    {new Date(item.sent_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                    {" · "}
+                    {formatLongDate(item.sent_at)}
+                  </p>
+
+                  {/* Attachments + Reactions — nur am aktuellen Item */}
+                  {item.id === msg.id && msg.attachments && msg.attachments.length > 0 && (
+                    <div className="mt-2 w-full">
+                      <AttachmentList paths={msg.attachments} />
+                    </div>
+                  )}
+                  {item.id === msg.id && (
+                    <div className={`mt-2 ${isFromMe ? "self-end" : "self-start"}`}>
+                      <ReactionBar
+                        messageId={msg.id}
+                        initialReactions={initialReactions}
+                      />
+                    </div>
                   )}
                 </div>
-
-                {/* Subject — nur beim ersten Item */}
-                {isFirst && (
-                  <h1 className="font-display italic text-cream text-[40px] sm:text-5xl md:text-6xl leading-[1.0] tracking-[-0.02em] mb-16">
-                    {stripRePrefix(item.subject || "") || "(ohne Betreff)"}
-                  </h1>
-                )}
-
-                {/* Body */}
-                <div className="text-cream/85 text-base md:text-lg leading-[1.85] whitespace-pre-wrap font-light">
-                  {item.body}
-                </div>
-
-                {/* Attachments — nur beim aktuellen Item (msg.id) */}
-                {item.id === msg.id && msg.attachments && msg.attachments.length > 0 && (
-                  <AttachmentList paths={msg.attachments} />
-                )}
-
-                {/* Reactions — V1 nur fuer aktuelles Item */}
-                {item.id === msg.id && (
-                  <ReactionBar
-                    messageId={msg.id}
-                    initialReactions={initialReactions}
-                  />
-                )}
               </div>
             );
           })}
