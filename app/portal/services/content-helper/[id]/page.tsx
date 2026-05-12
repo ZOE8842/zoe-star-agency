@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { SummaryRenderer } from "@/components/content-helper/SummaryRenderer";
 import { AdminTriggerPanel } from "./AdminTriggerPanel";
 
 export const dynamic = "force-dynamic";
@@ -172,33 +173,44 @@ export default async function ContentHelperDetailPage({ params }: Props) {
         )}
 
         {(job.status === "done" || job.status === "reviewed") && (
-          <div className="border border-champagne/30 bg-champagne/5 p-5 md:p-7 mb-6">
-            <p className="eyebrow text-champagne mb-3">Ergebnis</p>
+          <div className="border border-champagne/30 bg-champagne/[0.03] p-5 md:p-8 mb-6">
+            <p className="eyebrow text-champagne mb-6">Ergebnis</p>
 
-            {summary && Object.keys(summary).length > 0 && (
-              <div className="space-y-3 mb-5">
-                {Object.entries(summary).map(([k, v]) => (
-                  <div key={k}>
-                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">{k}</p>
-                    <p className="text-cream text-sm leading-relaxed">{String(v)}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Strukturiertes Rendering: parst STIMMUNG / STAERKEN / SCHWAECHEN /
+                FIX-ANWEISUNGEN / HOOK-SCORE Sections aus Anthropic-Output. */}
+            <SummaryRenderer summary={summary} />
 
+            {/* AI-Score (separate Stats — von Worker als JSON-Block extrahiert) */}
             {aiScore && Object.keys(aiScore).length > 0 && (
-              <div className="grid grid-cols-2 gap-2 mb-5">
-                {Object.entries(aiScore).map(([k, v]) => (
-                  <div key={k} className="border border-champagne/20 p-3">
-                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mb-1">{k}</p>
-                    <p className="font-display italic text-champagne text-xl">{String(v)}</p>
-                  </div>
-                ))}
+              <div className="mt-8 pt-6 border-t border-champagne/15">
+                <p className="eyebrow text-champagne mb-4">Werte</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                  {Object.entries(aiScore).map(([k, v]) => {
+                    // Arrays als Listen, sonst als String
+                    const isArray = Array.isArray(v);
+                    return (
+                      <div key={k} className="border border-champagne/15 p-3 md:p-4">
+                        <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mb-2">{k}</p>
+                        {isArray ? (
+                          <ul className="space-y-1">
+                            {(v as unknown[]).slice(0, 5).map((item, i) => (
+                              <li key={i} className="text-cream/80 text-xs leading-snug">{String(item)}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="font-display italic text-champagne text-xl md:text-2xl leading-none">
+                            {String(v)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
             {job.ai_provider && (
-              <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-4">
+              <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-6 pt-4 border-t border-champagne/10">
                 Analysiert via {job.ai_provider}
                 {job.ai_model && <> · {job.ai_model}</>}
                 {job.reviewed_at && (
