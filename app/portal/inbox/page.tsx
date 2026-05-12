@@ -4,6 +4,7 @@ import { PortalNav } from "@/components/PortalNav";
 import { ActivityFeed } from "@/components/inbox/ActivityFeed";
 import { SystemNotificationsList } from "@/components/inbox/SystemNotificationsList";
 import { InboxRealtime } from "@/components/inbox/InboxRealtime";
+import { ParticipationShortcuts } from "@/components/inbox/ParticipationShortcuts";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,9 @@ export default async function InboxPage({ searchParams }: Props) {
             Verfassen
           </Link>
         </div>
+
+        {/* TEILNAHMEN — kompakte Shortcuts zu Events/Match/Push/Academy */}
+        <ParticipationShortcuts supabase={supabase} profileId={profile.id} />
 
         {/* TABS — Nachrichten / System / Aktivitaet */}
         <div className="flex border-b border-champagne/15 mb-8 -mx-2 overflow-x-auto">
