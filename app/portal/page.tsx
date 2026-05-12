@@ -7,6 +7,7 @@ import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock"
 import { FollowPromptCard } from "@/components/dashboard/FollowPromptCard";
 import { ShowcaseInterestBanner } from "@/components/dashboard/ShowcaseInterestBanner";
 import { TodayQueue } from "@/components/dashboard/TodayQueue";
+import { WarningsBlock } from "@/components/dashboard/WarningsBlock";
 import { loadDashboardData } from "@/lib/dashboard/aggregator";
 // ZoeAppCodeBox bleibt im Repo (Component existiert), wird aber nicht mehr
 // im Dashboard gerendert. Backend-Routes /api/zoe-app/request-code +
@@ -225,7 +226,10 @@ export default async function DashboardPage() {
           coopPending={coopPending}
         />
 
-        {/* TODAY-QUEUE — datengetrieben, oben weil hoechste UX-Prioritaet */}
+        {/* WARNINGS — Pflicht-Punkte (Showcase unvollstaendig, Email-Ack offen) */}
+        <WarningsBlock items={dashboard.warnings} />
+
+        {/* TODAY-QUEUE — datengetrieben, hoechste UX-Prioritaet */}
         <TodayQueue items={dashboard.queue} />
 
         {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
