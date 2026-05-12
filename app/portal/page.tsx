@@ -9,6 +9,7 @@ import { ShowcaseInterestBanner } from "@/components/dashboard/ShowcaseInterestB
 import { TodayQueue } from "@/components/dashboard/TodayQueue";
 import { WarningsBlock } from "@/components/dashboard/WarningsBlock";
 import { RecommendationsBlock } from "@/components/dashboard/RecommendationsBlock";
+import { NewsFeed } from "@/components/dashboard/NewsFeed";
 import { loadDashboardData } from "@/lib/dashboard/aggregator";
 // ZoeAppCodeBox bleibt im Repo (Component existiert), wird aber nicht mehr
 // im Dashboard gerendert. Backend-Routes /api/zoe-app/request-code +
@@ -232,6 +233,9 @@ export default async function DashboardPage() {
 
         {/* TODAY-QUEUE — datengetrieben, hoechste UX-Prioritaet */}
         <TodayQueue items={dashboard.queue} />
+
+        {/* NEWS & INFOS — Birthdays, neue Creator, System-Hinweise */}
+        <NewsFeed supabase={supabase} />
 
         {/* RECOMMENDATIONS — leise, unter der Action-Queue */}
         <RecommendationsBlock items={dashboard.recommendations} />

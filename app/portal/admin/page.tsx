@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PortalNav } from "@/components/PortalNav";
+import { NewsFeed } from "@/components/dashboard/NewsFeed";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -408,6 +409,9 @@ export default async function AdminPage() {
             </div>
           </section>
         )}
+
+        {/* NEWS & INFOS — Birthdays, neue Creator, System-Hinweise */}
+        <NewsFeed supabase={supabase} />
 
         {/* KPI-Block — diese Woche */}
         {isAdmin && (

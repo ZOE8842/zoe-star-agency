@@ -118,5 +118,21 @@ export async function POST(req: NextRequest) {
     .update({ used_at: new Date().toISOString(), used_by: user_id })
     .eq("id", invite.id);
 
+  // 6. Dashboard-News fuer creator_joined (14 Tage sichtbar) — best-effort
+  if (invite.intended_role === "creator") {
+    const tiktokUrl = `https://www.tiktok.com/@${tiktok_username.replace(/^@/, "")}`;
+    const visibleUntil = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
+    await admin.from("dashboard_news").insert({
+      type: "creator_joined",
+      title: `⭐ ${display_name} ist neu bei ZOE Star Agency`,
+      body: "Folgt ihr gerne auf TikTok.",
+      profile_id: user_id,
+      tiktok_username,
+      tiktok_url: tiktokUrl,
+      visible_until: visibleUntil,
+      dedupe_key: `creator_joined:${user_id}`,
+    }).then(() => undefined, () => undefined);
+  }
+
   return NextResponse.json({ success: true, role: invite.intended_role });
 }
