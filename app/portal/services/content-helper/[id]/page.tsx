@@ -140,19 +140,8 @@ export default async function ContentHelperDetailPage({ params }: Props) {
           </span>
         </div>
 
-        {isAdmin && (
-          <AdminTriggerPanel
-            id={job.id}
-            kind={job.kind}
-            status={job.status}
-            costUsd={job.cost_usd}
-            processingStartedAt={job.processing_started_at}
-            reviewedAt={job.reviewed_at}
-            errorMessage={job.error_message}
-            aiProvider={job.ai_provider}
-            aiModel={job.ai_model}
-          />
-        )}
+        {/* AdminTriggerPanel ist weiter unten als collapsed <details> eingebaut,
+            damit Creator-Flow zuerst Bild + Kurzfazit + Analyse sieht. */}
 
         {/* HERO IMAGE — Creator sieht zuerst sein Bild */}
         {previewUrl && (
@@ -323,6 +312,34 @@ export default async function ContentHelperDetailPage({ params }: Props) {
               </Link>
             </div>
           </>
+        )}
+
+        {/* ADMIN TOOLS — am Ende, eingeklappt by default */}
+        {isAdmin && (
+          <details className="mt-10 border-t border-champagne/10 pt-6 group">
+            <summary className="cursor-pointer flex items-center justify-between gap-3 py-2 select-none">
+              <span className="eyebrow text-cream/55">Admin · Tools</span>
+              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em] group-open:hidden">
+                Anzeigen →
+              </span>
+              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em] hidden group-open:inline">
+                Verbergen ↑
+              </span>
+            </summary>
+            <div className="mt-4">
+              <AdminTriggerPanel
+                id={job.id}
+                kind={job.kind}
+                status={job.status}
+                costUsd={job.cost_usd}
+                processingStartedAt={job.processing_started_at}
+                reviewedAt={job.reviewed_at}
+                errorMessage={job.error_message}
+                aiProvider={job.ai_provider}
+                aiModel={job.ai_model}
+              />
+            </div>
+          </details>
         )}
       </main>
     </>
