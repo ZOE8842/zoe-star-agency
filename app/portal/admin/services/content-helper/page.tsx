@@ -105,7 +105,7 @@ export default async function AdminContentHelper() {
                   {r.cost_usd && Number(r.cost_usd) > 0 && <> · ${Number(r.cost_usd).toFixed(2)}</>}
                 </span>
                 <Link
-                  href={`/portal/admin/services/content-helper/${r.id}`}
+                  href={`/portal/services/content-helper/${r.id}`}
                   className="text-champagne hover:text-champagne-300"
                 >
                   Oeffnen →
