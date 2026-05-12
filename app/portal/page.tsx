@@ -6,6 +6,8 @@ import { AvatarStack } from "@/components/AvatarStack";
 import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock";
 import { FollowPromptCard } from "@/components/dashboard/FollowPromptCard";
 import { ShowcaseInterestBanner } from "@/components/dashboard/ShowcaseInterestBanner";
+import { TodayQueue } from "@/components/dashboard/TodayQueue";
+import { loadDashboardData } from "@/lib/dashboard/aggregator";
 // ZoeAppCodeBox bleibt im Repo (Component existiert), wird aber nicht mehr
 // im Dashboard gerendert. Backend-Routes /api/zoe-app/request-code +
 // zoe_app_connection_codes Tabelle bleiben als Legacy-Bridge intern.
@@ -78,6 +80,9 @@ export default async function DashboardPage() {
   const recentMessages = recentMessagesRes.data ?? [];
   const nextEvent = nextEventRes.data;
   const latestPushStatus = activePushRes.data?.status as string | undefined;
+
+  // Dashboard-Aggregator: Today-Queue + Warnings + Recommendations
+  const dashboard = await loadDashboardData(supabase, profile);
 
   // Interest-Status fuer Showcase + Kooperationen (Banner-Anzeige).
   // Fallback: wenn Spalte noch nicht migriert ist, gilt 'pending' nur
@@ -219,6 +224,9 @@ export default async function DashboardPage() {
           showcasePending={showcasePending}
           coopPending={coopPending}
         />
+
+        {/* TODAY-QUEUE — datengetrieben, oben weil hoechste UX-Prioritaet */}
+        <TodayQueue items={dashboard.queue} />
 
         {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
         <MonthlyMetricsBlock supabase={supabase} profileId={profile.id} />
