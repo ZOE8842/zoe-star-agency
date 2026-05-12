@@ -249,32 +249,35 @@ export default async function DashboardPage() {
           />
         )}
 
-        {/* TODAY — Featured + Side-Cards (kompakt) */}
+        {/* SCHNELLZUGRIFF — Featured (Fallback wenn Queue leer) + Side-Cards */}
         <section className="mb-12 md:mb-16">
-          <div className="grid md:grid-cols-3 gap-4 md:gap-5">
-            {/* Featured — span 2 */}
-            <Link
-              href={featured.href}
-              className="card-featured md:col-span-2 p-7 md:p-10 group transition-all duration-500 hover:bg-champagne/5"
-            >
-              <p className="eyebrow mb-5">{featured.eyebrow}</p>
-              <p className="font-display italic text-champagne text-6xl md:text-8xl leading-[0.9] mb-4 md:mb-5">
-                {featured.accent}
-              </p>
-              <h2 className="text-cream text-2xl md:text-3xl font-medium leading-snug mb-2">
-                {featured.headline}
-              </h2>
-              <p className="text-cream/60 text-sm md:text-base mb-7 max-w-[44ch]">
-                {featured.tagline}
-              </p>
-              <span className="btn-cta">
-                {featured.cta}
-                <span className="btn-cta-arrow" aria-hidden>→</span>
-              </span>
-            </Link>
+          <p className="eyebrow mb-5">Schnellzugriff</p>
+          <div className={`grid ${dashboard.queue.length === 0 ? "md:grid-cols-3" : "md:grid-cols-1"} gap-4 md:gap-5`}>
+            {/* Featured — nur wenn Today-Queue leer ist (sonst Doppelung) */}
+            {dashboard.queue.length === 0 && (
+              <Link
+                href={featured.href}
+                className="card-featured md:col-span-2 p-7 md:p-10 group transition-all duration-500 hover:bg-champagne/5"
+              >
+                <p className="eyebrow mb-5">{featured.eyebrow}</p>
+                <p className="font-display italic text-champagne text-6xl md:text-8xl leading-[0.9] mb-4 md:mb-5">
+                  {featured.accent}
+                </p>
+                <h2 className="text-cream text-2xl md:text-3xl font-medium leading-snug mb-2">
+                  {featured.headline}
+                </h2>
+                <p className="text-cream/60 text-sm md:text-base mb-7 max-w-[44ch]">
+                  {featured.tagline}
+                </p>
+                <span className="btn-cta">
+                  {featured.cta}
+                  <span className="btn-cta-arrow" aria-hidden>→</span>
+                </span>
+              </Link>
+            )}
 
-            {/* Side Cards stack */}
-            <div className="space-y-4 md:space-y-5">
+            {/* Side Cards stack — bei voller Queue als 3-Spalten-Grid, sonst stack rechts */}
+            <div className={dashboard.queue.length === 0 ? "space-y-4 md:space-y-5" : "grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5"}>
               <ServiceLink
                 href="/portal/services/tiktok-push"
                 eyebrow="TikTok Push"
