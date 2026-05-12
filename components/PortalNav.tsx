@@ -53,6 +53,11 @@ export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isMana
           <span className="text-cream/50 text-[10px] uppercase tracking-[0.25em] truncate max-w-[180px]">
             {displayName || (tiktokUsername ? `@${tiktokUsername}` : "Creator")}
           </span>
+          {userId && (
+            <Suspense fallback={null}>
+              <InboxIndicator userId={userId} variant="bell" />
+            </Suspense>
+          )}
           <ThemeToggle />
           <Link
             href="/portal/profile"
@@ -80,15 +85,22 @@ export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isMana
           </form>
         </div>
 
-        {/* Mobile: Burger-Drawer */}
-        <MobileNavDrawer
-          items={navItems.map(({ href, label }) => ({ href, label }))}
-          isAdmin={isAdmin}
-          isManager={isManager}
-          displayName={displayName}
-          tiktokUsername={tiktokUsername}
-          avatarUrl={avatarUrl}
-        />
+        {/* Mobile: Bell + Burger-Drawer */}
+        <div className="md:hidden flex items-center gap-1 shrink-0">
+          {userId && (
+            <Suspense fallback={null}>
+              <InboxIndicator userId={userId} variant="bell" />
+            </Suspense>
+          )}
+          <MobileNavDrawer
+            items={navItems.map(({ href, label }) => ({ href, label }))}
+            isAdmin={isAdmin}
+            isManager={isManager}
+            displayName={displayName}
+            tiktokUsername={tiktokUsername}
+            avatarUrl={avatarUrl}
+          />
+        </div>
       </div>
 
       {/* Desktop-Sub-Nav · Mobile hidden */}

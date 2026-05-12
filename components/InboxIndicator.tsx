@@ -1,37 +1,76 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-// Subtile Inbox-Indicator fuer PortalNav
-// Zeigt einen kleinen Champagne-Dot wenn es ungelesene Nachrichten gibt.
-// Keine Zahl, kein Badge, keine roten Kreise — nur Dot.
+// Inbox-Glocke: zaehlt ungelesene Messages + System-Notifications und
+// rendert einen Bell-Icon mit Badge. Klick fuehrt zu /portal/inbox.
+//
+// Verwendung in PortalNav:
+//   <InboxIndicator userId={userId} variant="dot" />   ← klein (Sub-Nav)
+//   <InboxIndicator userId={userId} variant="bell" />  ← gross (Header)
 
-export async function InboxIndicator({ userId }: { userId: string }) {
+interface Props {
+  userId: string;
+  variant?: "dot" | "bell";
+}
+
+export async function InboxIndicator({ userId, variant = "dot" }: Props) {
   const supabase = await createClient();
 
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("id")
-    .or(`recipient_id.eq.${userId},recipient_group.eq.all_creators`)
-    .order("sent_at", { ascending: false })
-    .limit(80);
+  const [{ data: messages }, { count: notifUnread }] = await Promise.all([
+    supabase
+      .from("messages")
+      .select("id")
+      .or(`recipient_id.eq.${userId},recipient_group.eq.all_creators`)
+      .order("sent_at", { ascending: false })
+      .limit(80),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "unread"),
+  ]);
 
-  if (!messages || messages.length === 0) return null;
+  let msgUnread = 0;
+  if (messages && messages.length > 0) {
+    const messageIds = messages.map((m) => m.id);
+    const { data: reads } = await supabase
+      .from("message_reads")
+      .select("message_id")
+      .eq("reader_id", userId)
+      .in("message_id", messageIds);
+    const readSet = new Set((reads ?? []).map((r) => r.message_id));
+    msgUnread = messages.filter((m) => !readSet.has(m.id)).length;
+  }
 
-  const messageIds = messages.map((m) => m.id);
-  const { data: reads } = await supabase
-    .from("message_reads")
-    .select("message_id")
-    .eq("reader_id", userId)
-    .in("message_id", messageIds);
+  const total = msgUnread + (notifUnread ?? 0);
 
-  const readSet = new Set((reads || []).map((r) => r.message_id));
-  const hasUnread = messages.some((m) => !readSet.has(m.id));
+  if (variant === "dot") {
+    if (total === 0) return null;
+    return (
+      <span
+        aria-label="ungelesene Nachrichten"
+        className="inline-block w-1 h-1 rounded-full bg-champagne ml-1.5 align-middle"
+      />
+    );
+  }
 
-  if (!hasUnread) return null;
-
+  // bell-variant: voller Icon-Button mit Badge
+  const display = total > 99 ? "99+" : String(total);
   return (
-    <span
-      aria-label="ungelesene Nachrichten"
-      className="inline-block w-1 h-1 rounded-full bg-champagne ml-1.5 align-middle"
-    />
+    <Link
+      href="/portal/inbox"
+      aria-label={total === 0 ? "Inbox" : `Inbox · ${total} ungelesen`}
+      className="relative inline-flex items-center justify-center w-9 h-9 text-cream/65 hover:text-champagne transition-colors"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+      {total > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-champagne text-ink text-[9px] font-medium leading-[16px] text-center">
+          {display}
+        </span>
+      )}
+    </Link>
   );
 }
