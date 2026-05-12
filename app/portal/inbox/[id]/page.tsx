@@ -106,28 +106,54 @@ export default async function MessageDetailPage({
     replyTargetId = msg.sender_id;
   }
 
-  // Sender-Names fuer alle Korrespondenz-Items
+  // Sender-Profile fuer alle Korrespondenz-Items + Gespraechspartner
   const senderIds = Array.from(
     new Set(
-      correspondence
-        .map((c) => c.sender_id)
-        .filter((id): id is string => !!id),
+      [
+        ...correspondence.map((c) => c.sender_id),
+        msg.sender_id,
+        msg.recipient_id,
+      ].filter((id): id is string => !!id),
     ),
   );
-  const senderMap = new Map<string, string>();
+  const profileMap = new Map<string, { display_name: string; role: string }>();
   if (senderIds.length > 0) {
-    const { data: senders } = await supabase
+    const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, display_name")
+      .select("id, display_name, role")
       .in("id", senderIds);
-    (senders || []).forEach((s) => senderMap.set(s.id, s.display_name));
-  } else if (msg.sender_id) {
-    const { data: sender } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .eq("id", msg.sender_id)
+    (profiles ?? []).forEach((p) =>
+      profileMap.set(p.id, { display_name: p.display_name, role: p.role }),
+    );
+  }
+  // Legacy-Alias fuer alten Code-Pfad
+  const senderMap = new Map<string, string>();
+  profileMap.forEach((p, id) => senderMap.set(id, p.display_name));
+
+  // Gespraechspartner-Label fuer Header
+  function partnerLabelFor(otherId: string | null): string {
+    if (!otherId) return "—";
+    const p = profileMap.get(otherId);
+    if (!p) return "—";
+    if (p.role === "admin" || p.role === "manager") return "ZOE Management";
+    return p.display_name || "Creator";
+  }
+  const headerLabel: string = msg.recipient_group === "all_creators"
+    ? "ZOE Broadcast"
+    : msg.sender_id === profile.id
+    ? partnerLabelFor(msg.recipient_id)
+    : partnerLabelFor(msg.sender_id);
+
+  // Lese-/Bestaetigungs-Status fuer Gegenseite (zeigt dem Sender ob gelesen wurde)
+  let readByPartnerAt: string | null = null;
+  if (msg.sender_id === profile.id && msg.recipient_id) {
+    const { data: partnerRead } = await supabase
+      .from("message_reads")
+      .select("read_at")
+      .eq("message_id", msg.id)
+      .eq("reader_id", msg.recipient_id)
       .maybeSingle();
-    if (sender) senderMap.set(sender.id, sender.display_name);
+    readByPartnerAt = partnerRead?.read_at ?? null;
   }
 
   // Wenn keine Kette: nur die aktuelle Nachricht zeigen
@@ -182,6 +208,36 @@ export default async function MessageDetailPage({
             <span className="text-champagne text-[10px] uppercase tracking-[0.25em]">OK</span>
           </div>
         )}
+
+        {/* Gespraechs-Header — Partner + Status */}
+        <div className="mb-12 pb-6 border-b border-cream/[0.06]">
+          <p className="text-cream/45 text-[10px] uppercase tracking-[0.3em] mb-2">
+            Gespraech mit
+          </p>
+          <p className="font-display italic text-champagne text-2xl md:text-3xl leading-tight mb-3">
+            {headerLabel}
+          </p>
+          <div className="flex items-center gap-3 flex-wrap text-[10px] uppercase tracking-[0.25em]">
+            {msg.sender_id === profile.id ? (
+              readByPartnerAt ? (
+                <span className="text-champagne">Gelesen · {formatLongDate(readByPartnerAt)}</span>
+              ) : (
+                <span className="text-cream/55">Gesendet</span>
+              )
+            ) : readInfo?.acknowledged_at ? (
+              <span className="text-champagne">Bestaetigt</span>
+            ) : msg.requires_ack ? (
+              <span className="text-champagne">Bestaetigung offen</span>
+            ) : readInfo?.read_at ? (
+              <span className="text-cream/45">Gelesen</span>
+            ) : (
+              <span className="text-cream/55">Neu</span>
+            )}
+            {correspondence.length > 1 && (
+              <span className="text-cream/35">{correspondence.length} Nachrichten</span>
+            )}
+          </div>
+        </div>
 
         {/* Editorial-Korrespondenz-Timeline */}
         <article>
