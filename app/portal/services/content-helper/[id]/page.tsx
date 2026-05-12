@@ -143,8 +143,9 @@ export default async function ContentHelperDetailPage({ params }: Props) {
         {/* AdminTriggerPanel ist weiter unten als collapsed <details> eingebaut,
             damit Creator-Flow zuerst Bild + Kurzfazit + Analyse sieht. */}
 
-        {/* HERO IMAGE — Creator sieht zuerst sein Bild */}
-        {previewUrl && (
+        {/* HERO IMAGE — Creator sieht zuerst sein Bild.
+            Originaldateien sind 5 Tage sichtbar (cleanup via daily cron). */}
+        {job.kind === "image" && previewUrl && (
           <div className="mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -152,14 +153,40 @@ export default async function ContentHelperDetailPage({ params }: Props) {
               alt="Eingereichtes Bild"
               className="w-full max-h-[60vh] object-contain border border-champagne/15 bg-ink/40"
             />
-            <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-2">
-              Upload vom {uploadedLabel}
+            <div className="flex items-baseline justify-between gap-3 mt-2 flex-wrap">
+              <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+                Upload vom {uploadedLabel}
+              </p>
+              {(() => {
+                const expiry = new Date(new Date(job.created_at).getTime() + 5 * 24 * 3600 * 1000);
+                const remaining = Math.ceil((expiry.getTime() - Date.now()) / (24 * 3600 * 1000));
+                if (remaining > 0) {
+                  return (
+                    <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+                      Sichtbar fuer {remaining} {remaining === 1 ? "Tag" : "Tage"}
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Original wurde nach 5 Tagen aus Storage entfernt — nur fuer image. */}
+        {job.kind === "image" && !previewUrl && !job.video_storage_path && (
+          <div className="border border-champagne/15 bg-ink/40 p-6 md:p-8 mb-8 text-center">
+            <p className="font-display italic text-cream/45 text-lg md:text-xl mb-2">
+              Original entfernt.
+            </p>
+            <p className="text-cream/35 text-sm">
+              Originaldateien werden nach 5 Tagen geloescht. Die Analyse bleibt verfuegbar.
             </p>
           </div>
         )}
 
-        {/* Video/Link-Quellen: anklickbarer Link, kein UUID-Pfad */}
-        {(job.source_url || job.video_url) && (
+        {/* Video/Link-Quellen — nur fuer video_link, NICHT fuer image. */}
+        {(job.kind === "video_link" || job.kind === "profile") && (job.source_url || job.video_url) && (
           <div className="border border-champagne/15 p-4 md:p-5 mb-6">
             <p className="eyebrow mb-2">Quelle</p>
             <a
@@ -173,9 +200,8 @@ export default async function ContentHelperDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* Storage-Path-Anzeige nur als sauberes Datum, kein interner Pfad.
-            Fuer Bilder mit Preview oben ueberfluessig (Preview enthaelt schon das Datum). */}
-        {job.video_storage_path && job.kind !== "image" && (
+        {/* Video-Upload-Original: kein interner Pfad, nur Datum. */}
+        {job.video_storage_path && job.kind === "video_file" && (
           <div className="border border-champagne/15 p-4 md:p-5 mb-6">
             <p className="eyebrow mb-2">Original-Datei</p>
             <p className="text-cream/65 text-sm">Upload vom {uploadedLabel}</p>

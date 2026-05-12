@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/analyse-worker",
       "schedule": "15 9 * * *"
+    },
+    {
+      "path": "/api/cron/content-cleanup",
+      "schedule": "0 4 * * *"
     }
   ]
 }
