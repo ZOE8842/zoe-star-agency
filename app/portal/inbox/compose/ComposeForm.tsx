@@ -58,11 +58,7 @@ export function ComposeForm({
       setError("Bitte einen Empfaenger auswaehlen.");
       return;
     }
-    if (subject.trim().length < 2) {
-      setError("Bitte gib einen Betreff an.");
-      return;
-    }
-    if (body.trim().length < 10) {
+    if (body.trim().length < 2) {
       setError("Die Nachricht ist zu kurz.");
       return;
     }
@@ -156,24 +152,7 @@ export function ComposeForm({
         </div>
       )}
 
-      {/* Subject — als Hero-Input ohne sichtbaren Border */}
-      <div>
-        <label htmlFor="subject" className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-4">
-          Betreff
-        </label>
-        <input
-          id="subject"
-          type="text"
-          required
-          maxLength={200}
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="Worum geht es?"
-          className="w-full bg-transparent border-b border-cream/[0.08] focus:border-champagne/60 px-0 py-3 text-cream font-display italic text-2xl md:text-3xl leading-tight tracking-[-0.01em] focus:outline-none placeholder-cream/20 transition-colors"
-        />
-      </div>
-
-      {/* Body — als Reading-Editor */}
+      {/* Body — zuerst, weil Pflicht. Subject ist optional. */}
       <div>
         <label htmlFor="body" className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-4">
           Nachricht
@@ -181,7 +160,7 @@ export function ComposeForm({
         <textarea
           id="body"
           required
-          rows={10}
+          rows={8}
           maxLength={5000}
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -191,6 +170,22 @@ export function ComposeForm({
         <p className="text-cream/25 text-[10px] uppercase tracking-[0.3em] mt-3 text-right">
           {body.length} / 5000
         </p>
+      </div>
+
+      {/* Subject — optional, kleiner */}
+      <div>
+        <label htmlFor="subject" className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-3">
+          Betreff · optional
+        </label>
+        <input
+          id="subject"
+          type="text"
+          maxLength={200}
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Optional, z. B. Rueckfrage zum Push"
+          className="w-full bg-transparent border-b border-cream/[0.08] focus:border-champagne/60 px-0 py-2 text-cream text-base focus:outline-none placeholder-cream/20 transition-colors"
+        />
       </div>
 
       {/* Anlagen */}

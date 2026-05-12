@@ -18,12 +18,22 @@ export async function sendMessage({ recipientId, subject, body, attachments }: S
   } = await supabase.auth.getUser();
   if (!user) return { error: "Nicht eingeloggt." };
 
-  if (subject.trim().length < 2 || body.trim().length < 10) {
-    return { error: "Pflichtfelder zu kurz." };
+  // Subject ist optional — wenn leer, nehmen wir die ersten ~40 Zeichen
+  // aus dem Body als Preview-Subject. Body bleibt Pflicht.
+  if (body.trim().length < 2) {
+    return { error: "Nachricht zu kurz." };
   }
-  if (subject.length > 200 || body.length > 5000) {
+  if (body.length > 5000) {
     return { error: "Nachricht zu lang." };
   }
+  let effectiveSubject = subject.trim();
+  if (!effectiveSubject) {
+    const cleaned = body.trim().replace(/\s+/g, " ");
+    effectiveSubject = cleaned.length > 40
+      ? `${cleaned.slice(0, 37)}...`
+      : cleaned;
+  }
+  if (effectiveSubject.length > 200) effectiveSubject = effectiveSubject.slice(0, 200);
 
   const admin = createSrvClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,7 +44,7 @@ export async function sendMessage({ recipientId, subject, body, attachments }: S
   const insertPayload: Record<string, unknown> = {
     sender_id: user.id,
     recipient_id: recipientId,
-    subject: subject.trim(),
+    subject: effectiveSubject,
     body: body.trim(),
     // Enum-Wert "general" — Direct-Messages werden ueber recipient_group=null
     // + recipient_id!=null identifiziert, nicht ueber category.
