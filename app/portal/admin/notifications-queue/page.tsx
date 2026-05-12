@@ -74,6 +74,51 @@ export default async function AdminNotificationsQueuePage() {
     : { data: [] };
   const map = new Map((profs ?? []).map((p) => [p.id, p]));
 
+  // Showcase-Status laden — nur fuer Creators, die in der Queue
+  // showcase_approved-Eintraege haben. Wenn der Showcase bereits LIVE
+  // (approved + featured) ist, ist die DM redundant.
+  const showcaseProfileIds = Array.from(new Set(
+    (rows ?? [])
+      .filter((r) => r.type === "showcase_approved")
+      .map((r) => r.profile_id),
+  ));
+  const showcaseLiveSet = new Set<string>();
+  if (showcaseProfileIds.length > 0) {
+    const { data: showcases } = await supabase
+      .from("showcase_creators")
+      .select("profile_id, is_approved, is_featured")
+      .in("profile_id", showcaseProfileIds);
+    for (const s of showcases ?? []) {
+      if (s.is_approved && s.is_featured) showcaseLiveSet.add(s.profile_id);
+    }
+  }
+
+  // Auto-Skip: showcase_approved-Eintraege mit status=queued, deren
+  // Showcase bereits LIVE ist, werden automatisch auf "skipped" gesetzt.
+  // Damit verschwindet das widerspruechliche "Wartet" auf LIVE-Cards.
+  const autoSkipIds: string[] = [];
+  for (const r of rows ?? []) {
+    if (r.type === "showcase_approved" && r.status === "queued" && showcaseLiveSet.has(r.profile_id)) {
+      autoSkipIds.push(r.id);
+    }
+  }
+  if (autoSkipIds.length > 0) {
+    await supabase
+      .from("platform_notifications")
+      .update({
+        status: "skipped",
+        error_message: "auto: showcase bereits live",
+      })
+      .in("id", autoSkipIds);
+    // Lokale rows-Liste synchron halten — Render zeigt direkt "Uebersprungen"
+    for (const r of rows ?? []) {
+      if (autoSkipIds.includes(r.id)) {
+        r.status = "skipped";
+        r.error_message = "auto: showcase bereits live";
+      }
+    }
+  }
+
   return (
     <>
       <PortalNav
@@ -126,6 +171,9 @@ export default async function AdminNotificationsQueuePage() {
                 <p className="text-cream/55 text-[11px] uppercase tracking-[0.22em] mb-2">
                   {TYPE_LABEL[r.type] ?? r.type} · prio {r.priority}
                   {r.attempts > 0 && <> · {r.attempts} versuch{r.attempts === 1 ? "" : "e"}</>}
+                  {r.type === "showcase_approved" && showcaseLiveSet.has(r.profile_id) && (
+                    <> · <span className="text-champagne">Showcase live</span></>
+                  )}
                 </p>
 
                 <p className="text-cream text-sm leading-relaxed mb-2 break-words">{r.body}</p>
