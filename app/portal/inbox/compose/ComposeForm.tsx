@@ -81,7 +81,15 @@ export function ComposeForm({
       return;
     }
 
-    router.push("/portal/inbox");
+    // Wenn die Server-Action die neue Message-ID zurueckgegeben hat,
+    // direkt zur Detail-Page springen — mit ?sent=1 fuer den
+    // Bestaetigungs-Banner. Sonst Fallback auf Inbox-Liste.
+    const newId = (result as { id?: string }).id;
+    if (newId) {
+      router.push(`/portal/inbox/${newId}?sent=1`);
+    } else {
+      router.push("/portal/inbox");
+    }
     router.refresh();
   }
 

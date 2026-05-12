@@ -30,10 +30,14 @@ function stripRePrefix(s: string): string {
 
 export default async function MessageDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ sent?: string }>;
 }) {
   const { id } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const justSent = sp.sent === "1";
   const { supabase, profile } = await getAuthedProfile();
 
   // Versuch mit attachments-Spalte; Fallback ohne (falls Migration noch fehlt)
@@ -167,10 +171,17 @@ export default async function MessageDetailPage({
       <main className="container-luxe py-20 md:py-32 max-w-[640px] mx-auto">
         <Link
           href="/portal/inbox"
-          className="inline-flex items-center gap-2 text-cream/40 hover:text-champagne text-[10px] uppercase tracking-[0.3em] mb-24 transition-colors"
+          className="inline-flex items-center gap-2 text-cream/40 hover:text-champagne text-[10px] uppercase tracking-[0.3em] mb-12 transition-colors"
         >
           <span aria-hidden="true">←</span> Inbox
         </Link>
+
+        {justSent && (
+          <div className="border border-champagne/40 bg-champagne/5 px-4 py-3 mb-10 flex items-center justify-between gap-3">
+            <p className="text-champagne text-sm">Nachricht gesendet.</p>
+            <span className="text-champagne text-[10px] uppercase tracking-[0.25em]">OK</span>
+          </div>
+        )}
 
         {/* Editorial-Korrespondenz-Timeline */}
         <article>

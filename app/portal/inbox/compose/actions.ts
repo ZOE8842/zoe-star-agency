@@ -45,22 +45,32 @@ export async function sendMessage({ recipientId, subject, body, attachments }: S
     insertPayload.attachments = attachments;
   }
 
-  const { error } = await admin.from("messages").insert(insertPayload);
+  const { data: inserted, error } = await admin
+    .from("messages")
+    .insert(insertPayload)
+    .select("id")
+    .single();
 
   if (error) {
     // Falls Spalte attachments noch fehlt: ohne attachments retry
     if (error.message.includes("attachments")) {
       delete insertPayload.attachments;
-      const { error: retry } = await admin.from("messages").insert(insertPayload);
-      if (!retry) {
+      const { data: retryInsert, error: retry } = await admin
+        .from("messages")
+        .insert(insertPayload)
+        .select("id")
+        .single();
+      if (!retry && retryInsert) {
         revalidatePath("/portal/inbox");
-        return { success: true, attachmentsSkipped: true };
+        revalidatePath(`/portal/inbox/${retryInsert.id}`);
+        return { success: true, id: retryInsert.id, attachmentsSkipped: true };
       }
-      return { error: `Senden fehlgeschlagen: ${retry.message}` };
+      return { error: `Senden fehlgeschlagen: ${retry?.message ?? "unbekannt"}` };
     }
     return { error: `Senden fehlgeschlagen: ${error.message}` };
   }
 
   revalidatePath("/portal/inbox");
-  return { success: true };
+  revalidatePath(`/portal/inbox/${inserted.id}`);
+  return { success: true, id: inserted.id };
 }
