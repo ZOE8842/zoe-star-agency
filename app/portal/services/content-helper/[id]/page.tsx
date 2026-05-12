@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { createClient as createSrClient } from "@supabase/supabase-js";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { SummaryRenderer } from "@/components/content-helper/SummaryRenderer";
@@ -61,6 +62,46 @@ export default async function ContentHelperDetailPage({ params }: Props) {
   const aiScore = (job.ai_score as Record<string, unknown> | null) ?? null;
   const summary = (job.summary as Record<string, unknown> | null) ?? null;
 
+  // Hero-Image (nur kind=image): signed URL fuer 1h aus private Bucket holen.
+  // Service-Role-Client noetig, weil creator-content private ist.
+  let previewUrl: string | null = null;
+  if (job.kind === "image" && job.video_storage_path && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const sr = createSrClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+    const { data: signed } = await sr.storage
+      .from("creator-content")
+      .createSignedUrl(job.video_storage_path as string, 3600);
+    previewUrl = signed?.signedUrl ?? null;
+  }
+
+  // Kurzfazit aus ai_score extrahieren (siehe content-prompts.ts Schema)
+  const hookScore = aiScore && typeof aiScore.hook_score === "number"
+    ? aiScore.hook_score as number
+    : aiScore && typeof aiScore.hook_score === "string"
+    ? Number(aiScore.hook_score) || null
+    : null;
+  const strongest = aiScore && Array.isArray(aiScore.strengths) && aiScore.strengths.length > 0
+    ? String((aiScore.strengths as unknown[])[0])
+    : null;
+  const biggestIssue = aiScore && Array.isArray(aiScore.weaknesses) && aiScore.weaknesses.length > 0
+    ? String((aiScore.weaknesses as unknown[])[0])
+    : null;
+
+  // ai_score-Aufteilung: Listen vs Skalare
+  const aiScoreEntries = aiScore ? Object.entries(aiScore) : [];
+  const listEntries = aiScoreEntries.filter(([, v]) => Array.isArray(v) && (v as unknown[]).length > 0);
+  // hook_score wird oben separat als Kurzfazit gerendert — hier nicht doppeln
+  const scalarEntries = aiScoreEntries.filter(([k, v]) => !Array.isArray(v) && k !== "hook_score");
+
+  const uploadedLabel = new Date(job.created_at).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <>
       <PortalNav
@@ -113,6 +154,22 @@ export default async function ContentHelperDetailPage({ params }: Props) {
           />
         )}
 
+        {/* HERO IMAGE — Creator sieht zuerst sein Bild */}
+        {previewUrl && (
+          <div className="mb-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt="Eingereichtes Bild"
+              className="w-full max-h-[60vh] object-contain border border-champagne/15 bg-ink/40"
+            />
+            <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-2">
+              Upload vom {uploadedLabel}
+            </p>
+          </div>
+        )}
+
+        {/* Video/Link-Quellen: anklickbarer Link, kein UUID-Pfad */}
         {(job.source_url || job.video_url) && (
           <div className="border border-champagne/15 p-4 md:p-5 mb-6">
             <p className="eyebrow mb-2">Quelle</p>
@@ -127,10 +184,12 @@ export default async function ContentHelperDetailPage({ params }: Props) {
           </div>
         )}
 
-        {job.video_storage_path && (
+        {/* Storage-Path-Anzeige nur als sauberes Datum, kein interner Pfad.
+            Fuer Bilder mit Preview oben ueberfluessig (Preview enthaelt schon das Datum). */}
+        {job.video_storage_path && job.kind !== "image" && (
           <div className="border border-champagne/15 p-4 md:p-5 mb-6">
-            <p className="eyebrow mb-2">Datei</p>
-            <p className="text-cream/65 text-sm font-mono break-all">{job.video_storage_path}</p>
+            <p className="eyebrow mb-2">Original-Datei</p>
+            <p className="text-cream/65 text-sm">Upload vom {uploadedLabel}</p>
           </div>
         )}
 
@@ -173,52 +232,97 @@ export default async function ContentHelperDetailPage({ params }: Props) {
         )}
 
         {(job.status === "done" || job.status === "reviewed") && (
-          <div className="border border-champagne/30 bg-champagne/[0.03] p-5 md:p-8 mb-6">
-            <p className="eyebrow text-champagne mb-6">Ergebnis</p>
-
-            {/* Strukturiertes Rendering: parst STIMMUNG / STAERKEN / SCHWAECHEN /
-                FIX-ANWEISUNGEN / HOOK-SCORE Sections aus Anthropic-Output. */}
-            <SummaryRenderer summary={summary} />
-
-            {/* AI-Score (separate Stats — von Worker als JSON-Block extrahiert) */}
-            {aiScore && Object.keys(aiScore).length > 0 && (
-              <div className="mt-8 pt-6 border-t border-champagne/15">
-                <p className="eyebrow text-champagne mb-4">Werte</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-                  {Object.entries(aiScore).map(([k, v]) => {
-                    // Arrays als Listen, sonst als String
-                    const isArray = Array.isArray(v);
-                    return (
-                      <div key={k} className="border border-champagne/15 p-3 md:p-4">
-                        <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mb-2">{k}</p>
-                        {isArray ? (
-                          <ul className="space-y-1">
-                            {(v as unknown[]).slice(0, 5).map((item, i) => (
-                              <li key={i} className="text-cream/80 text-xs leading-snug">{String(item)}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="font-display italic text-champagne text-xl md:text-2xl leading-none">
-                            {String(v)}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+          <>
+            {/* KURZFAZIT — Hero-Card mit Hook-Score + Strongest + Biggest Issue */}
+            {(hookScore !== null || strongest || biggestIssue) && (
+              <div className="border border-champagne bg-champagne/[0.06] p-5 md:p-7 mb-6">
+                <p className="eyebrow text-champagne mb-5">Kurzfazit</p>
+                {hookScore !== null && (
+                  <div className="mb-5 pb-5 border-b border-champagne/15">
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">Hook-Score</p>
+                    <p className="font-display italic text-champagne text-5xl md:text-6xl leading-none">
+                      {hookScore}<span className="text-cream/35 text-3xl md:text-4xl">/10</span>
+                    </p>
+                  </div>
+                )}
+                {strongest && (
+                  <div className="mb-4">
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">Staerkste Sache</p>
+                    <p className="text-cream text-sm md:text-base leading-relaxed">{strongest}</p>
+                  </div>
+                )}
+                {biggestIssue && (
+                  <div>
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">Groesster Fehler</p>
+                    <p className="text-cream text-sm md:text-base leading-relaxed">{biggestIssue}</p>
+                  </div>
+                )}
               </div>
             )}
 
-            {job.ai_provider && (
-              <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-6 pt-4 border-t border-champagne/10">
-                Analysiert via {job.ai_provider}
-                {job.ai_model && <> · {job.ai_model}</>}
-                {job.reviewed_at && (
-                  <> · {new Date(job.reviewed_at).toLocaleDateString("de-DE")}</>
-                )}
-              </p>
-            )}
-          </div>
+            {/* ERGEBNIS — strukturierte Sections */}
+            <div className="border border-champagne/30 bg-champagne/[0.03] p-5 md:p-8 mb-6">
+              <p className="eyebrow text-champagne mb-6">Analyse</p>
+              <SummaryRenderer summary={summary} />
+
+              {/* Skalar-Werte als Inline-Badges */}
+              {scalarEntries.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-champagne/15">
+                  <p className="eyebrow text-champagne mb-3">Werte</p>
+                  <div className="flex flex-wrap gap-2">
+                    {scalarEntries.map(([k, v]) => (
+                      <div key={k} className="border border-champagne/20 px-3 py-2">
+                        <p className="text-cream/45 text-[9px] uppercase tracking-[0.25em]">{k}</p>
+                        <p className="font-display italic text-champagne text-lg leading-none mt-1">{String(v)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Listen als Vertical-Stack-Cards (volle Breite) */}
+              {listEntries.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  {listEntries.map(([k, v]) => (
+                    <div key={k} className="border border-champagne/15 p-4 md:p-5">
+                      <p className="eyebrow text-champagne mb-3">{k}</p>
+                      <ul className="space-y-2">
+                        {(v as unknown[]).map((item, i) => (
+                          <li
+                            key={i}
+                            className="text-cream/85 text-sm md:text-base leading-relaxed pl-4 border-l border-champagne/30"
+                          >
+                            {String(item)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {job.ai_provider && (
+                <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-6 pt-4 border-t border-champagne/10">
+                  Analysiert via {job.ai_provider}
+                  {job.ai_model && <> · {job.ai_model}</>}
+                  {job.reviewed_at && (
+                    <> · {new Date(job.reviewed_at).toLocaleDateString("de-DE")}</>
+                  )}
+                </p>
+              )}
+            </div>
+
+            {/* Creator-CTA: neue Analyse starten */}
+            <div className="border border-champagne/15 p-4 md:p-5 mb-6 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-cream/65 text-sm">Bereit fuer den naechsten Content?</p>
+              <Link
+                href="/portal/services/content-helper/new"
+                className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]"
+              >
+                Neue Analyse starten →
+              </Link>
+            </div>
+          </>
         )}
       </main>
     </>

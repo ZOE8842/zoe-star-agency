@@ -27,9 +27,35 @@ interface SectionBlock {
   body: string;
 }
 
+function stripJsonArtifacts(raw: string): string {
+  let s = raw;
+  // 1) Vollstaendige Triple-Backtick-Bloecke (json oder generic)
+  s = s.replace(/```json[\s\S]*?```/gi, "");
+  s = s.replace(/```[\s\S]*?```/g, "");
+  // 2) Unvollstaendige Triple-Backticks am Ende (oeffnender Block ohne Close)
+  s = s.replace(/```json[\s\S]*$/i, "");
+  s = s.replace(/```[\s\S]*$/g, "");
+  // 3) Raw-JSON am Ende der Antwort (Object oder Array) — z.B. wenn LLM
+  //    den Markdown-Fence weggelassen hat. Hueristik: ab der letzten
+  //    eigenstaendigen Zeile, die mit { oder [ beginnt, bis Ende abschneiden.
+  const trailJson = s.match(/\n\s*[{[][\s\S]*$/);
+  if (trailJson) {
+    const candidate = trailJson[0].trim();
+    // Nur wenn parsebar — sonst Original behalten
+    try {
+      JSON.parse(candidate);
+      s = s.slice(0, trailJson.index);
+    } catch {
+      // nicht json → ignorieren
+    }
+  }
+  // 4) Escaped Markdown-Artefakte
+  s = s.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  return s.trim();
+}
+
 function parseSections(text: string): SectionBlock[] {
-  // JSON-Block am Ende abschneiden
-  const cleaned = text.replace(/```json[\s\S]*?```/g, "").replace(/```[\s\S]*?```/g, "").trim();
+  const cleaned = stripJsonArtifacts(text);
 
   // Match: "1) STIMMUNG · ..." bis zum naechsten "N) " oder Ende
   const re = /^\s*(\d+)\)\s+([A-ZÄÖÜa-zäöü-]+)\s*[·:]?\s*([\s\S]*?)(?=^\s*\d+\)\s+|$)/gm;
@@ -88,8 +114,8 @@ export function SummaryRenderer({ summary }: { summary: Record<string, unknown> 
   if (text) {
     const sections = parseSections(text);
     if (sections.length === 0) {
-      // Kein bekanntes Format → Fallback whitespace-pre-wrap
-      const cleaned = text.replace(/```[\s\S]*?```/g, "").trim();
+      // Kein bekanntes Format → Fallback whitespace-pre-wrap (mit gleicher Bereinigung)
+      const cleaned = stripJsonArtifacts(text);
       return (
         <p className="text-cream/85 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
           {cleaned}
