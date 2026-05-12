@@ -27,12 +27,59 @@ interface ClaudeResult {
   error?: string;
 }
 
-// Vision-Variante · accepts ein Bild via Public-URL.
+// Laedt eine URL serverseitig und wandelt sie in base64 + media_type um.
+// Anthropic-Vision akzeptiert entweder URL-Source oder base64-Source.
+// URL-Source fuehrt regelmaessig zu HTTP 400 wenn Supabase-Storage-URLs
+// nicht zuverlaessig fuer Anthropic erreichbar sind — daher base64 als
+// stabile Default-Strategie.
+const ANTHROPIC_VISION_MEDIA = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
+type AnthropicMediaType = (typeof ANTHROPIC_VISION_MEDIA)[number];
+
+async function fetchImageAsBase64(url: string): Promise<
+  | { ok: true; data: string; mediaType: AnthropicMediaType }
+  | { ok: false; error: string }
+> {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    if (!r.ok) return { ok: false, error: `HTTP ${r.status} beim Bild-Download` };
+    const contentType = (r.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    let mediaType: AnthropicMediaType | null =
+      (ANTHROPIC_VISION_MEDIA as readonly string[]).includes(contentType)
+        ? (contentType as AnthropicMediaType)
+        : null;
+    if (!mediaType) {
+      // Fallback: aus Dateiendung herleiten
+      const ext = url.split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+      const map: Record<string, AnthropicMediaType> = {
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        gif: "image/gif",
+        webp: "image/webp",
+      };
+      if (ext && map[ext]) mediaType = map[ext];
+    }
+    if (!mediaType) return { ok: false, error: `Unbekannter Bild-Typ (content-type=${contentType})` };
+
+    const buf = await r.arrayBuffer();
+    const sizeMb = buf.byteLength / 1024 / 1024;
+    if (sizeMb > 5) return { ok: false, error: `Bild zu gross (${sizeMb.toFixed(1)} MB > 5 MB)` };
+
+    const base64 = Buffer.from(buf).toString("base64");
+    return { ok: true, data: base64, mediaType };
+  } catch (e) {
+    const isAbort = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+    const msg = isAbort ? "Bild-Download Timeout nach 15s" : e instanceof Error ? e.message : String(e);
+    return { ok: false, error: msg };
+  }
+}
+
+// Vision-Variante · laedt Bilder serverseitig und sendet sie als base64.
 // Nutzt das gleiche Pricing und Token-Tracking wie claudeAnalyze.
 export async function claudeAnalyzeVision(args: {
   systemPrompt: string;
   text: string;
-  imageUrls: string[]; // public HTTPS URLs
+  imageUrls: string[]; // public HTTPS URLs (werden serverseitig geladen)
   maxTokens?: number;
   model?: string;
 }): Promise<ClaudeResult> {
@@ -42,10 +89,29 @@ export async function claudeAnalyzeVision(args: {
     return { ok: false, text: "", cost_usd: 0, in_tokens: 0, out_tokens: 0, model, error: "ANTHROPIC_API_KEY fehlt" };
   }
 
-  const imageBlocks = args.imageUrls.slice(0, 5).map((url) => ({
-    type: "image" as const,
-    source: { type: "url" as const, url },
-  }));
+  // Bilder serverseitig laden + zu base64 konvertieren
+  const imageBlocks: Array<{
+    type: "image";
+    source: { type: "base64"; media_type: AnthropicMediaType; data: string };
+  }> = [];
+  for (const url of args.imageUrls.slice(0, 5)) {
+    const conv = await fetchImageAsBase64(url);
+    if (!conv.ok) {
+      return {
+        ok: false,
+        text: "",
+        cost_usd: 0,
+        in_tokens: 0,
+        out_tokens: 0,
+        model,
+        error: `Bild konnte nicht geladen werden: ${conv.error}`,
+      };
+    }
+    imageBlocks.push({
+      type: "image",
+      source: { type: "base64", media_type: conv.mediaType, data: conv.data },
+    });
+  }
 
   const body = {
     model,
