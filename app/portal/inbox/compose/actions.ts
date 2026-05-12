@@ -36,7 +36,9 @@ export async function sendMessage({ recipientId, subject, body, attachments }: S
     recipient_id: recipientId,
     subject: subject.trim(),
     body: body.trim(),
-    category: "direct",
+    // Enum-Wert "general" — Direct-Messages werden ueber recipient_group=null
+    // + recipient_id!=null identifiziert, nicht ueber category.
+    category: "general",
     sent_at: new Date().toISOString(),
   };
   if (attachments && attachments.length > 0) {

@@ -60,11 +60,12 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
   const adminIds = new Set((admins ?? []).map((a) => a.id));
 
   // Waiting-Set: pro Thread die letzte Message, wenn sender=Creator + recipient=Admin
+  // Direct-Messages werden ueber recipient_group=null + recipient_id!=null
+  // identifiziert (category-Enum hat keinen 'direct'-Wert).
   const seenThread = new Set<string>();
   const waitingSet = new Set<string>();
   for (const m of recent) {
-    // direct-only — broadcasts werden nicht als "wartet" gewertet
-    if (m.category !== "direct" || !m.sender_id || !m.recipient_id) continue;
+    if (m.recipient_group != null || !m.sender_id || !m.recipient_id) continue;
     const k = threadKey(m.sender_id, m.recipient_id, m.subject);
     if (seenThread.has(k)) continue; // recent ist DESC sortiert → erste pro Key ist die neueste
     seenThread.add(k);
@@ -103,12 +104,15 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
     }
   }
 
-  // Filter anwenden
+  // Filter anwenden — Broadcasts haben recipient_group!=null, Direct hat recipient_id!=null
+  const isBroadcastMsg = (m: typeof recent[number]) => m.recipient_group != null;
+  const isDirectMsg = (m: typeof recent[number]) => m.recipient_group == null && m.recipient_id != null;
+
   const filtered = recent.filter((m) => {
     if (filter === "unread") return unreadSet.has(m.id);
     if (filter === "waiting") return waitingSet.has(m.id);
-    if (filter === "broadcast") return m.category === "broadcast" || m.recipient_group != null;
-    if (filter === "direct") return m.category === "direct" && m.recipient_group == null;
+    if (filter === "broadcast") return isBroadcastMsg(m);
+    if (filter === "direct") return isDirectMsg(m);
     return true;
   });
 
@@ -117,8 +121,8 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
     all: recent.length,
     unread: unreadSet.size,
     waiting: waitingSet.size,
-    broadcast: recent.filter((m) => m.category === "broadcast" || m.recipient_group != null).length,
-    direct: recent.filter((m) => m.category === "direct" && m.recipient_group == null).length,
+    broadcast: recent.filter(isBroadcastMsg).length,
+    direct: recent.filter(isDirectMsg).length,
   };
 
   return (
