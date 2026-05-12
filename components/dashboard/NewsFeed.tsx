@@ -37,16 +37,23 @@ function relativeAge(iso: string): string {
 }
 
 export async function NewsFeed({ supabase }: { supabase: SupabaseClient }) {
-  const nowIso = new Date().toISOString();
+  // SQL-Filter sind tricky bei .or() + .is.null + .gt() in der Supabase-JS-API
+  // (Reihenfolge der Klauseln kann zu unerwarteten Resultaten fuehren).
+  // Wir holen die letzten 50 Eintraege und filtern Visibility in JS.
   const { data } = await supabase
     .from("dashboard_news")
     .select("id, type, title, body, profile_id, tiktok_username, tiktok_url, visible_from, visible_until, created_at")
-    .lte("visible_from", nowIso)
-    .or(`visible_until.is.null,visible_until.gt.${nowIso}`)
     .order("created_at", { ascending: false })
-    .limit(8);
+    .limit(50);
 
-  const rows = (data as NewsRow[] | null) ?? [];
+  const now = Date.now();
+  const allRows = (data as NewsRow[] | null) ?? [];
+  const visibleRows = allRows.filter((r) => {
+    const fromOk = !r.visible_from || new Date(r.visible_from).getTime() <= now;
+    const untilOk = !r.visible_until || new Date(r.visible_until).getTime() > now;
+    return fromOk && untilOk;
+  });
+  const rows = visibleRows.slice(0, 8);
 
   if (rows.length === 0) {
     return (
@@ -63,10 +70,19 @@ export async function NewsFeed({ supabase }: { supabase: SupabaseClient }) {
 
   return (
     <section className="mb-12 md:mb-16">
-      <p className="eyebrow mb-5">News &amp; Infos</p>
+      <div className="flex items-baseline justify-between mb-5">
+        <p className="eyebrow">News &amp; Infos</p>
+        <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+          {rows.length} {rows.length === 1 ? "Eintrag" : "Eintraege"}
+        </span>
+      </div>
       <ul className="space-y-3">
-        {rows.map((r) => (
-          <li key={r.id}>
+        {rows.map((r, idx) => (
+          <li
+            key={r.id}
+            // Mobile cap: max 5, Desktop: bis 8 (Index 5-7 nur ab md+)
+            className={idx >= 5 ? "hidden md:block" : ""}
+          >
             <div className={`border p-4 md:p-5 ${TYPE_TONE[r.type] ?? "border-cream/15"}`}>
               <div className="flex items-baseline justify-between gap-3 mb-1 flex-wrap">
                 <p className="text-cream text-base md:text-lg leading-tight">
