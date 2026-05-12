@@ -5,10 +5,11 @@ import { ActivityFeed } from "@/components/inbox/ActivityFeed";
 import { SystemNotificationsList } from "@/components/inbox/SystemNotificationsList";
 import { InboxRealtime } from "@/components/inbox/InboxRealtime";
 import { ParticipationShortcuts } from "@/components/inbox/ParticipationShortcuts";
+import { GroupConversationList } from "@/components/inbox/GroupConversationList";
 
 export const dynamic = "force-dynamic";
 
-type TabKey = "messages" | "system" | "activity";
+type TabKey = "messages" | "groups" | "system" | "activity";
 
 interface Props {
   searchParams: Promise<{ q?: string; tab?: string }>;
@@ -31,7 +32,10 @@ export default async function InboxPage({ searchParams }: Props) {
   const params = await searchParams;
   const query = (params.q || "").trim();
   const tabRaw = params.tab as TabKey | undefined;
-  const tab: TabKey = tabRaw === "system" || tabRaw === "activity" ? tabRaw : "messages";
+  const tab: TabKey =
+    tabRaw === "system" || tabRaw === "activity" || tabRaw === "groups"
+      ? tabRaw
+      : "messages";
 
   // System-Tab geoeffnet → alle eigenen unread-Notifications als gelesen markieren.
   // Erfolgt VOR den Counts, damit das Badge im selben Render aktualisiert ist.
@@ -95,7 +99,7 @@ export default async function InboxPage({ searchParams }: Props) {
   }
 
   // Unread-Counts fuer Tab-Badges (immer laden, leichtgewichtig)
-  const [{ count: msgUnreadCount }, { count: sysUnreadCount }] = await Promise.all([
+  const [{ count: msgUnreadCount }, { count: sysUnreadCount }, groupCountRes] = await Promise.all([
     supabase
       .from("messages")
       .select("id", { count: "exact", head: true })
@@ -105,10 +109,27 @@ export default async function InboxPage({ searchParams }: Props) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", profile.id)
       .eq("status", "unread"),
+    supabase
+      .from("conversation_members")
+      .select("conversation_id, last_read_at, conversation:conversations(last_message_at,type)")
+      .eq("profile_id", profile.id),
   ]);
+
+  // Gruppen-Unread: pro Member-Row pruefen ob last_message_at > last_read_at
+  type GroupRow = {
+    last_read_at: string | null;
+    conversation: { last_message_at: string | null; type: string } | null;
+  };
+  const groupUnread = ((groupCountRes.data as unknown) as GroupRow[] | null ?? []).filter((r) => {
+    if (!r.conversation || r.conversation.type === "dm") return false;
+    if (!r.conversation.last_message_at) return false;
+    if (!r.last_read_at) return true;
+    return new Date(r.conversation.last_message_at) > new Date(r.last_read_at);
+  }).length;
 
   const TABS: Array<{ key: TabKey; label: string; count: number }> = [
     { key: "messages", label: "Nachrichten", count: msgUnreadCount ?? 0 },
+    { key: "groups", label: "Gruppen", count: groupUnread },
     { key: "system", label: "System", count: sysUnreadCount ?? 0 },
     { key: "activity", label: "Aktivitaet", count: 0 },
   ];
@@ -277,6 +298,15 @@ export default async function InboxPage({ searchParams }: Props) {
               })}
             </ul>
           </>
+        )}
+
+        {tab === "groups" && (
+          <div>
+            <p className="text-cream/45 text-sm mb-6">
+              Gruppen-Chats. Admin erstellt Gruppen + Mitglieder.
+            </p>
+            <GroupConversationList supabase={supabase} profileId={profile.id} />
+          </div>
         )}
 
         {tab === "system" && (
