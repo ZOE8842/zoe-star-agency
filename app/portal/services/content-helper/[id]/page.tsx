@@ -224,26 +224,33 @@ export default async function ContentHelperDetailPage({ params }: Props) {
           <>
             {/* KURZFAZIT — Hero-Card mit Hook-Score + Strongest + Biggest Issue */}
             {(hookScore !== null || strongest || biggestIssue) && (
-              <div className="border border-champagne bg-champagne/[0.06] p-5 md:p-7 mb-6">
-                <p className="eyebrow text-champagne mb-5">Kurzfazit</p>
+              <div className="border border-champagne bg-champagne/[0.06] p-5 md:p-8 mb-6">
+                <p className="eyebrow text-champagne mb-6">Kurzfazit</p>
                 {hookScore !== null && (
-                  <div className="mb-5 pb-5 border-b border-champagne/15">
-                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">Hook-Score</p>
-                    <p className="font-display italic text-champagne text-5xl md:text-6xl leading-none">
-                      {hookScore}<span className="text-cream/35 text-3xl md:text-4xl">/10</span>
+                  <div className="mb-6 pb-6 border-b border-champagne/15">
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.3em] mb-3">
+                      Scroll-Stop Potential
                     </p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="font-display italic text-champagne text-7xl md:text-8xl leading-none tracking-[-0.02em]">
+                        {hookScore}
+                      </p>
+                      <p className="text-cream/35 font-display italic text-3xl md:text-4xl leading-none">
+                        /10
+                      </p>
+                    </div>
                   </div>
                 )}
                 {strongest && (
                   <div className="mb-4">
-                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">Staerkste Sache</p>
-                    <p className="text-cream text-sm md:text-base leading-relaxed">{strongest}</p>
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.3em] mb-2">Staerkste Sache</p>
+                    <p className="text-cream text-base md:text-lg leading-relaxed">{strongest}</p>
                   </div>
                 )}
                 {biggestIssue && (
                   <div>
-                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.25em] mb-1">Groesster Fehler</p>
-                    <p className="text-cream text-sm md:text-base leading-relaxed">{biggestIssue}</p>
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.3em] mb-2">Groesster Fehler</p>
+                    <p className="text-cream text-base md:text-lg leading-relaxed">{biggestIssue}</p>
                   </div>
                 )}
               </div>
