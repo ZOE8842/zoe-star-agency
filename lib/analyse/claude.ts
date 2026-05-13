@@ -1,6 +1,8 @@
 // V2 Worker · Anthropic Claude-API Wrapper
 // Port von opus_analyze() aus bot_zoeapp.py.
 
+import { assertSafeUrl } from "@/lib/security/safe-fetch";
+
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 // Sonnet ist 3-5x schneller als Opus bei vergleichbarer Vision-Qualität für
 // Content-Scoring. Opus kann per env ueberschrieben werden wenn noetig.
@@ -39,8 +41,12 @@ async function fetchImageAsBase64(url: string): Promise<
   | { ok: true; data: string; mediaType: AnthropicMediaType }
   | { ok: false; error: string }
 > {
+  // SSRF-Schutz: nur https + public-IPs. Vor dem fetch() prueft der
+  // Validator Protokoll + Host + IP-Range.
+  const safe = assertSafeUrl(url);
+  if (!safe.ok) return { ok: false, error: safe.error };
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    const r = await fetch(safe.url, { signal: AbortSignal.timeout(15_000) });
     if (!r.ok) return { ok: false, error: `HTTP ${r.status} beim Bild-Download` };
     const contentType = (r.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
     let mediaType: AnthropicMediaType | null =

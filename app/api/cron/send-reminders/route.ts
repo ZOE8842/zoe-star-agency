@@ -14,6 +14,7 @@ import {
   sendShowcaseIncompleteReminder,
   type OnboardingStage,
 } from "@/lib/email/reminder-mails";
+import { checkCronAuth } from "@/lib/security/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,11 +23,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 180;
 
 export async function GET(request: NextRequest) {
-  // Vercel-Cron setzt Authorization: Bearer <CRON_SECRET>
-  const authHeader = request.headers.get("authorization");
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // Fail-closed Cron-Auth: ohne CRON_SECRET kein Zugriff.
+  const denied = checkCronAuth(request);
+  if (denied) return denied;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

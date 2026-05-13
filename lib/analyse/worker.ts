@@ -12,6 +12,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { claudeAnalyze, claudeAnalyzeVision, ANTHROPIC_VISION_MEDIA, type AnthropicMediaType } from "./claude";
+import { assertSafeUrl } from "@/lib/security/safe-fetch";
 import {
   ACCOUNT_ANALYSE_SYSTEM,
   LIVE_PERFORMANCE_SYSTEM,
@@ -440,7 +441,10 @@ export async function processContentReview(
       } else {
         const url = (locked.video_url as string | null) || (locked.source_url as string | null);
         if (!url) throw new Error("Kein Bild-Pfad oder URL gefunden");
-        imageUrls = [url];
+        // SSRF-Schutz: nur https + public-IPs
+        const safe = assertSafeUrl(url);
+        if (!safe.ok) throw new Error(`Source-URL unsicher: ${safe.error}`);
+        imageUrls = [safe.url];
       }
 
       // 1500 Tokens reichen fuer strukturiertes JSON-Output;

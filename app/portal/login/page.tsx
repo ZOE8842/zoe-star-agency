@@ -6,10 +6,31 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
 
+// Whitelist: nur relative Portal-Pfade akzeptieren. URL-Normalisierung
+// fängt zusätzlich Path-Traversal (/portal/../external) und Null-Bytes ab.
+// Dummy-Base statt window.location.origin, damit der Helper auch ausserhalb
+// des Browser-Contexts safe ist.
+function safeRedirect(raw: string | null): string {
+  if (!raw || typeof raw !== "string") return "/portal";
+  if (raw.includes("\0") || raw.startsWith("//") || raw.startsWith("\\")) {
+    return "/portal";
+  }
+  try {
+    const u = new URL(raw, "https://internal.invalid");
+    if (u.origin !== "https://internal.invalid") return "/portal";
+    if (u.pathname !== "/portal" && !u.pathname.startsWith("/portal/")) {
+      return "/portal";
+    }
+    return `${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return "/portal";
+  }
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/portal";
+  const redirect = safeRedirect(searchParams.get("redirect"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

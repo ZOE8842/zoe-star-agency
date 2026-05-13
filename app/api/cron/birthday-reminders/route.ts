@@ -12,6 +12,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { checkCronAuth } from "@/lib/security/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,10 +21,8 @@ export const maxDuration = 60;
 const VISIBLE_HOURS = 36; // ein bisschen ueber 24h, damit der heutige Eintrag erst am uebernaechsten Tag verschwindet
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = checkCronAuth(request);
+  if (denied) return denied;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

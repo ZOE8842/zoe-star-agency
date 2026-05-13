@@ -9,6 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { runWorkerBatch } from "@/lib/analyse/worker";
+import { checkCronAuth } from "@/lib/security/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,10 +19,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = checkCronAuth(request);
+  if (denied) return denied;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -61,10 +60,8 @@ export async function GET(request: NextRequest) {
 // in `after()` ab. Damit blockiert der Aufrufer (Server Action) nicht auf
 // dem Anthropic-Call. Der Worker hat seine eigenen maxDuration=60s.
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = checkCronAuth(request);
+  if (denied) return denied;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

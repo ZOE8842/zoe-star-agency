@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { assertSafeUrl } from "@/lib/security/safe-fetch";
 
 interface SubmitInput {
   kind: "video_link" | "video_file" | "image" | "profile";
@@ -35,8 +36,13 @@ export async function submitContent(input: SubmitInput): Promise<{ ok: boolean; 
   if (!source_url && !video_storage_path) {
     return { ok: false, error: "Bitte Link oder Datei angeben." };
   }
-  if (source_url && !/^https?:\/\//i.test(source_url)) {
-    return { ok: false, error: "Link muss mit http:// oder https:// beginnen." };
+  if (source_url) {
+    // SSRF-Schutz: blockiert nicht-https, private-IPs, link-local,
+    // metadata-Endpoints, .local/.internal.
+    const safe = assertSafeUrl(source_url);
+    if (!safe.ok) {
+      return { ok: false, error: `Link ungueltig: ${safe.error}` };
+    }
   }
 
   // Rate-Limit: max 5 offene Jobs pro Creator
