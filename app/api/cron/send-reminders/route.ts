@@ -196,19 +196,34 @@ export async function GET(request: NextRequest) {
     .lt("created_at", _12h)
     .limit(50);
 
+  // PERF: admins einmal holen (statt 1x pro Ticket)
+  const { data: supportAdmins } = pendingTickets && pendingTickets.length > 0
+    ? await supabase.from("profiles")
+        .select("email, display_name").eq("role", "admin").eq("status", "active")
+    : { data: [] };
+
+  // PERF: support_messages-Replies fuer alle Tickets gebatched
+  const ticketIds = (pendingTickets ?? []).map((t) => t.id);
+  const repliedTickets = new Set<string>();
+  if (ticketIds.length > 0) {
+    const { data: allReplies } = await supabase
+      .from("support_messages")
+      .select("ticket_id, sender_id")
+      .in("ticket_id", ticketIds);
+    const ticketCreatorMap = new Map(
+      (pendingTickets ?? []).map((t) => [t.id, t.creator_id]),
+    );
+    for (const r of allReplies ?? []) {
+      if (r.sender_id !== ticketCreatorMap.get(r.ticket_id)) {
+        repliedTickets.add(r.ticket_id);
+      }
+    }
+  }
+
   for (const ticket of pendingTickets || []) {
-    const { count: replyCount } = await supabase.from("support_messages")
-      .select("*", { count: "exact", head: true })
-      .eq("ticket_id", ticket.id)
-      .neq("sender_id", ticket.creator_id);
+    if (repliedTickets.has(ticket.id)) continue; // schon geantwortet
 
-    if ((replyCount ?? 0) > 0) continue; // schon geantwortet
-
-    // Hole Admins
-    const { data: admins } = await supabase.from("profiles")
-      .select("email, display_name").eq("role", "admin").eq("status", "active");
-
-    for (const admin of admins || []) {
+    for (const admin of supportAdmins || []) {
       try {
         await resend.emails.send({
           from: `ZOE Star Agency <${fromEmail}>`,
@@ -389,6 +404,24 @@ export async function GET(request: NextRequest) {
         .eq("status", "active")
         .not("email", "is", null);
 
+      // PERF: alle stale×admin Dedupe-Lookups batched in EINEM Query
+      // statt N×M Roundtrips
+      const allDedupLinks = (stale ?? []).map((c) => `/portal/admin/pending#approve-${c.id}`);
+      const adminIds = (admins ?? []).map((a) => a.id);
+      const dupSet = new Set<string>();
+      if (allDedupLinks.length > 0 && adminIds.length > 0) {
+        const { data: existingDups } = await supabase
+          .from("notifications")
+          .select("user_id, link")
+          .eq("type", "reminder")
+          .in("link", allDedupLinks)
+          .in("user_id", adminIds)
+          .gte("created_at", _7d);
+        for (const d of existingDups ?? []) {
+          dupSet.add(`${d.user_id}:${d.link}`);
+        }
+      }
+
       for (const creator of stale || []) {
         const waiting_days = Math.floor(
           (now.getTime() - new Date(creator.created_at).getTime()) / (24 * 3600 * 1000),
@@ -402,15 +435,7 @@ export async function GET(request: NextRequest) {
           }
 
           const dedupLink = `/portal/admin/pending#approve-${creator.id}`;
-          const { data: dup } = await supabase
-            .from("notifications")
-            .select("id")
-            .eq("user_id", admin.id)
-            .eq("type", "reminder")
-            .eq("link", dedupLink)
-            .gte("created_at", _7d)
-            .maybeSingle();
-          if (dup) continue;
+          if (dupSet.has(`${admin.id}:${dedupLink}`)) continue;
 
           const { error: lockErr } = await supabase.from("notifications").insert({
             user_id: admin.id,
