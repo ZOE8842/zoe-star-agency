@@ -294,9 +294,19 @@ export default async function InboxPage({ searchParams }: Props) {
 
         {tab === "groups" && (
           <div>
-            <p className="text-cream/45 text-sm mb-6">
-              Gruppen-Chats. Admin erstellt Gruppen + Mitglieder.
-            </p>
+            <div className="flex items-baseline justify-between gap-3 mb-6 flex-wrap">
+              <p className="text-cream/45 text-sm">
+                Gruppen-Chats. Admin erstellt Gruppen + Mitglieder.
+              </p>
+              {(profile.role === "admin" || profile.role === "manager") && (
+                <Link
+                  href="/portal/admin/inbox/groups/new"
+                  className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] inline-flex items-center gap-1 px-3 py-2 border border-champagne/30"
+                >
+                  + Neue Gruppe
+                </Link>
+              )}
+            </div>
             <GroupConversationList supabase={supabase} profileId={profile.id} />
           </div>
         )}

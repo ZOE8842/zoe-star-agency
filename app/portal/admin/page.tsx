@@ -458,7 +458,8 @@ export default async function AdminPage() {
                 <AdminTile href="/portal/admin/analyse/live" title="LIVE Performance" hint="KPI-Reports · Queue" />
                 <AdminTile href="/portal/admin/analyse/health" title="Analyse Health" hint="Datenquellen · Errors · Cost" />
                 <AdminTile href="/portal/admin/challenges" title="Academy Challenges" hint="Anlegen · Aktivieren · Gewinner" />
-                <AdminTile href="/portal/admin/messages" title="Broadcasts" hint="Nachrichten an Gruppen" />
+                <AdminTile href="/portal/admin/messages" title="Broadcasts" hint="Direct + Broadcast" />
+                <AdminTile href="/portal/admin/inbox/groups" title="Gruppen" hint="Channels · Events · Community" />
                 <AdminTile href="/portal/admin/downloads" title="Downloads" hint="Asset-Library" />
                 <AdminTile href="/portal/admin/analytics" title="Analytics" hint="Login · Aktivität" />
               </>

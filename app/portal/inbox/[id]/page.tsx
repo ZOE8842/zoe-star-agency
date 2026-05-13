@@ -64,7 +64,8 @@ export default async function MessageDetailPage({
     profile.role === "admin";
   if (!isRecipient) notFound();
 
-  await markRead(msg.id, profile.id);
+  // markRead wird weiter unten nach Chain-Load aufgerufen, damit ALLE
+  // Thread-Items als gelesen markiert werden (nicht nur die aktuelle msg).
 
   const { data: readInfo } = await supabase
     .from("message_reads")
@@ -155,6 +156,10 @@ export default async function MessageDetailPage({
     category: msg.category,
   }];
   const replySubject = `Re: ${baseSubject}`;
+
+  // Mark ALL Thread-Items als gelesen (nicht nur die aktuelle msg) +
+  // revalidatePath fuer Inbox-Liste, damit Unread-Badge sofort weg ist.
+  await markRead(msg.id, profile.id, items.map((i) => i.id));
 
   // Reactions fuer aktuelle Message
   const { data: reactionsRaw } = await supabase
