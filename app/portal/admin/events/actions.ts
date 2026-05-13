@@ -26,6 +26,7 @@ type EventInput = {
   status: string;
   visibility_mode?: "all" | "selected";
   allowed_profile_ids?: string[];
+  requires_registration?: boolean;
 };
 
 function admin() {
@@ -100,6 +101,7 @@ export async function adminCreateEvent(
         cover_image_url: input.cover_image_url?.trim() || null,
         status: input.status,
         visibility_mode: visibility,
+        requires_registration: input.requires_registration !== false,
         created_by: profile.id,
       })
       .select("id")
@@ -159,6 +161,7 @@ export async function adminUpdateEvent(
         cover_image_url: input.cover_image_url?.trim() || null,
         status: input.status,
         visibility_mode: visibility,
+        requires_registration: input.requires_registration !== false,
       })
       .eq("id", id);
 
@@ -208,4 +211,24 @@ export async function adminCreateEventAndRedirect(input: EventInput): Promise<{ 
   const r = await adminCreateEvent(input);
   if (!r.ok) return r;
   redirect("/portal/admin/events");
+}
+
+// Hard-Delete. event_signups + event_allowed_profiles cascaden via FK
+// on delete cascade — manueller Cleanup nicht noetig. Storage-Cover bleibt
+// erstmal liegen (Bucket-Pfade sind anonym, kein Stress).
+export async function adminDeleteEvent(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    if (!id || typeof id !== "string") return { ok: false, error: "Ungueltige Event-ID." };
+    const sb = admin();
+    const { error } = await sb.from("events").delete().eq("id", id);
+    if (error) return { ok: false, error: error.message };
+    revalidatePath("/portal/admin/events");
+    revalidatePath("/portal/events");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
+  }
 }

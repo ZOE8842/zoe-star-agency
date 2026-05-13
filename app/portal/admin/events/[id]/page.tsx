@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { EventForm, type EventInitial } from "../EventForm";
 import { StatusActions } from "./StatusActions";
+import { DeleteEventButton } from "./DeleteEventButton";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function AdminEventEditPage({ params }: Props) {
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules, visibility_mode",
+      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules, visibility_mode, requires_registration",
     )
     .eq("id", id)
     .maybeSingle();
@@ -65,6 +66,7 @@ export default async function AdminEventEditPage({ params }: Props) {
     status: event.status,
     visibility_mode: (event.visibility_mode as "all" | "selected" | null) ?? "all",
     allowed_profile_ids: allowedIds,
+    requires_registration: event.requires_registration ?? true,
   };
 
   return (
@@ -103,6 +105,14 @@ export default async function AdminEventEditPage({ params }: Props) {
         </section>
 
         <EventForm initial={initial} creators={creatorOptions} />
+
+        <section className="border border-red-500/20 p-6 md:p-7 mt-12">
+          <p className="eyebrow mb-2 text-red-300/80">Gefahrenzone</p>
+          <p className="text-cream/55 text-sm mb-4 leading-relaxed">
+            Event hart loeschen. Anmeldungen + Berechtigungen werden mitgeloescht. Cover-Bild bleibt im Storage.
+          </p>
+          <DeleteEventButton eventId={event.id} title={event.title} />
+        </section>
       </main>
     </>
   );

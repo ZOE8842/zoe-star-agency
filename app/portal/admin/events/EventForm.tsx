@@ -24,6 +24,7 @@ export interface EventInitial {
   status: string;
   visibility_mode?: "all" | "selected" | null;
   allowed_profile_ids?: string[];
+  requires_registration?: boolean;
 }
 
 export interface CreatorOption {
@@ -78,6 +79,9 @@ export function EventForm({
   );
   const [allowedIds, setAllowedIds] = useState<string[]>(initial?.allowed_profile_ids ?? []);
   const [creatorQuery, setCreatorQuery] = useState("");
+  const [requiresRegistration, setRequiresRegistration] = useState<boolean>(
+    initial?.requires_registration !== false,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -148,6 +152,7 @@ export function EventForm({
       status,
       visibility_mode: visibilityMode,
       allowed_profile_ids: visibilityMode === "selected" ? allowedIds : [],
+      requires_registration: requiresRegistration,
     };
 
     const r = isEdit
@@ -308,6 +313,30 @@ export function EventForm({
             </p>
           </Field>
         )}
+
+        <Field label="Anmeldung" full>
+          <div className="flex flex-wrap gap-2">
+            {([true, false] as const).map((v) => (
+              <button
+                key={String(v)}
+                type="button"
+                onClick={() => setRequiresRegistration(v)}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors ${
+                  requiresRegistration === v
+                    ? "bg-champagne text-ink border-champagne"
+                    : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
+                }`}
+              >
+                {v ? "Anmeldung erforderlich" : "Nur Info / Ankuendigung"}
+              </button>
+            ))}
+          </div>
+          <p className="text-cream/40 text-[10px] uppercase tracking-[0.22em] mt-2">
+            {requiresRegistration
+              ? "Creator sehen 'Im Portal anmelden'-Button."
+              : "Creator sehen nur Info. Kein Anmelde-Flow."}
+          </p>
+        </Field>
 
         <Field label="Sichtbarkeit" full>
           <div className="flex flex-wrap gap-2 mb-3">

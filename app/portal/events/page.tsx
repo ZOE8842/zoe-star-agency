@@ -23,6 +23,7 @@ interface EventRow {
   rules: string | null;
   winners: Array<{ display_name?: string; rank?: number; note?: string }> | null;
   visibility_mode: string | null;
+  requires_registration: boolean | null;
 }
 
 export default async function EventsPage({ searchParams }: SearchProps) {
@@ -35,7 +36,7 @@ export default async function EventsPage({ searchParams }: SearchProps) {
   let query = supabase
     .from("events")
     .select(
-      "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners, visibility_mode",
+      "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners, visibility_mode, requires_registration",
     )
     .in("status", ["open", "closed", "archived"])
     .order("start_at", { ascending: tab === "past" ? false : true })
@@ -211,11 +212,16 @@ export default async function EventsPage({ searchParams }: SearchProps) {
                       <span className="btn-cta-arrow" aria-hidden>↗</span>
                     </a>
                   )}
-                  {ev.source !== "tiktok" && !userSignup && ev.status === "open" && !isPast && (
+                  {ev.source !== "tiktok" && ev.requires_registration !== false && !userSignup && ev.status === "open" && !isPast && (
                     <Link href={`/portal/events/${ev.id}`} className="btn-cta btn-shimmer">
                       Anmelden
                       <span className="btn-cta-arrow" aria-hidden>→</span>
                     </Link>
+                  )}
+                  {ev.source !== "tiktok" && ev.requires_registration === false && (
+                    <span className="text-cream/45 text-[10px] uppercase tracking-[0.25em] px-3 py-2 border border-cream/15">
+                      Nur Info
+                    </span>
                   )}
                   <Link
                     href={`/portal/events/${ev.id}`}

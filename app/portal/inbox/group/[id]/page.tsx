@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { markConversationRead } from "@/lib/inbox/conversations";
@@ -12,29 +13,46 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+// Service-Role-Bypass nach Auth-Check: User-Cookie-RLS auf conversations
+// braucht conv_admin_all (admin) ODER cm_self_read (Member). In seltenen
+// Faellen greift die RLS-policy nicht direkt nach Insert (Caching/Replica) →
+// Conversation wirkt fuer Admin wie 404. Service-Role nach Auth-Check ist
+// safe weil wir Membership/Role explizit selbst pruefen.
+function srClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
+
 export default async function GroupChatPage({ params }: Props) {
   const { id } = await params;
-  const { supabase, profile } = await getAuthedProfile();
+  const { profile } = await getAuthedProfile();
   const isAdmin = profile.role === "admin";
+  const isManager = profile.role === "manager";
+  const isStaff = isAdmin || isManager;
+  const sr = srClient();
 
-  // Member-Gate
-  const { data: member } = await supabase
+  // Member-Gate via Service-Role
+  const { data: member } = await sr
     .from("conversation_members")
     .select("id, role")
     .eq("conversation_id", id)
     .eq("profile_id", profile.id)
     .maybeSingle();
-  if (!member && !isAdmin) notFound();
+  if (!member && !isStaff) notFound();
 
-  const { data: conv } = await supabase
+  const { data: conv } = await sr
     .from("conversations")
     .select("id, type, title, created_at, last_message_at")
     .eq("id", id)
     .maybeSingle();
   if (!conv) notFound();
 
-  // Messages laden
-  const { data: msgs } = await supabase
+  // Messages laden — Service-Role, weil messages-RLS fuer Creator nur
+  // eigene direct + broadcasts liefert; Gruppen-Messages wuerden gefiltert.
+  const { data: msgs } = await sr
     .from("messages")
     .select("id, sender_id, body, sent_at")
     .eq("conversation_id", id)
@@ -57,11 +75,12 @@ export default async function GroupChatPage({ params }: Props) {
     }
   }
 
-  // Schreib-Recht: in Channels nur Admin/Manager; in Gruppen + Events alle Member
+  // Schreib-Recht: in Channels nur Admin/Manager; in Gruppen alle Member.
+  // Admin/Manager duerfen ueberall schreiben (auch ohne Member-Row).
   const canWrite =
     conv.type === "channel"
-      ? isAdmin || profile.role === "manager"
-      : !!member || isAdmin || profile.role === "manager";
+      ? isStaff
+      : !!member || isStaff;
 
   return (
     <>
@@ -71,7 +90,7 @@ export default async function GroupChatPage({ params }: Props) {
         tiktokUsername={profile.tiktok_username}
         avatarUrl={profile.avatar_url}
         isAdmin={isAdmin}
-        isManager={profile.role === "manager"}
+        isManager={isManager}
       />
 
       <main className="container-luxe py-10 md:py-16 max-w-[640px] mx-auto">
@@ -82,12 +101,12 @@ export default async function GroupChatPage({ params }: Props) {
           >
             ← Gruppen
           </Link>
-          {isAdmin && (
+          {isStaff && (
             <Link
               href={`/portal/admin/inbox/groups/${conv.id}`}
               className="text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.25em]"
             >
-              Admin · Verwalten →
+              {isAdmin ? "Admin · Verwalten →" : "Manager · Verwalten →"}
             </Link>
           )}
         </div>

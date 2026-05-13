@@ -25,7 +25,7 @@ export default async function EventDetailPage({ params }: Props) {
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, source, start_at, end_at, status, max_participants, cover_image_url, prize_description, registration_url, rules, winners, created_at",
+      "id, title, description, category, source, start_at, end_at, status, max_participants, cover_image_url, prize_description, registration_url, rules, winners, created_at, requires_registration",
     )
     .eq("id", id)
     .maybeSingle();
@@ -54,7 +54,8 @@ export default async function EventDetailPage({ params }: Props) {
     .in("status", ["signed", "confirmed"]);
 
   const signupsFull = !!(event.max_participants && (signupCount ?? 0) >= event.max_participants);
-  const canSignup = event.status === "open" && !isPast && !isTikTok;
+  const requiresRegistration = event.requires_registration !== false;
+  const canSignup = requiresRegistration && event.status === "open" && !isPast && !isTikTok;
   const signupDisabledReason = isTikTok
     ? "TikTok-Events: Teilnahme direkt auf TikTok."
     : isPast
@@ -155,47 +156,56 @@ export default async function EventDetailPage({ params }: Props) {
           </section>
         )}
 
-        {/* Signup-Block */}
-        <section className="border-t border-champagne/15 pt-8 mb-8">
-          <div className="flex items-baseline justify-between gap-3 mb-4 flex-wrap">
-            <p className="eyebrow">Teilnahme</p>
-            {event.max_participants && (
-              <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em]">
-                {signupCount ?? 0} / {event.max_participants} Plaetze
-              </p>
-            )}
-          </div>
-
-          {isTikTok ? (
-            event.registration_url && !isPast ? (
-              <div className="space-y-2">
-                <a
-                  href={event.registration_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-cta btn-shimmer"
-                >
-                  Bei TikTok anmelden
-                  <span className="btn-cta-arrow" aria-hidden>↗</span>
-                </a>
-                <p className="text-cream/45 text-xs">
-                  Anmeldung laeuft direkt ueber TikTok. Kein Portal-Signup noetig.
+        {/* Signup-Block — nur wenn Anmeldung erforderlich */}
+        {requiresRegistration ? (
+          <section className="border-t border-champagne/15 pt-8 mb-8">
+            <div className="flex items-baseline justify-between gap-3 mb-4 flex-wrap">
+              <p className="eyebrow">Teilnahme</p>
+              {event.max_participants && (
+                <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em]">
+                  {signupCount ?? 0} / {event.max_participants} Plaetze
                 </p>
-              </div>
+              )}
+            </div>
+
+            {isTikTok ? (
+              event.registration_url && !isPast ? (
+                <div className="space-y-2">
+                  <a
+                    href={event.registration_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-cta btn-shimmer"
+                  >
+                    Bei TikTok anmelden
+                    <span className="btn-cta-arrow" aria-hidden>↗</span>
+                  </a>
+                  <p className="text-cream/45 text-xs">
+                    Anmeldung laeuft direkt ueber TikTok. Kein Portal-Signup noetig.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-cream/45 text-sm">
+                  {isPast ? "Event ist beendet." : "Kein TikTok-Anmelde-Link gesetzt."}
+                </p>
+              )
             ) : (
-              <p className="text-cream/45 text-sm">
-                {isPast ? "Event ist beendet." : "Kein TikTok-Anmelde-Link gesetzt."}
-              </p>
-            )
-          ) : (
-            <SignupButtons
-              eventId={event.id}
-              signedUp={!!mySignup}
-              disabled={!canSignup || signupsFull}
-              disabledReason={signupDisabledReason}
-            />
-          )}
-        </section>
+              <SignupButtons
+                eventId={event.id}
+                signedUp={!!mySignup}
+                disabled={!canSignup || signupsFull}
+                disabledReason={signupDisabledReason}
+              />
+            )}
+          </section>
+        ) : (
+          <section className="border-t border-champagne/15 pt-8 mb-8">
+            <p className="eyebrow mb-3">Hinweis</p>
+            <p className="text-cream/70 text-sm md:text-base leading-relaxed">
+              Keine Anmeldung erforderlich. Dieses Event ist eine Info / Ankuendigung.
+            </p>
+          </section>
+        )}
 
         {winners.length > 0 && (
           <section className="border-t border-champagne/15 pt-8 mb-8">
