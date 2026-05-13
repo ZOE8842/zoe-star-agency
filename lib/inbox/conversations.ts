@@ -67,24 +67,34 @@ export async function createGroupConversation(input: {
   type: ConvType;
   memberIds: string[];
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const TAG = "[AURA-RUNTIME-LOG createGroupConversation]";
   try {
     const { user } = await requireAdminOrManager();
+    console.log(TAG, "input:", JSON.stringify({
+      title: input.title,
+      type: input.type,
+      memberIdsCount: input.memberIds?.length,
+      memberIdsType: Array.isArray(input.memberIds) ? "array" : typeof input.memberIds,
+      memberIdsRaw: input.memberIds,
+      userId: user.id,
+    }));
+
     if (!input.title || input.title.trim().length < 2) {
+      console.warn(TAG, "rejected: title too short");
       return { ok: false, error: "Titel zu kurz." };
     }
     if (input.title.length > 120) return { ok: false, error: "Titel zu lang." };
     if (!["group", "channel"].includes(input.type)) {
       return { ok: false, error: "Ungueltiger Typ." };
     }
-    // Defensive: input.memberIds robust normalisieren (akzeptiert Array,
-    // einzelnen String, oder undefined — falls die UI durch RSC-Serialization
-    // etwas Anderes durchreichen sollte).
     const rawIds: string[] = Array.isArray(input.memberIds)
       ? input.memberIds
       : typeof input.memberIds === "string"
       ? [input.memberIds]
       : [];
     const memberIds = Array.from(new Set([...rawIds.filter((id) => typeof id === "string" && id.length > 0), user.id]));
+    console.log(TAG, "memberIds final:", memberIds, "count:", memberIds.length);
+
     if (memberIds.length < 2) {
       return { ok: false, error: `Mindestens ein weiteres Mitglied noetig (erhalten: ${rawIds.length} input ids).` };
     }
@@ -99,23 +109,33 @@ export async function createGroupConversation(input: {
       })
       .select("id")
       .single();
-    if (cErr || !conv) return { ok: false, error: cErr?.message ?? "Insert fehlgeschlagen." };
+    if (cErr || !conv) {
+      console.error(TAG, "conversation insert failed:", cErr);
+      return { ok: false, error: cErr?.message ?? "Insert fehlgeschlagen." };
+    }
+    console.log(TAG, "conversation inserted id:", conv.id);
 
     const memberRows = memberIds.map((pid) => ({
       conversation_id: conv.id,
       profile_id: pid,
       role: pid === user.id ? "owner" : "member",
     }));
-    const { error: mErr, count: insertedCount } = await sb
+    console.log(TAG, "memberRows to insert:", memberRows);
+
+    const { data: insertedRows, error: mErr } = await sb
       .from("conversation_members")
-      .insert(memberRows, { count: "exact" });
+      .insert(memberRows)
+      .select("id, profile_id, role");
     if (mErr) {
-      // Rollback Conversation, sonst dangling
+      console.error(TAG, "member insert failed:", mErr);
       await sb.from("conversations").delete().eq("id", conv.id);
       return { ok: false, error: `Member-Insert fehlgeschlagen: ${mErr.message}` };
     }
-    // Sanity-Check: alle Mitglieder wirklich angelegt?
-    if (typeof insertedCount === "number" && insertedCount !== memberRows.length) {
+    const insertedCount = insertedRows?.length ?? 0;
+    console.log(TAG, "members inserted:", insertedCount, "rows:", insertedRows);
+
+    if (insertedCount !== memberRows.length) {
+      console.error(TAG, "incomplete member insert:", insertedCount, "/", memberRows.length);
       return {
         ok: false,
         error: `Member-Insert unvollstaendig: ${insertedCount}/${memberRows.length}`,
@@ -124,8 +144,10 @@ export async function createGroupConversation(input: {
 
     revalidatePath("/portal/admin/inbox/groups");
     revalidatePath("/portal/inbox");
+    console.log(TAG, "success conv:", conv.id);
     return { ok: true, id: conv.id };
   } catch (e) {
+    console.error(TAG, "exception:", e);
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
   }
 }

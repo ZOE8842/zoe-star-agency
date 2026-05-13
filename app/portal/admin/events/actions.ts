@@ -134,8 +134,12 @@ export async function adminUpdateEvent(
   id: string,
   input: EventInput,
 ): Promise<{ ok: boolean; error?: string }> {
+  const TAG = "[AURA-RUNTIME-LOG adminUpdateEvent]";
   try {
     await requireAdmin();
+    console.log(TAG, "id:", id, "requires_registration RAW:", input.requires_registration,
+      "type:", typeof input.requires_registration,
+      "computed (!==false):", input.requires_registration !== false);
     const err = validate(input);
     if (err) return { ok: false, error: err };
 
@@ -145,27 +149,41 @@ export async function adminUpdateEvent(
       : [];
 
     const sb = admin();
+    const updatePayload = {
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      category: input.category,
+      source: input.source,
+      start_at: input.start_at,
+      end_at: input.end_at || null,
+      max_participants: input.max_participants ?? null,
+      prize_description: input.prize_description?.trim() || null,
+      registration_url: input.registration_url?.trim() || null,
+      rules: input.rules?.trim() || null,
+      cover_image_url: input.cover_image_url?.trim() || null,
+      status: input.status,
+      visibility_mode: visibility,
+      requires_registration: input.requires_registration !== false,
+    };
+    console.log(TAG, "updatePayload requires_registration:", updatePayload.requires_registration);
+
     const { error } = await sb
       .from("events")
-      .update({
-        title: input.title.trim(),
-        description: input.description?.trim() || null,
-        category: input.category,
-        source: input.source,
-        start_at: input.start_at,
-        end_at: input.end_at || null,
-        max_participants: input.max_participants ?? null,
-        prize_description: input.prize_description?.trim() || null,
-        registration_url: input.registration_url?.trim() || null,
-        rules: input.rules?.trim() || null,
-        cover_image_url: input.cover_image_url?.trim() || null,
-        status: input.status,
-        visibility_mode: visibility,
-        requires_registration: input.requires_registration !== false,
-      })
+      .update(updatePayload)
       .eq("id", id);
 
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      console.error(TAG, "update error:", error);
+      return { ok: false, error: error.message };
+    }
+
+    // Verify DB-State direkt nach Update (kein cache, keine Server-Action-Race)
+    const { data: verifyRow } = await sb
+      .from("events")
+      .select("id, requires_registration, status")
+      .eq("id", id)
+      .maybeSingle();
+    console.log(TAG, "post-update verify:", verifyRow);
 
     // Allowed-Profiles synchronisieren: alte loeschen, neue setzen
     await sb.from("event_allowed_profiles").delete().eq("event_id", id);
