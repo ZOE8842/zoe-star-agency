@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSrClient } from "@supabase/supabase-js";
 
 // Inbox-Glocke: zaehlt ungelesene Messages + System-Notifications und
 // rendert einen Bell-Icon mit Badge. Klick fuehrt zu /portal/inbox.
@@ -7,14 +8,27 @@ import { createClient } from "@/lib/supabase/server";
 // Verwendung in PortalNav:
 //   <InboxIndicator userId={userId} variant="dot" />   ← klein (Sub-Nav)
 //   <InboxIndicator userId={userId} variant="bell" />  ← gross (Header)
+//
+// Group-Count (conversation_members + JOIN) muss via Service-Role laufen:
+// user-cookie + RLS-EXISTS-Subquery liefert conversation=null im JOIN
+// (siehe Live-Befund a6aa480). Wir filtern hart auf userId, kein Cross-User-Leak.
 
 interface Props {
   userId: string;
   variant?: "dot" | "bell";
 }
 
+function sr() {
+  return createSrClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
+
 export async function InboxIndicator({ userId, variant = "dot" }: Props) {
   const supabase = await createClient();
+  const srClient = sr();
 
   const [{ data: messages }, { count: notifUnread }, { data: convMembers }] = await Promise.all([
     supabase
@@ -28,7 +42,7 @@ export async function InboxIndicator({ userId, variant = "dot" }: Props) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("status", "unread"),
-    supabase
+    srClient
       .from("conversation_members")
       .select("last_read_at, conversation:conversations(last_message_at, type)")
       .eq("profile_id", userId),

@@ -44,26 +44,51 @@ export async function GET(request: NextRequest) {
 
   const candidates = (rows ?? []).filter((r) => r.video_storage_path);
 
-  const results: Array<{ id: string; path: string; ok: boolean; error?: string }> = [];
+  // Parallel mit Concurrency-Cap. Storage-API kann pro Call latent sein.
+  // Batches von 8 gleichzeitigen Deletes haelt die Function unter Timeout.
+  const CONCURRENCY = 8;
 
-  for (const row of candidates) {
+  async function processOne(row: { id: string; video_storage_path: string | null }) {
     const path = row.video_storage_path as string;
-    // Storage-File loeschen
     const { error: rmErr } = await supabase.storage.from(BUCKET).remove([path]);
     if (rmErr && !rmErr.message.toLowerCase().includes("not found")) {
-      results.push({ id: row.id, path, ok: false, error: rmErr.message });
-      continue;
+      return { id: row.id, path, ok: false, error: rmErr.message };
     }
-    // DB-Row: video_storage_path = null (Analyse-Daten bleiben)
     const { error: upErr } = await supabase
       .from("content_reviews")
       .update({ video_storage_path: null })
       .eq("id", row.id);
     if (upErr) {
-      results.push({ id: row.id, path, ok: false, error: upErr.message });
-      continue;
+      return { id: row.id, path, ok: false, error: upErr.message };
     }
-    results.push({ id: row.id, path, ok: true });
+    return { id: row.id, path, ok: true };
+  }
+
+  // 100ms Backoff zwischen Batches verhindert Storage-Rate-Limits bei
+  // grossen Cleanup-Runs.
+  const BATCH_DELAY_MS = 100;
+
+  const results: Array<{ id: string; path: string; ok: boolean; error?: string }> = [];
+  for (let i = 0; i < candidates.length; i += CONCURRENCY) {
+    if (i > 0) {
+      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+    }
+    const batch = candidates.slice(i, i + CONCURRENCY);
+    const settled = await Promise.allSettled(batch.map(processOne));
+    for (let j = 0; j < settled.length; j++) {
+      const s = settled[j];
+      if (s.status === "fulfilled") {
+        results.push(s.value);
+      } else {
+        const r = batch[j];
+        results.push({
+          id: r.id,
+          path: (r.video_storage_path as string) ?? "",
+          ok: false,
+          error: s.reason instanceof Error ? s.reason.message : String(s.reason),
+        });
+      }
+    }
   }
 
   const cleaned = results.filter((r) => r.ok).length;
