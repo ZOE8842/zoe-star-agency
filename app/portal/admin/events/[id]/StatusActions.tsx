@@ -4,12 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminSetEventStatus } from "../actions";
 
-const STATUSES = ["draft", "open", "closed", "completed"] as const;
+const STATUSES = ["draft", "open", "closed", "archived"] as const;
 const STATUS_LABEL: Record<string, string> = {
   draft: "Entwurf",
   open: "Offen",
   closed: "Geschlossen",
-  completed: "Beendet",
+  archived: "Beendet",
 };
 
 export function StatusActions({

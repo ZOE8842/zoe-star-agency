@@ -48,7 +48,7 @@ export default async function AdminEventsPage() {
                     <span className={`text-[10px] uppercase tracking-[0.25em] px-1.5 py-0.5 ${
                       e.status === "open" ? "bg-champagne text-ink" :
                       e.status === "draft" ? "border border-yellow-400/40 text-yellow-300" :
-                      e.status === "completed" ? "border border-cream/20 text-cream/55" :
+                      e.status === "archived" ? "border border-cream/20 text-cream/55" :
                       "border border-champagne/40 text-champagne"
                     }`}>{e.status}</span>
                   </div>

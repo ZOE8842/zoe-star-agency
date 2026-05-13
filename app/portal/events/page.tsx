@@ -36,7 +36,7 @@ export default async function EventsPage({ searchParams }: SearchProps) {
     .select(
       "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners",
     )
-    .in("status", ["open", "closed", "completed"])
+    .in("status", ["open", "closed", "archived"])
     .order("start_at", { ascending: tab === "past" ? false : true })
     .limit(40);
 

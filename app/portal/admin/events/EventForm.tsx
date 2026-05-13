@@ -6,7 +6,7 @@ import { adminCreateEvent, adminUpdateEvent } from "./actions";
 
 const CATEGORIES = ["live", "battle", "ranking", "special", "announcement"] as const;
 const SOURCES = ["agency", "tiktok"] as const;
-const STATUSES = ["draft", "open", "closed", "completed"] as const;
+const STATUSES = ["draft", "open", "closed", "archived"] as const;
 
 export interface EventInitial {
   id: string;

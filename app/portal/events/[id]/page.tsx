@@ -10,7 +10,7 @@ const STATUS_LABEL: Record<string, string> = {
   draft: "Entwurf",
   open: "Offen",
   closed: "Geschlossen",
-  completed: "Beendet",
+  archived: "Beendet",
 };
 
 interface Props {
@@ -112,7 +112,7 @@ export default async function EventDetailPage({ params }: Props) {
           </p>
           <span className={`px-2.5 py-0.5 text-[10px] uppercase tracking-[0.25em] ${
             event.status === "open" ? "bg-champagne text-ink"
-            : event.status === "completed" ? "border border-cream/20 text-cream/55"
+            : event.status === "archived" ? "border border-cream/20 text-cream/55"
             : event.status === "draft" ? "border border-yellow-400/40 text-yellow-300"
             : "border border-champagne/40 text-champagne"
           }`}>

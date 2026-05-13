@@ -6,7 +6,9 @@ import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { createClient as createSrClient } from "@supabase/supabase-js";
 
 const CATEGORIES = ["live", "battle", "ranking", "special", "announcement"] as const;
-const STATUSES = ["draft", "open", "closed", "completed"] as const;
+// event_status-Enum in DB: draft / open / closed / archived
+// "completed" wurde frueher hier irrtuemlich verwendet → Insert-Failure
+const STATUSES = ["draft", "open", "closed", "archived"] as const;
 const SOURCES = ["agency", "tiktok"] as const;
 
 type EventInput = {
