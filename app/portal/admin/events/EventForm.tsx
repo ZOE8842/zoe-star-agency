@@ -70,6 +70,8 @@ export function EventForm({
   const [registrationUrl, setRegistrationUrl] = useState(initial?.registration_url ?? "");
   const [rules, setRules] = useState(initial?.rules ?? "");
   const [coverUrl, setCoverUrl] = useState(initial?.cover_image_url ?? "");
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>(initial?.status ?? "open");
   const [visibilityMode, setVisibilityMode] = useState<"all" | "selected">(
     initial?.visibility_mode === "selected" ? "selected" : "all",
@@ -90,6 +92,30 @@ export function EventForm({
     setAllowedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverUploading(true);
+    setCoverError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/events/upload-cover", { method: "POST", body: fd });
+      const data = await r.json();
+      if (!r.ok || !data.url) {
+        setCoverError(data.error ?? "Upload fehlgeschlagen.");
+      } else {
+        setCoverUrl(data.url);
+      }
+    } catch (err) {
+      setCoverError(err instanceof Error ? err.message : "Upload fehlgeschlagen.");
+    } finally {
+      setCoverUploading(false);
+      // Input zuruecksetzen damit derselbe File erneut hochgeladen werden kann
+      e.target.value = "";
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -212,13 +238,51 @@ export function EventForm({
           />
         </Field>
 
-        <Field label="Cover-URL (optional)" full>
-          <input
-            type="url" value={coverUrl ?? ""}
-            onChange={(e) => setCoverUrl(e.target.value)}
-            placeholder="https://..."
-            className={inputCls}
-          />
+        <Field label="Cover-Bild (optional)" full>
+          <div className="space-y-3">
+            {coverUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={coverUrl}
+                alt=""
+                className="w-full max-w-md aspect-[16/7] object-cover border border-champagne/20"
+              />
+            )}
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="inline-flex items-center px-4 py-2 border border-champagne/40 text-champagne text-[10px] uppercase tracking-[0.25em] cursor-pointer hover:bg-champagne/10 transition-colors">
+                {coverUploading ? "Laedt hoch…" : coverUrl ? "Bild ersetzen" : "Bild hochladen"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleCoverUpload}
+                  disabled={coverUploading}
+                  className="hidden"
+                />
+              </label>
+              {coverUrl && (
+                <button
+                  type="button"
+                  onClick={() => setCoverUrl("")}
+                  className="text-cream/45 hover:text-red-300 text-[10px] uppercase tracking-[0.25em]"
+                >
+                  Entfernen
+                </button>
+              )}
+            </div>
+            {coverError && (
+              <p className="text-red-300 text-xs">{coverError}</p>
+            )}
+            <input
+              type="url"
+              value={coverUrl ?? ""}
+              onChange={(e) => setCoverUrl(e.target.value)}
+              placeholder="oder URL einfuegen: https://..."
+              className={inputCls}
+            />
+            <p className="text-cream/40 text-[10px] uppercase tracking-[0.22em]">
+              JPEG / PNG / WebP · max 8 MB · empfohlen 1600 × 700
+            </p>
+          </div>
         </Field>
 
         <Field label="Gewinn / Prize (optional)" full>

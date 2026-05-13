@@ -90,12 +90,21 @@ export default async function InboxPage({ searchParams }: Props) {
     unreadCount = messages.filter((m) => !readMap.has(m.id)).length;
   }
 
-  // Unread-Counts fuer Tab-Badges (immer laden, leichtgewichtig)
-  const [{ count: msgUnreadCount }, { count: sysUnreadCount }, groupCountRes] = await Promise.all([
+  // Unread-Counts fuer Tab-Badges. Fuer den Nachrichten-Tab brauchen wir
+  // echtes "unread" (Messages MINUS message_reads), nicht die Gesamt-Zahl
+  // aller Messages. HEAD-Count ohne JOIN haette ALLE Messages gezaehlt
+  // (auch bereits gelesene Broadcasts) → Badge blieb stale.
+  const [msgIdsRes, allReadsRes, { count: sysUnreadCount }, groupCountRes] = await Promise.all([
     supabase
       .from("messages")
-      .select("id", { count: "exact", head: true })
-      .or(`recipient_id.eq.${profile.id},recipient_group.eq.all_creators`),
+      .select("id")
+      .or(`recipient_id.eq.${profile.id},recipient_group.eq.all_creators`)
+      .order("sent_at", { ascending: false })
+      .limit(200),
+    supabase
+      .from("message_reads")
+      .select("message_id")
+      .eq("reader_id", profile.id),
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -106,6 +115,9 @@ export default async function InboxPage({ searchParams }: Props) {
       .select("conversation_id, last_read_at, conversation:conversations(last_message_at,type)")
       .eq("profile_id", profile.id),
   ]);
+  const allMsgIds = (msgIdsRes.data ?? []).map((m) => m.id);
+  const readMsgIds = new Set((allReadsRes.data ?? []).map((r) => r.message_id));
+  const msgUnreadCount = allMsgIds.filter((id) => !readMsgIds.has(id)).length;
 
   // Gruppen-Unread: pro Member-Row pruefen ob last_message_at > last_read_at
   type GroupRow = {

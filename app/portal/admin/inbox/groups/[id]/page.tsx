@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AddMemberButton, RemoveMemberButton } from "./MemberActions";
@@ -10,18 +11,33 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+// Service-Role-Client fuer RLS-Bypass nach erfolgreichem requireAdmin().
+// Grund: Conversations werden in createGroupConversation via Service-Role
+// inserted; die zugehoerigen SELECT-RLS-Policies (cm_member_select)
+// liefern fuer den Admin-Cookie erst nach Membership-Join Rows zurueck.
+// Direkt nach Insert sieht der User-Cookie die frische Zeile nicht →
+// notFound() fuer den Creator. Nach Admin-Check ist Service-Role sicher.
+function srClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
+
 export default async function AdminGroupDetailPage({ params }: Props) {
   const { id } = await params;
-  const { supabase, profile } = await requireAdmin();
+  const { profile } = await requireAdmin();
+  const sr = srClient();
 
-  const { data: conv } = await supabase
+  const { data: conv } = await sr
     .from("conversations")
     .select("id, type, title, created_by, created_at, last_message_at")
     .eq("id", id)
     .maybeSingle();
   if (!conv) notFound();
 
-  const { data: members } = await supabase
+  const { data: members } = await sr
     .from("conversation_members")
     .select("id, profile_id, role, joined_at, last_read_at, muted")
     .eq("conversation_id", id);
@@ -29,7 +45,7 @@ export default async function AdminGroupDetailPage({ params }: Props) {
   const memberIds = (members ?? []).map((m) => m.profile_id);
 
   const { data: memberProfiles } = memberIds.length
-    ? await supabase
+    ? await sr
         .from("profiles")
         .select("id, display_name, tiktok_username, role")
         .in("id", memberIds)
@@ -39,7 +55,7 @@ export default async function AdminGroupDetailPage({ params }: Props) {
     (memberProfiles ?? []).map((p) => [p.id, p]),
   );
 
-  const { data: allProfiles } = await supabase
+  const { data: allProfiles } = await sr
     .from("profiles")
     .select("id, display_name, tiktok_username, role")
     .in("role", ["creator", "manager", "admin"])
@@ -79,7 +95,7 @@ export default async function AdminGroupDetailPage({ params }: Props) {
           </Link>
         </div>
 
-        <p className="eyebrow mb-3">Admin · {conv.type === "channel" ? "Channel" : conv.type === "event" ? "Event" : "Gruppe"}</p>
+        <p className="eyebrow mb-3">Admin · {conv.type === "channel" ? "Channel" : "Gruppe"}</p>
         <h1 className="font-display italic text-cream text-3xl md:text-5xl mb-2">
           {conv.title}
         </h1>
