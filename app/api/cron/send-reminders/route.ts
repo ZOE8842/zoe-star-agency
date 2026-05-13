@@ -302,17 +302,21 @@ export async function GET(request: NextRequest) {
         .select("id, email, display_name")
         .eq("role", "admin").eq("status", "active");
 
+      // PERF: Dedupe-Set fuer alle Admins gebatched (statt 1 Query pro Admin)
+      const backstageAdminIds = (admins ?? []).map((a) => a.id);
+      const { data: existingBackstageDups } = backstageAdminIds.length > 0
+        ? await supabase
+            .from("notifications")
+            .select("user_id")
+            .eq("type", "reminder")
+            .eq("link", "/portal/admin/analyse/health")
+            .gte("created_at", _24h)
+            .in("user_id", backstageAdminIds)
+        : { data: [] };
+      const backstageDupSet = new Set((existingBackstageDups ?? []).map((d) => d.user_id));
+
       for (const admin of admins || []) {
-        // Dedupe: hat der Admin in den letzten 24 h schon einen
-        // backstage-Alert bekommen?
-        const { data: dup } = await supabase.from("notifications")
-          .select("id")
-          .eq("user_id", admin.id)
-          .eq("type", "reminder")
-          .eq("link", "/portal/admin/analyse/health")
-          .gte("created_at", _24h)
-          .maybeSingle();
-        if (dup) continue;
+        if (backstageDupSet.has(admin.id)) continue;
 
         try {
           await resend.emails.send({

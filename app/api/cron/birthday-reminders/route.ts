@@ -120,7 +120,8 @@ export async function GET(request: NextRequest) {
     created++;
   }
 
-  // Admin-Inbox-Reminder fuer "morgen"-Birthdays — eine Notification an alle Admins
+  // Admin-Inbox-Reminder fuer "morgen"-Birthdays — eine Notification pro Admin pro Tag
+  // Dedupe via link-Pattern, damit mehrfache Cron-Runs am selben Tag nicht spammen
   if (tomPeople.length > 0) {
     const { data: admins } = await supabase
       .from("profiles")
@@ -128,13 +129,26 @@ export async function GET(request: NextRequest) {
       .eq("role", "admin")
       .eq("status", "active");
     const names = tomPeople.map((p) => p.display_name || "—").join(", ");
+    const dedupLink = `/portal/admin#birthday-tomorrow-${now.toISOString().slice(0, 10)}`;
+    const adminIds = (admins ?? []).map((a) => a.id);
+    const { data: existingDups } = adminIds.length > 0
+      ? await supabase
+          .from("notifications")
+          .select("user_id")
+          .eq("type", "reminder")
+          .eq("link", dedupLink)
+          .in("user_id", adminIds)
+      : { data: [] };
+    const dupSet = new Set((existingDups ?? []).map((d) => d.user_id));
+
     for (const a of admins ?? []) {
+      if (dupSet.has(a.id)) continue;
       await supabase.from("notifications").insert({
         user_id: a.id,
         type: "reminder",
         title: `🎂 Morgen Geburtstag: ${names}`,
         body: "Glueckwuensche vorbereiten.",
-        link: "/portal/admin",
+        link: dedupLink,
       }).then(() => undefined, () => undefined);
     }
   }

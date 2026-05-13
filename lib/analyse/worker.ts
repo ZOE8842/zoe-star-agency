@@ -593,41 +593,56 @@ export async function runWorkerBatch(
   const maxL = opts.maxLive ?? 5;
   const maxC = opts.maxContent ?? 5;
 
-  const { data: aaPending } = await supabase
-    .from("account_analyses")
-    .select("id")
-    .in("status", ["submitted", "queued"])
-    .order("created_at", { ascending: true })
-    .limit(maxA);
+  // PERF: pending-Listen parallel laden statt 3× sequenziell warten
+  const [aaPendingRes, lpPendingRes, crPendingRes] = await Promise.all([
+    supabase
+      .from("account_analyses")
+      .select("id")
+      .in("status", ["submitted", "queued"])
+      .order("created_at", { ascending: true })
+      .limit(maxA),
+    supabase
+      .from("live_performance_reports")
+      .select("id")
+      .in("status", ["submitted", "queued"])
+      .order("created_at", { ascending: true })
+      .limit(maxL),
+    supabase
+      .from("content_reviews")
+      .select("id")
+      .in("status", ["submitted", "queued"])
+      .order("created_at", { ascending: true })
+      .limit(maxC),
+  ]);
+  const aaPending = aaPendingRes.data;
+  const lpPending = lpPendingRes.data;
+  const crPending = crPendingRes.data;
 
-  const { data: lpPending } = await supabase
-    .from("live_performance_reports")
-    .select("id")
-    .in("status", ["submitted", "queued"])
-    .order("created_at", { ascending: true })
-    .limit(maxL);
-
-  const { data: crPending } = await supabase
-    .from("content_reviews")
-    .select("id")
-    .in("status", ["submitted", "queued"])
-    .order("created_at", { ascending: true })
-    .limit(maxC);
-
-  const accountResults: ProcessResult[] = [];
-  for (const row of aaPending ?? []) {
-    accountResults.push(await processAccountAnalysis(supabase, row.id));
-  }
-
-  const liveResults: ProcessResult[] = [];
-  for (const row of lpPending ?? []) {
-    liveResults.push(await processLiveReport(supabase, row.id));
-  }
-
-  const contentResults: ProcessResult[] = [];
-  for (const row of crPending ?? []) {
-    contentResults.push(await processContentReview(supabase, row.id));
-  }
+  // PERF: 3 Analyse-Typen parallel verarbeiten. Innerhalb eines Typs bleibt
+  // sequentiell, weil Anthropic-Calls Rate-Limit + Cost-Tracking haben.
+  const [accountResults, liveResults, contentResults] = await Promise.all([
+    (async () => {
+      const results: ProcessResult[] = [];
+      for (const row of aaPending ?? []) {
+        results.push(await processAccountAnalysis(supabase, row.id));
+      }
+      return results;
+    })(),
+    (async () => {
+      const results: ProcessResult[] = [];
+      for (const row of lpPending ?? []) {
+        results.push(await processLiveReport(supabase, row.id));
+      }
+      return results;
+    })(),
+    (async () => {
+      const results: ProcessResult[] = [];
+      for (const row of crPending ?? []) {
+        results.push(await processContentReview(supabase, row.id));
+      }
+      return results;
+    })(),
+  ]);
 
   const total_cost_usd =
     accountResults.reduce((s, r) => s + r.cost_usd, 0) +

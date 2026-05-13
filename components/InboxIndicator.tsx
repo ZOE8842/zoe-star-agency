@@ -16,7 +16,7 @@ interface Props {
 export async function InboxIndicator({ userId, variant = "dot" }: Props) {
   const supabase = await createClient();
 
-  const [{ data: messages }, { count: notifUnread }] = await Promise.all([
+  const [{ data: messages }, { count: notifUnread }, { data: convMembers }] = await Promise.all([
     supabase
       .from("messages")
       .select("id")
@@ -28,6 +28,10 @@ export async function InboxIndicator({ userId, variant = "dot" }: Props) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("status", "unread"),
+    supabase
+      .from("conversation_members")
+      .select("last_read_at, conversation:conversations(last_message_at, type)")
+      .eq("profile_id", userId),
   ]);
 
   let msgUnread = 0;
@@ -42,7 +46,19 @@ export async function InboxIndicator({ userId, variant = "dot" }: Props) {
     msgUnread = messages.filter((m) => !readSet.has(m.id)).length;
   }
 
-  const total = msgUnread + (notifUnread ?? 0);
+  // Gruppen-Unread im Bell-Count beruecksichtigen
+  type ConvMemberRow = {
+    last_read_at: string | null;
+    conversation: { last_message_at: string | null; type: string } | null;
+  };
+  const groupUnread = ((convMembers as unknown) as ConvMemberRow[] | null ?? []).filter((r) => {
+    if (!r.conversation || r.conversation.type === "dm") return false;
+    if (!r.conversation.last_message_at) return false;
+    if (!r.last_read_at) return true;
+    return new Date(r.conversation.last_message_at) > new Date(r.last_read_at);
+  }).length;
+
+  const total = msgUnread + (notifUnread ?? 0) + groupUnread;
 
   if (variant === "dot") {
     if (total === 0) return null;
