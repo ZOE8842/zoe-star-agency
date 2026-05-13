@@ -26,8 +26,16 @@ type EventInput = {
   status: string;
   visibility_mode?: "all" | "selected";
   allowed_profile_ids?: string[];
-  requires_registration?: boolean;
+  requires_registration?: boolean | string;
 };
+
+// Defensive Boolean-Normalisierung. RSC-Server-Action-Boundary kann
+// boolean false in seltenen Faellen als string "false" oder undefined
+// durchreichen. Wir nehmen explizit nur EINEN Code-Pfad fuer false.
+function normalizeRequiresRegistration(v: boolean | string | undefined): boolean {
+  if (v === false || v === "false" || v === "off" || v === "no" || v === "0") return false;
+  return true; // default true (Anmeldung erforderlich)
+}
 
 function admin() {
   return createSrClient(
@@ -101,7 +109,7 @@ export async function adminCreateEvent(
         cover_image_url: input.cover_image_url?.trim() || null,
         status: input.status,
         visibility_mode: visibility,
-        requires_registration: input.requires_registration !== false,
+        requires_registration: normalizeRequiresRegistration(input.requires_registration),
         created_by: profile.id,
       })
       .select("id")
@@ -163,9 +171,10 @@ export async function adminUpdateEvent(
       cover_image_url: input.cover_image_url?.trim() || null,
       status: input.status,
       visibility_mode: visibility,
-      requires_registration: input.requires_registration !== false,
+      requires_registration: normalizeRequiresRegistration(input.requires_registration),
     };
-    console.log(TAG, "updatePayload requires_registration:", updatePayload.requires_registration);
+    console.log(TAG, "updatePayload requires_registration:", updatePayload.requires_registration,
+      "(normalized from raw:", input.requires_registration, "type:", typeof input.requires_registration, ")");
 
     const { error } = await sb
       .from("events")

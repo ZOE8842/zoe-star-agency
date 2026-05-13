@@ -1,14 +1,33 @@
 import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 // Gruppen-Liste fuer Creator-Inbox-Tab.
-// Liest conversation_members WHERE profile_id=me + JOIN conversations.
+// ROOT-CAUSE Live-Bug (a6aa480 Diagnostics):
+//   conversation_members hat 23 Rows, Creator ist Member, aber RLS-JOIN
+//   auf conversations.* via user-cookie kommt mit conversation=null zurueck.
+//   conv_member_read policy hat eine EXISTS-Subquery auf conversation_members,
+//   die in der Cross-Table-Selection nicht greift. Resultat: filter killt
+//   alle Rows → "Keine Gruppen".
+//
+// FIX: Service-Role-Read NACH expliziter profile-id-Filterung.
+//   Sicher: wir filtern hart auf den authentifizierten profileId, kein
+//   Cross-User-Leak moeglich. Member-Liste leakt nicht (wir lesen nur
+//   Memberships des aktuellen Users).
 
 const TYPE_LABEL: Record<string, string> = {
   group: "Gruppe",
   channel: "Channel",
   event: "Event",
 };
+
+function srClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}
 
 function relativeAge(iso: string | null): string {
   if (!iso) return "—";
@@ -22,32 +41,60 @@ function relativeAge(iso: string | null): string {
   return `${d} t`;
 }
 
-interface MemberRow {
+interface MemberMembership {
   conversation_id: string;
   last_read_at: string | null;
-  conversation: {
-    id: string;
-    type: string;
-    title: string;
-    last_message_at: string | null;
-  } | null;
+}
+interface ConversationRow {
+  id: string;
+  type: string;
+  title: string;
+  last_message_at: string | null;
 }
 
 export async function GroupConversationList({
-  supabase,
+  supabase: _supabase,
   profileId,
 }: {
   supabase: SupabaseClient;
   profileId: string;
 }) {
-  const { data } = await supabase
-    .from("conversation_members")
-    .select("conversation_id, last_read_at, conversation:conversations(id, type, title, last_message_at)")
-    .eq("profile_id", profileId)
-    .order("last_read_at", { ascending: false, nullsFirst: true });
+  const sr = srClient();
 
-  const rows = ((data as unknown) as MemberRow[] | null) ?? [];
-  const visible = rows
+  // 1. Memberships des aktuellen Users (Service-Role, hart gefiltert auf profileId)
+  const { data: memberRows } = await sr
+    .from("conversation_members")
+    .select("conversation_id, last_read_at")
+    .eq("profile_id", profileId);
+
+  const memberships = (memberRows ?? []) as MemberMembership[];
+  if (memberships.length === 0) {
+    return (
+      <div className="border border-champagne/15 p-8 text-center">
+        <p className="font-display italic text-cream/45 text-xl mb-2">
+          Keine Gruppen.
+        </p>
+        <p className="text-cream/35 text-sm">
+          Sobald du in eine Gruppe eingeladen wirst, erscheint sie hier.
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Conversations per .in(conversation_id) laden — auch via Service-Role
+  const convIds = memberships.map((m) => m.conversation_id);
+  const { data: convRows } = await sr
+    .from("conversations")
+    .select("id, type, title, last_message_at")
+    .in("id", convIds);
+
+  const convMap = new Map<string, ConversationRow>(
+    ((convRows ?? []) as ConversationRow[]).map((c) => [c.id, c]),
+  );
+
+  // 3. Merge + filter (nur non-DM Konversationen)
+  const visible = memberships
+    .map((m) => ({ membership: m, conversation: convMap.get(m.conversation_id) }))
     .filter((r) => r.conversation && r.conversation.type !== "dm")
     .sort((a, b) => {
       const al = a.conversation?.last_message_at ?? "";
@@ -73,9 +120,10 @@ export async function GroupConversationList({
       {visible.map((r) => {
         const c = r.conversation!;
         const lastMsgAt = c.last_message_at;
+        const lastReadAt = r.membership.last_read_at;
         const unread =
           !!lastMsgAt &&
-          (!r.last_read_at || new Date(lastMsgAt) > new Date(r.last_read_at));
+          (!lastReadAt || new Date(lastMsgAt) > new Date(lastReadAt));
         const initial = (c.title || "?").slice(0, 1).toUpperCase();
 
         return (

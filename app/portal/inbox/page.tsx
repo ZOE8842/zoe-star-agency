@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient as createSrClient } from "@supabase/supabase-js";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { ActivityFeed } from "@/components/inbox/ActivityFeed";
@@ -106,7 +107,15 @@ export default async function InboxPage({ searchParams }: Props) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", profile.id)
       .eq("status", "unread"),
-    supabase
+    // Tab-Badge: Service-Role-Read mit explizitem profile-id-Filter.
+    // user-cookie + RLS-JOIN auf conversations liefert conversation=null
+    // (siehe Live-Befund Diagnostics a6aa480). Service-Role + hart
+    // gefilterte profile_id ist sicher.
+    createSrClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    )
       .from("conversation_members")
       .select("conversation_id, last_read_at, conversation:conversations(last_message_at,type)")
       .eq("profile_id", profile.id),

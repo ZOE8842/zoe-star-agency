@@ -42,11 +42,12 @@ export default async function DiagnosticsPage() {
       .select("id, conversation_id, profile_id, role, joined_at")
       .order("joined_at", { ascending: false })
       .limit(50),
+    // profiles hat keine created_at-Spalte → order by display_name
     db
       .from("profiles")
       .select("id, display_name, tiktok_username, role, status")
-      .order("created_at", { ascending: false })
-      .limit(40),
+      .order("display_name", { ascending: true })
+      .limit(60),
     // Schema-Check: Spalte requires_registration in events vorhanden?
     // PostgREST kennt information_schema nicht direkt → wir machen einen
     // Select-Test der bei fehlender Spalte einen Error wirft.

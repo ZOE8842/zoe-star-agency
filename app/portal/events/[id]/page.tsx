@@ -54,7 +54,10 @@ export default async function EventDetailPage({ params }: Props) {
     .in("status", ["signed", "confirmed"]);
 
   const signupsFull = !!(event.max_participants && (signupCount ?? 0) >= event.max_participants);
-  const requiresRegistration = event.requires_registration !== false;
+  // Defensive: nur exakt false bedeutet "keine Anmeldung". Null, undefined,
+  // true, oder string-Varianten → default true.
+  const rrRaw = event.requires_registration;
+  const requiresRegistration = !(rrRaw === false || rrRaw === "false");
   const canSignup = requiresRegistration && event.status === "open" && !isPast && !isTikTok;
   const signupDisabledReason = isTikTok
     ? "TikTok-Events: Teilnahme direkt auf TikTok."
