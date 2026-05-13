@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { markConversationRead } from "@/lib/inbox/conversations";
+import { loadProfileLabels, formatPartnerLabel } from "@/lib/inbox/profile-labels";
 import { GroupReplyForm } from "./GroupReplyForm";
 
 export const dynamic = "force-dynamic";
@@ -40,16 +41,11 @@ export default async function GroupChatPage({ params }: Props) {
     .order("sent_at", { ascending: true })
     .limit(200);
 
-  const senderIds = Array.from(new Set((msgs ?? []).map((m) => m.sender_id).filter(Boolean) as string[]));
-  const { data: senders } = senderIds.length
-    ? await supabase.from("profiles").select("id, display_name, role").in("id", senderIds)
-    : { data: [] };
-  const senderMap = new Map(
-    (senders ?? []).map((p) => [
-      p.id,
-      p.role === "admin" || p.role === "manager" ? "ZOE Management" : p.display_name || "Creator",
-    ]),
-  );
+  // Service-Role-Lookup, weil profiles-RLS Cross-User-Reads blockiert
+  const senderIds = (msgs ?? []).map((m) => m.sender_id).filter((id): id is string => !!id);
+  const profileMap = await loadProfileLabels(senderIds);
+  const senderMap = new Map<string, string>();
+  profileMap.forEach((p, id) => senderMap.set(id, formatPartnerLabel(p)));
 
   // Mark-Read (best-effort, async)
   if (member) {

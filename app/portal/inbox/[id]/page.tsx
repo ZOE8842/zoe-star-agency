@@ -4,6 +4,7 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AttachmentList } from "@/components/AttachmentList";
 import { ReactionBar } from "@/components/inbox/ReactionBar";
+import { loadProfileLabels, formatPartnerLabel } from "@/lib/inbox/profile-labels";
 import { AcknowledgeButton } from "./AcknowledgeButton";
 import { ReplyForm } from "./ReplyForm";
 import { markRead } from "./actions";
@@ -106,43 +107,30 @@ export default async function MessageDetailPage({
     replyTargetId = msg.sender_id;
   }
 
-  // Sender-Profile fuer alle Korrespondenz-Items + Gespraechspartner
-  const senderIds = Array.from(
-    new Set(
-      [
-        ...correspondence.map((c) => c.sender_id),
-        msg.sender_id,
-        msg.recipient_id,
-      ].filter((id): id is string => !!id),
-    ),
-  );
-  const profileMap = new Map<string, { display_name: string; role: string }>();
-  if (senderIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, display_name, role")
-      .in("id", senderIds);
-    (profiles ?? []).forEach((p) =>
-      profileMap.set(p.id, { display_name: p.display_name, role: p.role }),
-    );
-  }
-  // Legacy-Alias fuer alten Code-Pfad
-  const senderMap = new Map<string, string>();
-  profileMap.forEach((p, id) => senderMap.set(id, p.display_name));
+  // Sender-Profile fuer alle Korrespondenz-Items + Gespraechspartner.
+  // Wichtig: profiles-RLS erlaubt Creator nicht andere Profile zu lesen.
+  // Wir nutzen Service-Role-Lookup (loadProfileLabels) — gibt nur
+  // display_name + tiktok_username + role zurueck (keine PII).
+  const senderIds = [
+    ...correspondence.map((c) => c.sender_id),
+    msg.sender_id,
+    msg.recipient_id,
+  ].filter((id): id is string => !!id);
+  const profileMap = await loadProfileLabels(senderIds);
 
-  // Gespraechspartner-Label fuer Header
-  function partnerLabelFor(otherId: string | null): string {
-    if (!otherId) return "—";
-    const p = profileMap.get(otherId);
-    if (!p) return "—";
-    if (p.role === "admin" || p.role === "manager") return "ZOE Management";
-    return p.display_name || "Creator";
-  }
+  // Legacy-Alias fuer alten Code-Pfad (sender-name fuer Bubbles)
+  const senderMap = new Map<string, string>();
+  profileMap.forEach((p, id) => {
+    if (p.role === "admin" || p.role === "manager") senderMap.set(id, "ZOE Management");
+    else senderMap.set(id, p.display_name || "Creator");
+  });
+
+  // Gespraechspartner-Label fuer Header — mit Handle "Creator · @user"
+  const partnerId =
+    msg.sender_id === profile.id ? msg.recipient_id : msg.sender_id;
   const headerLabel: string = msg.recipient_group === "all_creators"
     ? "ZOE Broadcast"
-    : msg.sender_id === profile.id
-    ? partnerLabelFor(msg.recipient_id)
-    : partnerLabelFor(msg.sender_id);
+    : formatPartnerLabel(partnerId ? profileMap.get(partnerId) : undefined, { withHandle: true });
 
   // Lese-/Bestaetigungs-Status fuer Gegenseite (zeigt dem Sender ob gelesen wurde)
   let readByPartnerAt: string | null = null;
