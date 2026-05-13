@@ -4,7 +4,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,8 +13,22 @@ const MAX_SIZE = 8 * 1024 * 1024; // 8 MB reichen fuer Cover (3000x1300 jpg)
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
 
 export async function POST(req: NextRequest) {
-  // Admin-Gate. Bei fehlendem Recht: redirect → kommt als 307/302 im Client.
-  await requireAdmin();
+  // KEIN requireAdmin() — das ruft redirect() auf und liefert 307/HTML,
+  // wodurch der Client-fetch().json() silent crasht. Stattdessen
+  // expliziter Auth-Check mit JSON-Antwort.
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
+  }
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (!prof || (prof.role !== "admin" && prof.role !== "manager")) {
+    return NextResponse.json({ error: "Nur Admin oder Manager." }, { status: 403 });
+  }
 
   const formData = await req.formData();
   const file = formData.get("file");

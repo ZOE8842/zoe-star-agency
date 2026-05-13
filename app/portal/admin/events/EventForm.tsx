@@ -103,7 +103,9 @@ export function EventForm({
       const fd = new FormData();
       fd.append("file", file);
       const r = await fetch("/api/events/upload-cover", { method: "POST", body: fd });
-      const data = await r.json();
+      // Defensiv: falls Route nicht JSON liefert (z.B. HTML-Redirect),
+      // .json() wuerde sonst silent crashen → keine User-Sichtbarkeit.
+      const data = await r.json().catch(() => ({ error: `Upload-Antwort kein JSON (HTTP ${r.status}).` }));
       if (!r.ok || !data.url) {
         setCoverError(data.error ?? "Upload fehlgeschlagen.");
       } else {

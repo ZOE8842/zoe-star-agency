@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default async function AdminGroupsPage() {
-  const { supabase, profile } = await requireAdmin();
+  const { supabase, profile } = await requireManagerOrAdmin();
 
   const { data: rows } = await supabase
     .from("conversations")
@@ -27,7 +27,8 @@ export default async function AdminGroupsPage() {
         displayName={profile.display_name}
         tiktokUsername={profile.tiktok_username}
         avatarUrl={profile.avatar_url}
-        isAdmin
+        isAdmin={profile.role === "admin"}
+        isManager={profile.role === "manager"}
       />
       <main className="container-luxe py-12 md:py-16 max-w-3xl">
         <div className="flex items-baseline justify-between gap-3 mb-8 flex-wrap">

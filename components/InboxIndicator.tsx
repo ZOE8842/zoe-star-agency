@@ -22,7 +22,7 @@ export async function InboxIndicator({ userId, variant = "dot" }: Props) {
       .select("id")
       .or(`recipient_id.eq.${userId},recipient_group.eq.all_creators`)
       .order("sent_at", { ascending: false })
-      .limit(80),
+      .limit(200),
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })

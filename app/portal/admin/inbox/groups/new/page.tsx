@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { CreateGroupForm } from "./CreateGroupForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewGroupPage() {
-  const { supabase, profile } = await requireAdmin();
+  const { supabase, profile } = await requireManagerOrAdmin();
 
   const { data: profiles } = await supabase
     .from("profiles")
@@ -31,7 +31,8 @@ export default async function NewGroupPage() {
         displayName={profile.display_name}
         tiktokUsername={profile.tiktok_username}
         avatarUrl={profile.avatar_url}
-        isAdmin
+        isAdmin={profile.role === "admin"}
+        isManager={profile.role === "manager"}
       />
       <main className="container-luxe py-12 md:py-16 max-w-2xl">
         <div className="mb-8">
