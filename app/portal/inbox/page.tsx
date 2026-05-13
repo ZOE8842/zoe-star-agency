@@ -6,6 +6,7 @@ import { SystemNotificationsList } from "@/components/inbox/SystemNotificationsL
 import { InboxRealtime } from "@/components/inbox/InboxRealtime";
 import { ParticipationShortcuts } from "@/components/inbox/ParticipationShortcuts";
 import { GroupConversationList } from "@/components/inbox/GroupConversationList";
+import { loadProfileLabels, formatPartnerLabel } from "@/lib/inbox/profile-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -81,20 +82,11 @@ export default async function InboxPage({ searchParams }: Props) {
       .eq("reader_id", profile.id);
     readMap = new Map((reads ?? []).map((r) => [r.message_id, r]));
 
-    const senderIds = Array.from(new Set(messages.map((m) => m.sender_id).filter(Boolean) as string[]));
-    if (senderIds.length > 0) {
-      const { data: senders } = await supabase
-        .from("profiles")
-        .select("id, display_name, role")
-        .in("id", senderIds);
-      (senders ?? []).forEach((s) => {
-        // Admin-Sender als "ZOE Management" anzeigen, Creator mit Display-Name
-        const label = s.role === "admin" || s.role === "manager"
-          ? "ZOE Management"
-          : s.display_name || "Creator";
-        senderMap.set(s.id, label);
-      });
-    }
+    // Profiles-RLS blockt Creator von fremden Profilen → Service-Role-Lookup.
+    // Liefert nur display_name + tiktok_username + role (keine PII).
+    const senderIds = messages.map((m) => m.sender_id).filter((id): id is string => !!id);
+    const labelMap = await loadProfileLabels(senderIds);
+    labelMap.forEach((p, id) => senderMap.set(id, formatPartnerLabel(p)));
     unreadCount = messages.filter((m) => !readMap.has(m.id)).length;
   }
 
