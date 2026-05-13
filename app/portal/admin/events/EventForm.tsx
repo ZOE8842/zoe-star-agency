@@ -8,6 +8,11 @@ const CATEGORIES = ["live", "battle", "ranking", "special", "announcement"] as c
 const SOURCES = ["agency", "tiktok"] as const;
 const STATUSES = ["draft", "open", "closed", "archived"] as const;
 
+// Debug-Instrumentation. Env-gated. Wenn NEXT_PUBLIC_DEBUG_EVENT_FORM="true"
+// gesetzt ist, werden DEBUG-Balken, Console-Logs und Verify-DB-Banner aktiv.
+// Sonst sieht der Admin nur die normale UI ohne Debug-Noise.
+const DEBUG = process.env.NEXT_PUBLIC_DEBUG_EVENT_FORM === "true";
+
 export interface EventInitial {
   id: string;
   title: string;
@@ -99,7 +104,7 @@ export function EventForm({
   }
 
   function toggleRequiresRegistration(v: boolean) {
-    console.log("[AURA-CLIENT-LOG EventForm] toggle click → setting requiresRegistration to:", v, "(was:", requiresRegistration, ")");
+    if (DEBUG) console.log("[AURA-CLIENT-LOG EventForm] toggle click → setting requiresRegistration to:", v, "(was:", requiresRegistration, ")");
     setRequiresRegistration(v);
   }
 
@@ -159,14 +164,14 @@ export function EventForm({
       allowed_profile_ids: visibilityMode === "selected" ? allowedIds : [],
       requires_registration: requiresRegistration,
     };
-    console.log("[AURA-CLIENT-LOG EventForm] submit isEdit:", isEdit,
+    if (DEBUG) console.log("[AURA-CLIENT-LOG EventForm] submit isEdit:", isEdit,
       "payload.requires_registration:", payload.requires_registration,
       "type:", typeof payload.requires_registration);
 
     const r = isEdit
       ? await adminUpdateEvent(initial!.id, payload)
       : await adminCreateEvent(payload);
-    console.log("[AURA-CLIENT-LOG EventForm] action result:", r);
+    if (DEBUG) console.log("[AURA-CLIENT-LOG EventForm] action result:", r);
 
     if (!r.ok) {
       setError(r.error ?? "Fehler beim Speichern.");
@@ -174,7 +179,7 @@ export function EventForm({
       return;
     }
 
-    const verifyMsg = isEdit && typeof (r as { verified_requires_registration?: boolean }).verified_requires_registration === "boolean"
+    const verifyMsg = DEBUG && isEdit && typeof (r as { verified_requires_registration?: boolean }).verified_requires_registration === "boolean"
       ? ` · DB requires_registration nach Save = ${(r as { verified_requires_registration: boolean }).verified_requires_registration}`
       : "";
     setSuccess((isEdit ? "Event aktualisiert." : "Event angelegt.") + verifyMsg);
@@ -350,9 +355,11 @@ export function EventForm({
               ? "Creator sieht 'Im Portal anmelden'-Button. Anmeldungen werden gezaehlt."
               : "Creator sieht 'Keine Anmeldung erforderlich'. Kein Button, nur Info-Anzeige."}
           </p>
-          <p className="mt-2 px-3 py-2 border border-yellow-400/30 bg-yellow-400/[0.04] text-yellow-300/85 text-[11px] font-mono">
-            DEBUG · requiresRegistration state = {String(requiresRegistration)} · type = {typeof requiresRegistration} · source = {source} · isEdit = {String(isEdit)}
-          </p>
+          {DEBUG && (
+            <p className="mt-2 px-3 py-2 border border-yellow-400/30 bg-yellow-400/[0.04] text-yellow-300/85 text-[11px] font-mono">
+              DEBUG · requiresRegistration state = {String(requiresRegistration)} · type = {typeof requiresRegistration} · source = {source} · isEdit = {String(isEdit)}
+            </p>
+          )}
         </Field>
 
         <Field label="Sichtbarkeit" full>

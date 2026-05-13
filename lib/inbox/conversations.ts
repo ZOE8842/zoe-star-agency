@@ -68,9 +68,10 @@ export async function createGroupConversation(input: {
   memberIds: string[];
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const TAG = "[AURA-RUNTIME-LOG createGroupConversation]";
+  const DEBUG = process.env.NEXT_PUBLIC_DEBUG_EVENT_FORM === "true";
   try {
     const { user } = await requireAdminOrManager();
-    console.log(TAG, "input:", JSON.stringify({
+    if (DEBUG) console.log(TAG, "input:", JSON.stringify({
       title: input.title,
       type: input.type,
       memberIdsCount: input.memberIds?.length,
@@ -80,7 +81,7 @@ export async function createGroupConversation(input: {
     }));
 
     if (!input.title || input.title.trim().length < 2) {
-      console.warn(TAG, "rejected: title too short");
+      if (DEBUG) console.warn(TAG, "rejected: title too short");
       return { ok: false, error: "Titel zu kurz." };
     }
     if (input.title.length > 120) return { ok: false, error: "Titel zu lang." };
@@ -93,7 +94,7 @@ export async function createGroupConversation(input: {
       ? [input.memberIds]
       : [];
     const memberIds = Array.from(new Set([...rawIds.filter((id) => typeof id === "string" && id.length > 0), user.id]));
-    console.log(TAG, "memberIds final:", memberIds, "count:", memberIds.length);
+    if (DEBUG) console.log(TAG, "memberIds final:", memberIds, "count:", memberIds.length);
 
     if (memberIds.length < 2) {
       return { ok: false, error: `Mindestens ein weiteres Mitglied noetig (erhalten: ${rawIds.length} input ids).` };
@@ -113,14 +114,14 @@ export async function createGroupConversation(input: {
       console.error(TAG, "conversation insert failed:", cErr);
       return { ok: false, error: cErr?.message ?? "Insert fehlgeschlagen." };
     }
-    console.log(TAG, "conversation inserted id:", conv.id);
+    if (DEBUG) console.log(TAG, "conversation inserted id:", conv.id);
 
     const memberRows = memberIds.map((pid) => ({
       conversation_id: conv.id,
       profile_id: pid,
       role: pid === user.id ? "owner" : "member",
     }));
-    console.log(TAG, "memberRows to insert:", memberRows);
+    if (DEBUG) console.log(TAG, "memberRows to insert:", memberRows);
 
     const { data: insertedRows, error: mErr } = await sb
       .from("conversation_members")
@@ -132,7 +133,7 @@ export async function createGroupConversation(input: {
       return { ok: false, error: `Member-Insert fehlgeschlagen: ${mErr.message}` };
     }
     const insertedCount = insertedRows?.length ?? 0;
-    console.log(TAG, "members inserted:", insertedCount, "rows:", insertedRows);
+    if (DEBUG) console.log(TAG, "members inserted:", insertedCount, "rows:", insertedRows);
 
     if (insertedCount !== memberRows.length) {
       console.error(TAG, "incomplete member insert:", insertedCount, "/", memberRows.length);
@@ -144,7 +145,7 @@ export async function createGroupConversation(input: {
 
     revalidatePath("/portal/admin/inbox/groups");
     revalidatePath("/portal/inbox");
-    console.log(TAG, "success conv:", conv.id);
+    if (DEBUG) console.log(TAG, "success conv:", conv.id);
     return { ok: true, id: conv.id };
   } catch (e) {
     console.error(TAG, "exception:", e);

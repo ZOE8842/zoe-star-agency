@@ -143,9 +143,10 @@ export async function adminUpdateEvent(
   input: EventInput,
 ): Promise<{ ok: boolean; error?: string; verified_requires_registration?: boolean }> {
   const TAG = "[AURA-RUNTIME-LOG adminUpdateEvent]";
+  const DEBUG = process.env.NEXT_PUBLIC_DEBUG_EVENT_FORM === "true";
   try {
     await requireAdmin();
-    console.log(TAG, "id:", id, "requires_registration RAW:", input.requires_registration,
+    if (DEBUG) console.log(TAG, "id:", id, "requires_registration RAW:", input.requires_registration,
       "type:", typeof input.requires_registration,
       "computed (!==false):", input.requires_registration !== false);
     const err = validate(input);
@@ -173,7 +174,7 @@ export async function adminUpdateEvent(
       visibility_mode: visibility,
       requires_registration: normalizeRequiresRegistration(input.requires_registration),
     };
-    console.log(TAG, "updatePayload requires_registration:", updatePayload.requires_registration,
+    if (DEBUG) console.log(TAG, "updatePayload requires_registration:", updatePayload.requires_registration,
       "(normalized from raw:", input.requires_registration, "type:", typeof input.requires_registration, ")");
 
     const { error } = await sb
@@ -186,13 +187,14 @@ export async function adminUpdateEvent(
       return { ok: false, error: error.message };
     }
 
-    // Verify DB-State direkt nach Update (kein cache, keine Server-Action-Race)
+    // Verify-Read nach Update bleibt — kostet eine cheap SELECT und gibt
+    // dem Client das DB-Resultat zurueck (im Debug-Mode sichtbar im Banner).
     const { data: verifyRow } = await sb
       .from("events")
       .select("id, requires_registration, status")
       .eq("id", id)
       .maybeSingle();
-    console.log(TAG, "post-update verify:", verifyRow);
+    if (DEBUG) console.log(TAG, "post-update verify:", verifyRow);
 
     // Allowed-Profiles synchronisieren: alte loeschen, neue setzen
     await sb.from("event_allowed_profiles").delete().eq("event_id", id);
