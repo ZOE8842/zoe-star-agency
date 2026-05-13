@@ -16,7 +16,10 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"group" | "channel" | "event">("group");
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Array statt Set — Set in useState laeuft in React 19 / Next 16
+  // gelegentlich in StrictMode-Reconciliation-Pitfalls. Array ist explizit
+  // immutable + JSON-serialisierbar fuer Server-Action-Payload.
+  const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -31,12 +34,9 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
   }, [query, members]);
 
   function toggleMember(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   }
 
   function submit() {
@@ -45,7 +45,7 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
       setError("Titel zu kurz.");
       return;
     }
-    if (selected.size === 0) {
+    if (selected.length === 0) {
       setError("Mindestens ein Mitglied auswaehlen.");
       return;
     }
@@ -53,7 +53,7 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
       const r = await createGroupConversation({
         title: title.trim(),
         type,
-        memberIds: Array.from(selected),
+        memberIds: [...selected],
       });
       if (!r.ok) {
         setError(r.error ?? "Fehler.");
@@ -100,7 +100,7 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
 
       <div>
         <label className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-3">
-          Mitglieder ({selected.size} ausgewaehlt)
+          Mitglieder ({selected.length} ausgewaehlt)
         </label>
         <input
           type="search"
@@ -111,7 +111,7 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
         />
         <ul className="max-h-72 overflow-y-auto space-y-1">
           {filtered.map((m) => {
-            const on = selected.has(m.id);
+            const on = selected.includes(m.id);
             return (
               <li key={m.id}>
                 <button

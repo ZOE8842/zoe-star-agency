@@ -70,8 +70,18 @@ export async function createGroupConversation(input: {
     if (!["group", "channel", "event"].includes(input.type)) {
       return { ok: false, error: "Ungueltiger Typ." };
     }
-    const memberIds = Array.from(new Set([...input.memberIds.filter(Boolean), user.id]));
-    if (memberIds.length < 2) return { ok: false, error: "Mindestens ein weiteres Mitglied noetig." };
+    // Defensive: input.memberIds robust normalisieren (akzeptiert Array,
+    // einzelnen String, oder undefined — falls die UI durch RSC-Serialization
+    // etwas Anderes durchreichen sollte).
+    const rawIds: string[] = Array.isArray(input.memberIds)
+      ? input.memberIds
+      : typeof input.memberIds === "string"
+      ? [input.memberIds]
+      : [];
+    const memberIds = Array.from(new Set([...rawIds.filter((id) => typeof id === "string" && id.length > 0), user.id]));
+    if (memberIds.length < 2) {
+      return { ok: false, error: `Mindestens ein weiteres Mitglied noetig (erhalten: ${rawIds.length} input ids).` };
+    }
 
     const sb = admin();
     const { data: conv, error: cErr } = await sb
@@ -90,11 +100,20 @@ export async function createGroupConversation(input: {
       profile_id: pid,
       role: pid === user.id ? "owner" : "member",
     }));
-    const { error: mErr } = await sb.from("conversation_members").insert(memberRows);
+    const { error: mErr, count: insertedCount } = await sb
+      .from("conversation_members")
+      .insert(memberRows, { count: "exact" });
     if (mErr) {
       // Rollback Conversation, sonst dangling
       await sb.from("conversations").delete().eq("id", conv.id);
       return { ok: false, error: `Member-Insert fehlgeschlagen: ${mErr.message}` };
+    }
+    // Sanity-Check: alle Mitglieder wirklich angelegt?
+    if (typeof insertedCount === "number" && insertedCount !== memberRows.length) {
+      return {
+        ok: false,
+        error: `Member-Insert unvollstaendig: ${insertedCount}/${memberRows.length}`,
+      };
     }
 
     revalidatePath("/portal/admin/inbox/groups");
