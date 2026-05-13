@@ -188,19 +188,8 @@ export function MobileNavDrawer({
                 </Link>
               );
             })}
-            {(isAdmin || isManager) && (
-              <Link
-                href={isAdmin ? "/portal/admin" : "/portal/manager"}
-                className="block px-6 py-5 text-[17px]"
-                style={{
-                  color: GOLD,
-                  background: SOLID_BLACK,
-                  borderBottom: `1px solid ${GOLD_DIVIDER_SOFT}`,
-                }}
-              >
-                {isAdmin ? "Admin" : "Manager"}
-              </Link>
-            )}
+            {/* V4: Admin/Manager-Master ist bereits als erster Nav-Punkt
+                ueber buildNavItems eingebaut. Kein parallel-Eintrag mehr. */}
           </nav>
 
           {/* Logout · solid Card-Style */}

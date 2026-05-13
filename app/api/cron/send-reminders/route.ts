@@ -74,13 +74,21 @@ export async function GET(request: NextRequest) {
   ));
   const hasBroadcast = (oldMessages ?? []).some((m) => m.recipient_group === "all_creators");
   const profileQuery = supabase.from("profiles").select("id, email, role, status");
-  const { data: allRelevantProfiles } = hasBroadcast
-    ? await profileQuery.or(`id.in.(${directRecipientIds.join(",")}),and(role.eq.creator,status.eq.active)`)
-    : directRecipientIds.length > 0
-    ? await profileQuery.in("id", directRecipientIds)
-    : { data: [] };
-  const profileMap = new Map((allRelevantProfiles ?? []).map((p) => [p.id, p]));
-  const activeCreators = (allRelevantProfiles ?? []).filter((p) => p.role === "creator" && p.status === "active");
+  let allRelevantProfiles: { id: string; email: string | null; role: string; status: string }[] = [];
+  if (hasBroadcast && directRecipientIds.length > 0) {
+    const { data } = await profileQuery.or(
+      `id.in.(${directRecipientIds.join(",")}),and(role.eq.creator,status.eq.active)`,
+    );
+    allRelevantProfiles = data ?? [];
+  } else if (hasBroadcast) {
+    const { data } = await profileQuery.eq("role", "creator").eq("status", "active");
+    allRelevantProfiles = data ?? [];
+  } else if (directRecipientIds.length > 0) {
+    const { data } = await profileQuery.in("id", directRecipientIds);
+    allRelevantProfiles = data ?? [];
+  }
+  const profileMap = new Map(allRelevantProfiles.map((p) => [p.id, p]));
+  const activeCreators = allRelevantProfiles.filter((p) => p.role === "creator" && p.status === "active");
 
   // PERF: alle relevanten message_reads + notifications gebatched
   const allMessageIds = (oldMessages ?? []).map((m) => m.id);
@@ -159,13 +167,21 @@ export async function GET(request: NextRequest) {
   ));
   const ackHasBroadcast = (ackMessages ?? []).some((m) => m.recipient_group === "all_creators");
   const ackProfileQuery = supabase.from("profiles").select("id, email, role, status");
-  const { data: ackProfiles } = ackHasBroadcast
-    ? await ackProfileQuery.or(`id.in.(${ackDirectIds.join(",")}),and(role.eq.creator,status.eq.active)`)
-    : ackDirectIds.length > 0
-    ? await ackProfileQuery.in("id", ackDirectIds)
-    : { data: [] };
-  const ackProfileMap = new Map((ackProfiles ?? []).map((p) => [p.id, p]));
-  const ackActiveCreators = (ackProfiles ?? []).filter((p) => p.role === "creator" && p.status === "active");
+  let ackProfiles: { id: string; email: string | null; role: string; status: string }[] = [];
+  if (ackHasBroadcast && ackDirectIds.length > 0) {
+    const { data } = await ackProfileQuery.or(
+      `id.in.(${ackDirectIds.join(",")}),and(role.eq.creator,status.eq.active)`,
+    );
+    ackProfiles = data ?? [];
+  } else if (ackHasBroadcast) {
+    const { data } = await ackProfileQuery.eq("role", "creator").eq("status", "active");
+    ackProfiles = data ?? [];
+  } else if (ackDirectIds.length > 0) {
+    const { data } = await ackProfileQuery.in("id", ackDirectIds);
+    ackProfiles = data ?? [];
+  }
+  const ackProfileMap = new Map(ackProfiles.map((p) => [p.id, p]));
+  const ackActiveCreators = ackProfiles.filter((p) => p.role === "creator" && p.status === "active");
 
   // PERF: message_reads batched
   const ackMessageIds = (ackMessages ?? []).map((m) => m.id);
