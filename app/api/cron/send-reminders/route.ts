@@ -17,6 +17,9 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// 200 messages × multiple email-blocks → 60s default zu eng.
+// Vercel Pro erlaubt bis 300s. Wir nehmen 180s als sicheres Mittel.
+export const maxDuration = 180;
 
 export async function GET(request: NextRequest) {
   // Vercel-Cron setzt Authorization: Bearer <CRON_SECRET>
@@ -65,28 +68,58 @@ export async function GET(request: NextRequest) {
     .lt("sent_at", _24h)
     .limit(200);
 
+  // PERF: alle aktiven Creator + Direct-Recipients in EINER Query (statt N+1)
+  const directRecipientIds = Array.from(new Set(
+    (oldMessages ?? []).map((m) => m.recipient_id).filter((id): id is string => !!id),
+  ));
+  const hasBroadcast = (oldMessages ?? []).some((m) => m.recipient_group === "all_creators");
+  const profileQuery = supabase.from("profiles").select("id, email, role, status");
+  const { data: allRelevantProfiles } = hasBroadcast
+    ? await profileQuery.or(`id.in.(${directRecipientIds.join(",")}),and(role.eq.creator,status.eq.active)`)
+    : directRecipientIds.length > 0
+    ? await profileQuery.in("id", directRecipientIds)
+    : { data: [] };
+  const profileMap = new Map((allRelevantProfiles ?? []).map((p) => [p.id, p]));
+  const activeCreators = (allRelevantProfiles ?? []).filter((p) => p.role === "creator" && p.status === "active");
+
+  // PERF: alle relevanten message_reads + notifications gebatched
+  const allMessageIds = (oldMessages ?? []).map((m) => m.id);
+  const { data: allReads } = allMessageIds.length > 0
+    ? await supabase
+        .from("message_reads")
+        .select("message_id, reader_id")
+        .in("message_id", allMessageIds)
+    : { data: [] };
+  const readSet = new Set((allReads ?? []).map((r) => `${r.message_id}:${r.reader_id}`));
+
+  const allReminderLinks = allMessageIds.map((id) => `/portal/inbox/${id}`);
+  const { data: existingReminders } = allReminderLinks.length > 0
+    ? await supabase
+        .from("notifications")
+        .select("user_id, link")
+        .eq("type", "reminder")
+        .in("link", allReminderLinks)
+    : { data: [] };
+  const reminderSet = new Set((existingReminders ?? []).map((n) => `${n.link}:${n.user_id}`));
+
   for (const msg of oldMessages || []) {
-    // Empfänger ermitteln
+    // Empfänger aus Map ableiten
     let recipients: { id: string; email: string }[] = [];
     if (msg.recipient_id) {
-      const { data } = await supabase.from("profiles").select("id, email").eq("id", msg.recipient_id).single();
-      if (data) recipients = [data];
+      const p = profileMap.get(msg.recipient_id);
+      if (p?.email) recipients = [{ id: p.id, email: p.email }];
     } else if (msg.recipient_group === "all_creators") {
-      const { data } = await supabase.from("profiles").select("id, email").eq("role", "creator").eq("status", "active");
-      recipients = data || [];
+      recipients = activeCreators
+        .filter((p) => p.email)
+        .map((p) => ({ id: p.id, email: p.email as string }));
     }
 
     for (const r of recipients) {
-      // Schon gelesen?
-      const { data: read } = await supabase.from("message_reads")
-        .select("id").eq("message_id", msg.id).eq("reader_id", r.id).maybeSingle();
-      if (read) continue;
+      // Schon gelesen? (aus batched-Set)
+      if (readSet.has(`${msg.id}:${r.id}`)) continue;
 
-      // Schon Reminder geschickt?
-      const { data: existingNotif } = await supabase.from("notifications")
-        .select("id").eq("user_id", r.id).eq("type", "reminder")
-        .eq("link", `/portal/inbox/${msg.id}`).maybeSingle();
-      if (existingNotif) continue;
+      // Schon Reminder geschickt? (aus batched-Set)
+      if (reminderSet.has(`/portal/inbox/${msg.id}:${r.id}`)) continue;
 
       try {
         await resend.emails.send({
