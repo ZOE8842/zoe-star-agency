@@ -17,7 +17,9 @@ export const metadata: Metadata = {
     "Unsere TikTok-LIVE-Creator. Pro Reload eine andere Auswahl aus dem aktiven Roster.",
 };
 
-export const dynamic = "force-dynamic";
+// ISR statt force-dynamic: Listing wird alle 5 Min revalidiert,
+// danach cached Server-Render. Jeder Visit hit nicht mehr die DB.
+export const revalidate = 300;
 
 export default async function CreatorIndexPage() {
   const all = await fetchHomepageCreators();

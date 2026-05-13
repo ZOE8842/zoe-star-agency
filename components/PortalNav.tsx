@@ -6,18 +6,24 @@ import { InboxIndicator } from "./InboxIndicator";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 
 // V3 Nav-Reduktion: Showcase ist Profil-Toggle (Profile-Reiter),
-// Support ist Card unter /portal/services. Top-Nav konzentriert auf
-// die 5 Kernmodule + Profil.
-const navItems = [
-  { href: "/portal", label: "Dashboard" },
-  { href: "/portal/inbox", label: "Inbox", indicator: true as const },
-  { href: "/portal/analyse", label: "Analyse" },
-  { href: "/portal/events", label: "Events" },
-  { href: "/portal/services", label: "Services" },
-  { href: "/portal/academy", label: "Academy" },
-  { href: "/portal/info", label: "Info" },
-  { href: "/portal/profile", label: "Profile" },
-];
+// Support ist Card unter /portal/services.
+//
+// V4 Nav-Refactor: Admin/Manager bekommen "MASTER" → /portal/admin
+// statt parallelem "Dashboard" + "Admin"-Extralink.
+function buildNavItems(isStaff: boolean) {
+  return [
+    isStaff
+      ? { href: "/portal/admin", label: "Master" as string }
+      : { href: "/portal", label: "Dashboard" as string },
+    { href: "/portal/inbox", label: "Inbox", indicator: true as const },
+    { href: "/portal/analyse", label: "Analyse" },
+    { href: "/portal/events", label: "Events" },
+    { href: "/portal/services", label: "Services" },
+    { href: "/portal/academy", label: "Academy" },
+    { href: "/portal/info", label: "Info" },
+    { href: "/portal/profile", label: "Profile" },
+  ];
+}
 
 interface Props {
   userId?: string;
@@ -31,6 +37,8 @@ interface Props {
 }
 
 export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isManager, avatarUrl }: Props) {
+  const isStaff = !!isAdmin || !!isManager;
+  const navItems = buildNavItems(isStaff);
   // V3-Datenschutz: keine Email-Initials. Fallback ist Display-Name oder
   // TikTok-Username (kein PII).
   const initials = (displayName || tiktokUsername || "")
@@ -119,16 +127,9 @@ export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isMana
             )}
           </Link>
         ))}
-        {isAdmin && (
-          <Link href="/portal/admin" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap py-3">
-            Admin
-          </Link>
-        )}
-        {isManager && !isAdmin && (
-          <Link href="/portal/manager" className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] whitespace-nowrap py-3">
-            Manager
-          </Link>
-        )}
+        {/* V4: Admin/Manager-Extra-Links wurden in den ersten Nav-Punkt
+            ("Master" → /portal/admin) konsolidiert. Kein paralleles
+            "Dashboard + Admin" mehr. */}
       </nav>
     </header>
   );

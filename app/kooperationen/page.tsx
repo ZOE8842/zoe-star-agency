@@ -57,7 +57,8 @@ const SECTORS = [
   "Events",
 ];
 
-export const dynamic = "force-dynamic";
+// ISR statt force-dynamic: Coop-Listing alle 5 Min revalidiert.
+export const revalidate = 300;
 
 function countBy(items: CoopCreatorItem[], key: keyof CoopCreatorItem): FilterOption[] {
   const map = new Map<string, number>();

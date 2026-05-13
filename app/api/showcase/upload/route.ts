@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Kein File uebergeben." }, { status: 400 });
   }
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "Datei zu gross. Max 5 MB." }, { status: 400 });
+    return NextResponse.json({ error: "Datei zu gross. Max 20 MB." }, { status: 400 });
   }
   if (!ALLOWED_MIME.includes(file.type)) {
     return NextResponse.json({ error: "Nur JPEG, PNG oder WebP erlaubt." }, { status: 400 });

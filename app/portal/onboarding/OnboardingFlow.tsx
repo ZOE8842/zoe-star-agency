@@ -41,8 +41,9 @@ interface FormState {
   allow_partner_cooperations: boolean;
 }
 
-const STORAGE_KEY = "zoe_onboarding_v1";
-const TOTAL_STEPS = 7;
+const STORAGE_KEY_BASE = "zoe_onboarding_v1";
+const TOTAL_STEPS = 7; // Welcome + 5 Eingabe-Schritte + Final
+const ENTRY_STEPS = 5; // user-sichtbare "echte" Schritte (ohne Welcome/Final)
 
 const LANGUAGES = [
   { value: "de", label: "Deutsch" },
@@ -120,6 +121,7 @@ const DEFAULT_STATE: FormState = {
 };
 
 interface Props {
+  profileId: string;
   initialDisplayName?: string | null;
   initialTiktok?: string | null;
   initialLanguage?: string | null;
@@ -127,7 +129,7 @@ interface Props {
 }
 
 export function OnboardingFlow({
-  initialDisplayName, initialTiktok, initialLanguage, initialRegion,
+  profileId, initialDisplayName, initialTiktok, initialLanguage, initialRegion,
 }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -141,21 +143,24 @@ export function OnboardingFlow({
     region: initialRegion ?? "DE",
   });
 
+  // User-scoped Storage-Key (verhindert Cross-Account-Collision)
+  const storageKey = `${STORAGE_KEY_BASE}:${profileId}`;
+
   // localStorage-Resume
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const raw = window.localStorage.getItem(storageKey);
       if (!raw) return;
       const parsed = JSON.parse(raw) as Partial<FormState>;
       setForm((prev) => ({ ...prev, ...parsed }));
     } catch {
       // ignore corrupt storage
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+      window.localStorage.setItem(storageKey, JSON.stringify(form));
     } catch {
       // ignore quota
     }
@@ -224,7 +229,7 @@ export function OnboardingFlow({
       setSubmitting(false);
       return;
     }
-    try { window.localStorage.removeItem(STORAGE_KEY); } catch {}
+    try { window.localStorage.removeItem(storageKey); } catch {}
     setStep(TOTAL_STEPS - 1); // → emotional Final-Screen
     setSubmitting(false);
   };
@@ -368,7 +373,7 @@ function Step1Welcome() {
         <span className="text-champagne">ZOE⭐ Creator Network.</span>
       </h1>
       <p className="text-cream/60 text-base md:text-lg leading-relaxed max-w-sm mx-auto">
-        In sechs ruhigen Schritten richten wir dein Creator-Profil ein.
+        In fuenf ruhigen Schritten richten wir dein Creator-Profil ein.
         Du entscheidest was rein darf.
       </p>
       <div className="mt-12 mx-auto w-px h-12 bg-gradient-to-b from-champagne/40 to-transparent" />

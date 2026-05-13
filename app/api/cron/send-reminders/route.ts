@@ -153,20 +153,44 @@ export async function GET(request: NextRequest) {
     .lt("sent_at", _12h)
     .limit(100);
 
+  // PERF: profiles batched (Direct-Recipients + alle aktiven Creators)
+  const ackDirectIds = Array.from(new Set(
+    (ackMessages ?? []).map((m) => m.recipient_id).filter((id): id is string => !!id),
+  ));
+  const ackHasBroadcast = (ackMessages ?? []).some((m) => m.recipient_group === "all_creators");
+  const ackProfileQuery = supabase.from("profiles").select("id, email, role, status");
+  const { data: ackProfiles } = ackHasBroadcast
+    ? await ackProfileQuery.or(`id.in.(${ackDirectIds.join(",")}),and(role.eq.creator,status.eq.active)`)
+    : ackDirectIds.length > 0
+    ? await ackProfileQuery.in("id", ackDirectIds)
+    : { data: [] };
+  const ackProfileMap = new Map((ackProfiles ?? []).map((p) => [p.id, p]));
+  const ackActiveCreators = (ackProfiles ?? []).filter((p) => p.role === "creator" && p.status === "active");
+
+  // PERF: message_reads batched
+  const ackMessageIds = (ackMessages ?? []).map((m) => m.id);
+  const { data: ackReads } = ackMessageIds.length > 0
+    ? await supabase
+        .from("message_reads")
+        .select("message_id, reader_id, acknowledged_at")
+        .in("message_id", ackMessageIds)
+        .not("acknowledged_at", "is", null)
+    : { data: [] };
+  const ackedSet = new Set((ackReads ?? []).map((r) => `${r.message_id}:${r.reader_id}`));
+
   for (const msg of ackMessages || []) {
     let recipients: { id: string; email: string }[] = [];
     if (msg.recipient_id) {
-      const { data } = await supabase.from("profiles").select("id, email").eq("id", msg.recipient_id).single();
-      if (data) recipients = [data];
+      const p = ackProfileMap.get(msg.recipient_id);
+      if (p?.email) recipients = [{ id: p.id, email: p.email }];
     } else if (msg.recipient_group === "all_creators") {
-      const { data } = await supabase.from("profiles").select("id, email").eq("role", "creator").eq("status", "active");
-      recipients = data || [];
+      recipients = ackActiveCreators
+        .filter((p) => p.email)
+        .map((p) => ({ id: p.id, email: p.email as string }));
     }
 
     for (const r of recipients) {
-      const { data: read } = await supabase.from("message_reads")
-        .select("acknowledged_at").eq("message_id", msg.id).eq("reader_id", r.id).maybeSingle();
-      if (read?.acknowledged_at) continue;
+      if (ackedSet.has(`${msg.id}:${r.id}`)) continue;
 
       try {
         await resend.emails.send({
@@ -318,6 +342,18 @@ export async function GET(request: NextRequest) {
       .lt("created_at", _24h)
       .limit(200);
 
+    // PERF: bestehende Onboarding-Drip-Notifications einmal batched holen
+    const onbIds = (onbCreators ?? []).map((p) => p.id);
+    const { data: existingOnbNotifs } = onbIds.length > 0
+      ? await supabase
+          .from("notifications")
+          .select("user_id, link")
+          .eq("type", "reminder")
+          .in("user_id", onbIds)
+          .in("link", ["/portal/onboarding#drip-1", "/portal/onboarding#drip-2", "/portal/onboarding#drip-3"])
+      : { data: [] };
+    const onbDedupSet = new Set((existingOnbNotifs ?? []).map((n) => `${n.user_id}:${n.link}`));
+
     for (const p of onbCreators || []) {
       if (!p.email) continue;
       if (dripMailsSent >= DRIP_MAIL_CAP) {
@@ -335,14 +371,7 @@ export async function GET(request: NextRequest) {
 
       const dedupLink = `/portal/onboarding#drip-${stage}`;
 
-      const { data: existing } = await supabase
-        .from("notifications")
-        .select("id")
-        .eq("user_id", p.id)
-        .eq("type", "reminder")
-        .eq("link", dedupLink)
-        .maybeSingle();
-      if (existing) continue;
+      if (onbDedupSet.has(`${p.id}:${dedupLink}`)) continue;
 
       // Lock-Insert ZUERST — bei Insert-Failure kein Send (kein Spam).
       const { error: lockErr } = await supabase.from("notifications").insert({
@@ -487,6 +516,29 @@ export async function GET(request: NextRequest) {
       .lt("created_at", _24h)
       .limit(200);
 
+    // PERF: showcase_creators-Rows und Notification-Dedupe batched holen
+    const showIds = (showcased ?? []).map((p) => p.id);
+    const showcaseDedupLink = "/portal/profile/showcase#incomplete";
+    const [showcaseRowsRes, showcaseDupsRes] = showIds.length > 0
+      ? await Promise.all([
+          supabase
+            .from("showcase_creators")
+            .select("profile_id, showcase_images")
+            .in("profile_id", showIds),
+          supabase
+            .from("notifications")
+            .select("user_id")
+            .eq("type", "reminder")
+            .eq("link", showcaseDedupLink)
+            .in("user_id", showIds)
+            .gte("created_at", _7d),
+        ])
+      : [{ data: [] }, { data: [] }];
+    const showcaseRowMap = new Map(
+      (showcaseRowsRes.data ?? []).map((r) => [r.profile_id, r.showcase_images]),
+    );
+    const showcaseDupSet = new Set((showcaseDupsRes.data ?? []).map((d) => d.user_id));
+
     for (const p of showcased || []) {
       if (!p.email) continue;
       if (dripMailsSent >= DRIP_MAIL_CAP) {
@@ -494,26 +546,12 @@ export async function GET(request: NextRequest) {
         break;
       }
 
-      // Showcase-Row holen (kann komplett fehlen → images_count=0)
-      const { data: row } = await supabase
-        .from("showcase_creators")
-        .select("showcase_images")
-        .eq("profile_id", p.id)
-        .maybeSingle();
-
-      const images = Array.isArray(row?.showcase_images) ? row.showcase_images : [];
+      const showcaseImagesRaw = showcaseRowMap.get(p.id);
+      const images = Array.isArray(showcaseImagesRaw) ? showcaseImagesRaw : [];
       if (images.length >= 2) continue;
 
-      const dedupLink = `/portal/profile/showcase#incomplete`;
-      const { data: dup } = await supabase
-        .from("notifications")
-        .select("id")
-        .eq("user_id", p.id)
-        .eq("type", "reminder")
-        .eq("link", dedupLink)
-        .gte("created_at", _7d)
-        .maybeSingle();
-      if (dup) continue;
+      if (showcaseDupSet.has(p.id)) continue;
+      const dedupLink = showcaseDedupLink;
 
       const { error: lockErr } = await supabase.from("notifications").insert({
         user_id: p.id,

@@ -25,7 +25,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-export const dynamic = "force-dynamic";
+// ISR statt force-dynamic: Creator-Detail-Seite alle 5 Min revalidiert.
+export const revalidate = 300;
 
 export default async function CreatorDetailPage({ params }: Params) {
   const { username } = await params;

@@ -66,6 +66,9 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icon-512.png", sizes: "512x512" }],
   },
+  alternates: {
+    canonical: "/",
+  },
   robots: { index: true, follow: true },
 };
 

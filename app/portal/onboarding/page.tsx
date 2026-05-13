@@ -18,6 +18,7 @@ export default async function OnboardingPage() {
 
   return (
     <OnboardingFlow
+      profileId={profile.id}
       initialDisplayName={profile.display_name}
       initialTiktok={profile.tiktok_username}
       initialLanguage={profile.language}
