@@ -151,11 +151,23 @@ export default async function EventsPage({ searchParams }: SearchProps) {
                     {ev.source === "tiktok" ? "TikTok Event" : "Agency Event"}
                     {ev.category && <> · {ev.category}</>}
                   </span>
-                  {userSignup && !isPast && (
-                    <span className="text-[10px] uppercase tracking-[0.25em] text-champagne">
-                      {userSignup === "confirmed" ? "Bestaetigt" : userSignup}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {ev.status === "closed" && (
+                      <span className="text-[10px] uppercase tracking-[0.25em] px-2 py-0.5 border border-cream/25 text-cream/65">
+                        Geschlossen
+                      </span>
+                    )}
+                    {ev.status === "archived" && (
+                      <span className="text-[10px] uppercase tracking-[0.25em] px-2 py-0.5 border border-cream/20 text-cream/55">
+                        Beendet
+                      </span>
+                    )}
+                    {userSignup && !isPast && (
+                      <span className="text-[10px] uppercase tracking-[0.25em] text-champagne">
+                        {userSignup === "confirmed" ? "Bestaetigt" : userSignup}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <h2 className="font-display italic text-cream text-2xl md:text-3xl leading-tight mb-3">

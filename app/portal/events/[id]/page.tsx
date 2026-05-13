@@ -156,7 +156,20 @@ export default async function EventDetailPage({ params }: Props) {
           </section>
         )}
 
-        {/* Signup-Block — nur wenn Anmeldung erforderlich */}
+        {(event.status === "closed" || event.status === "archived") && (
+          <div className="border border-cream/20 px-5 py-4 mb-8 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-cream/75 text-sm">
+              {event.status === "closed"
+                ? "Anmeldung geschlossen."
+                : "Event ist beendet."}
+            </p>
+            <span className="text-cream/55 text-[10px] uppercase tracking-[0.25em]">
+              {STATUS_LABEL[event.status]}
+            </span>
+          </div>
+        )}
+
+        {/* Signup-Block — nur wenn Anmeldung erforderlich + Event nicht closed/archived */}
         {requiresRegistration ? (
           <section className="border-t border-champagne/15 pt-8 mb-8">
             <div className="flex items-baseline justify-between gap-3 mb-4 flex-wrap">

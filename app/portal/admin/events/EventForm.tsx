@@ -321,7 +321,8 @@ export function EventForm({
                 key={String(v)}
                 type="button"
                 onClick={() => setRequiresRegistration(v)}
-                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors ${
+                disabled={source === "tiktok"}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                   requiresRegistration === v
                     ? "bg-champagne text-ink border-champagne"
                     : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
@@ -331,10 +332,12 @@ export function EventForm({
               </button>
             ))}
           </div>
-          <p className="text-cream/40 text-[10px] uppercase tracking-[0.22em] mt-2">
-            {requiresRegistration
-              ? "Creator sehen 'Im Portal anmelden'-Button."
-              : "Creator sehen nur Info. Kein Anmelde-Flow."}
+          <p className="text-cream/45 text-xs leading-relaxed mt-2 max-w-xl">
+            {source === "tiktok"
+              ? "TikTok-Events leiten immer extern weiter. Toggle hat keinen Effekt."
+              : requiresRegistration
+              ? "Creator sieht 'Im Portal anmelden'-Button. Anmeldungen werden gezaehlt."
+              : "Creator sieht 'Keine Anmeldung erforderlich'. Kein Button, nur Info-Anzeige."}
           </p>
         </Field>
 

@@ -82,12 +82,20 @@ export default async function AdminEventEditPage({ params }: Props) {
           >
             ← Alle Events
           </Link>
-          <Link
-            href={`/portal/events/${event.id}`}
-            className="text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.25em]"
-          >
-            Vorschau →
-          </Link>
+          <div className="flex items-baseline gap-4 flex-wrap">
+            <Link
+              href={`/portal/events/${event.id}`}
+              className="text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.25em]"
+            >
+              Vorschau →
+            </Link>
+            <a
+              href="#gefahrenzone"
+              className="text-red-300/70 hover:text-red-300 text-[10px] uppercase tracking-[0.25em]"
+            >
+              Loeschen ↓
+            </a>
+          </div>
         </div>
 
         <p className="eyebrow mb-3">Admin · Event bearbeiten</p>
@@ -100,19 +108,29 @@ export default async function AdminEventEditPage({ params }: Props) {
         </p>
 
         <section className="border border-champagne/15 p-6 md:p-7 mb-8">
-          <p className="eyebrow mb-4">Status</p>
+          <p className="eyebrow mb-2">Status</p>
+          <p className="text-cream/45 text-xs leading-relaxed mb-4 max-w-xl">
+            <span className="text-cream/70">Entwurf</span> · nicht sichtbar fuer Creator ·
+            <span className="text-cream/70"> Offen</span> · sichtbar + Anmeldung moeglich ·
+            <span className="text-cream/70"> Geschlossen</span> · sichtbar, keine Anmeldung mehr ·
+            <span className="text-cream/70"> Beendet</span> · Archiv-Anzeige
+          </p>
           <StatusActions eventId={event.id} current={event.status} />
         </section>
 
         <EventForm initial={initial} creators={creatorOptions} />
 
-        <section className="border border-red-500/20 p-6 md:p-7 mt-12">
-          <p className="eyebrow mb-2 text-red-300/80">Gefahrenzone</p>
-          <p className="text-cream/55 text-sm mb-4 leading-relaxed">
+        <section id="gefahrenzone" className="border-2 border-red-500/40 bg-red-500/[0.03] p-6 md:p-7 mt-12 scroll-mt-24">
+          <p className="eyebrow mb-2 text-red-300">Gefahrenzone</p>
+          <p className="text-cream/65 text-sm mb-4 leading-relaxed">
             Event hart loeschen. Anmeldungen + Berechtigungen werden mitgeloescht. Cover-Bild bleibt im Storage.
           </p>
           <DeleteEventButton eventId={event.id} title={event.title} />
         </section>
+
+        <p className="text-cream/25 text-[9px] uppercase tracking-[0.3em] mt-16 text-center">
+          Build · {process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"}
+        </p>
       </main>
     </>
   );
