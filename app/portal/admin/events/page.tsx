@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { EventForm } from "./EventForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminEventsPage() {
-  const { supabase, profile } = await requireAdmin();
+  const { supabase, profile } = await requireManagerOrAdmin();
 
   const { data: events } = await supabase
     .from("events")
@@ -31,7 +31,9 @@ export default async function AdminEventsPage() {
     <>
       <PortalNav userId={profile.id}
         displayName={profile.display_name} email={profile.email}
-        avatarUrl={profile.avatar_url} isAdmin />
+        avatarUrl={profile.avatar_url}
+        isAdmin={profile.role === "admin"}
+        isManager={profile.role === "manager"} />
       <main className="container-luxe py-16">
         <p className="eyebrow mb-3">Admin · Events</p>
         <h1 className="heading-display text-4xl md:text-5xl mb-12">

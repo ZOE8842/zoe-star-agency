@@ -464,7 +464,7 @@ export default async function AdminPage() {
                 <AdminTile href="/portal/admin/diagnostics" title="Diagnostics" hint="DB-State · Runtime-Check" />
               </>
             )}
-            <AdminTile href="/portal/admin/events" title="Events" hint={isAdmin ? "CRUD + Anmeldungen" : "Übersicht"} />
+            <AdminTile href="/portal/admin/events" title="Events" hint="CRUD + Anmeldungen" />
           </div>
         </section>
 

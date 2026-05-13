@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { requireAdmin, requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { createClient as createSrClient } from "@supabase/supabase-js";
 
 const CATEGORIES = ["live", "battle", "ranking", "special", "announcement"] as const;
@@ -80,7 +80,7 @@ export async function adminCreateEvent(
   input: EventInput,
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   try {
-    const { profile } = await requireAdmin();
+    const { profile } = await requireManagerOrAdmin();
     const err = validate(input);
     if (err) return { ok: false, error: err };
 
@@ -145,7 +145,7 @@ export async function adminUpdateEvent(
   const TAG = "[AURA-RUNTIME-LOG adminUpdateEvent]";
   const DEBUG = process.env.NEXT_PUBLIC_DEBUG_EVENT_FORM === "true";
   try {
-    await requireAdmin();
+    await requireManagerOrAdmin();
     if (DEBUG) console.log(TAG, "id:", id, "requires_registration RAW:", input.requires_registration,
       "type:", typeof input.requires_registration,
       "computed (!==false):", input.requires_registration !== false);
@@ -224,7 +224,7 @@ export async function adminSetEventStatus(
   status: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    await requireManagerOrAdmin();
     if (!(STATUSES as readonly string[]).includes(status)) return { ok: false, error: "Status ungueltig." };
     const sb = admin();
     const { error } = await sb.from("events").update({ status }).eq("id", id);

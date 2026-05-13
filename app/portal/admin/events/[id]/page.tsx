@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/supabase/auth-helpers";
+import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { EventForm, type EventInitial } from "../EventForm";
 import { StatusActions } from "./StatusActions";
@@ -14,7 +14,8 @@ interface Props {
 
 export default async function AdminEventEditPage({ params }: Props) {
   const { id } = await params;
-  const { supabase, profile } = await requireAdmin();
+  const { supabase, profile } = await requireManagerOrAdmin();
+  const isAdmin = profile.role === "admin";
 
   const { data: event } = await supabase
     .from("events")
@@ -73,7 +74,9 @@ export default async function AdminEventEditPage({ params }: Props) {
     <>
       <PortalNav userId={profile.id}
         displayName={profile.display_name} email={profile.email}
-        avatarUrl={profile.avatar_url} isAdmin />
+        avatarUrl={profile.avatar_url}
+        isAdmin={isAdmin}
+        isManager={profile.role === "manager"} />
       <main className="container-luxe py-12 md:py-16">
         <div className="mb-8 flex items-baseline justify-between gap-3 flex-wrap">
           <Link
@@ -89,12 +92,14 @@ export default async function AdminEventEditPage({ params }: Props) {
             >
               Vorschau →
             </Link>
-            <a
-              href="#gefahrenzone"
-              className="text-red-300/70 hover:text-red-300 text-[10px] uppercase tracking-[0.25em]"
-            >
-              Loeschen ↓
-            </a>
+            {isAdmin && (
+              <a
+                href="#gefahrenzone"
+                className="text-red-300/70 hover:text-red-300 text-[10px] uppercase tracking-[0.25em]"
+              >
+                Loeschen ↓
+              </a>
+            )}
           </div>
         </div>
 
@@ -120,13 +125,15 @@ export default async function AdminEventEditPage({ params }: Props) {
 
         <EventForm initial={initial} creators={creatorOptions} />
 
-        <section id="gefahrenzone" className="border-2 border-red-500/40 bg-red-500/[0.03] p-6 md:p-7 mt-12 scroll-mt-24">
-          <p className="eyebrow mb-2 text-red-300">Gefahrenzone</p>
-          <p className="text-cream/65 text-sm mb-4 leading-relaxed">
-            Event hart loeschen. Anmeldungen + Berechtigungen werden mitgeloescht. Cover-Bild bleibt im Storage.
-          </p>
-          <DeleteEventButton eventId={event.id} title={event.title} />
-        </section>
+        {isAdmin && (
+          <section id="gefahrenzone" className="border-2 border-red-500/40 bg-red-500/[0.03] p-6 md:p-7 mt-12 scroll-mt-24">
+            <p className="eyebrow mb-2 text-red-300">Gefahrenzone</p>
+            <p className="text-cream/65 text-sm mb-4 leading-relaxed">
+              Event hart loeschen. Anmeldungen + Berechtigungen werden mitgeloescht. Cover-Bild bleibt im Storage.
+            </p>
+            <DeleteEventButton eventId={event.id} title={event.title} />
+          </section>
+        )}
 
         <p className="text-cream/25 text-[9px] uppercase tracking-[0.3em] mt-16 text-center">
           Build · {process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"}
