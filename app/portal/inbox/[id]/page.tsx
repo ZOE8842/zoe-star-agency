@@ -157,9 +157,13 @@ export default async function MessageDetailPage({
   }];
   const replySubject = `Re: ${baseSubject}`;
 
-  // Mark ALL Thread-Items als gelesen (nicht nur die aktuelle msg) +
-  // revalidatePath fuer Inbox-Liste, damit Unread-Badge sofort weg ist.
-  await markRead(msg.id, profile.id, items.map((i) => i.id));
+  // Mark ALL Thread-Items als gelesen — defensiv, damit ein markRead-Fehler
+  // nie die Detail-Page crashen laesst (war Bug-Quelle bei Broadcasts).
+  try {
+    await markRead(msg.id, profile.id, items.map((i) => i.id));
+  } catch (e) {
+    console.error("[inbox-detail] markRead failed:", e);
+  }
 
   // Reactions fuer aktuelle Message
   const { data: reactionsRaw } = await supabase

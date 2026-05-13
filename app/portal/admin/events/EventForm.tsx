@@ -22,6 +22,14 @@ export interface EventInitial {
   rules: string | null;
   cover_image_url: string | null;
   status: string;
+  visibility_mode?: "all" | "selected" | null;
+  allowed_profile_ids?: string[];
+}
+
+export interface CreatorOption {
+  id: string;
+  label: string;
+  hint?: string;
 }
 
 // Schneidet ISO auf "YYYY-MM-DDTHH:MM" fuer datetime-local-Input.
@@ -39,7 +47,13 @@ function localToIso(local: string): string {
   return isNaN(d.getTime()) ? "" : d.toISOString();
 }
 
-export function EventForm({ initial }: { initial?: EventInitial }) {
+export function EventForm({
+  initial,
+  creators = [],
+}: {
+  initial?: EventInitial;
+  creators?: CreatorOption[];
+}) {
   const router = useRouter();
   const isEdit = !!initial;
 
@@ -57,9 +71,26 @@ export function EventForm({ initial }: { initial?: EventInitial }) {
   const [rules, setRules] = useState(initial?.rules ?? "");
   const [coverUrl, setCoverUrl] = useState(initial?.cover_image_url ?? "");
   const [status, setStatus] = useState<string>(initial?.status ?? "open");
+  const [visibilityMode, setVisibilityMode] = useState<"all" | "selected">(
+    initial?.visibility_mode === "selected" ? "selected" : "all",
+  );
+  const [allowedIds, setAllowedIds] = useState<string[]>(initial?.allowed_profile_ids ?? []);
+  const [creatorQuery, setCreatorQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const filteredCreators = creators.filter((c) => {
+    const q = creatorQuery.trim().toLowerCase();
+    if (!q) return true;
+    return c.label.toLowerCase().includes(q) || (c.hint ?? "").toLowerCase().includes(q);
+  }).slice(0, 30);
+
+  function toggleAllowed(id: string) {
+    setAllowedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -87,6 +118,8 @@ export function EventForm({ initial }: { initial?: EventInitial }) {
       rules: rules || null,
       cover_image_url: coverUrl || null,
       status,
+      visibility_mode: visibilityMode,
+      allowed_profile_ids: visibilityMode === "selected" ? allowedIds : [],
     };
 
     const r = isEdit
@@ -209,6 +242,72 @@ export function EventForm({ initial }: { initial?: EventInitial }) {
             </p>
           </Field>
         )}
+
+        <Field label="Sichtbarkeit" full>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {(["all", "selected"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setVisibilityMode(m)}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors ${
+                  visibilityMode === m
+                    ? "bg-champagne text-ink border-champagne"
+                    : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
+                }`}
+              >
+                {m === "all" ? "Alle Creator" : "Ausgewaehlte Creator"}
+              </button>
+            ))}
+          </div>
+          {visibilityMode === "selected" && (
+            <div className="border border-champagne/15 p-3 space-y-2">
+              <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em]">
+                {allowedIds.length} ausgewaehlt
+              </p>
+              <input
+                type="search"
+                value={creatorQuery}
+                onChange={(e) => setCreatorQuery(e.target.value)}
+                placeholder="Creator suchen…"
+                className="w-full bg-transparent border-b border-cream/[0.08] focus:border-champagne/60 px-0 py-2 text-cream text-sm focus:outline-none placeholder-cream/30"
+              />
+              <ul className="max-h-60 overflow-y-auto space-y-1">
+                {filteredCreators.map((c) => {
+                  const on = allowedIds.includes(c.id);
+                  return (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        onClick={() => toggleAllowed(c.id)}
+                        className={`w-full text-left px-3 py-2 border transition-colors flex items-center justify-between gap-3 ${
+                          on
+                            ? "border-champagne bg-champagne/10"
+                            : "border-transparent hover:border-champagne/30 hover:bg-champagne/5"
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm ${on ? "text-cream" : "text-cream/85"}`}>{c.label}</p>
+                          {c.hint && (
+                            <p className="text-cream/40 text-[10px] uppercase tracking-[0.22em]">
+                              {c.hint}
+                            </p>
+                          )}
+                        </div>
+                        <span className={`text-[10px] uppercase tracking-[0.25em] shrink-0 ${on ? "text-champagne" : "text-cream/35"}`}>
+                          {on ? "Drin" : "+"}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+                {filteredCreators.length === 0 && (
+                  <li className="text-cream/35 text-sm px-3 py-2">Keine Treffer.</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </Field>
 
         <Field label="Regeln (lang, optional)" full>
           <textarea

@@ -47,10 +47,14 @@ export default async function GroupChatPage({ params }: Props) {
   const senderMap = new Map<string, string>();
   profileMap.forEach((p, id) => senderMap.set(id, formatPartnerLabel(p)));
 
-  // Mark-Read: synchron mit revalidatePath → Inbox-Liste + Bell-Indicator
-  // werden sofort aktualisiert, Unread-Badge verschwindet nach Page-Open.
+  // Mark-Read: synchron mit revalidatePath. Defensive — markConversationRead
+  // soll nie die Detail-Page crashen.
   if (member) {
-    await markConversationRead(id);
+    try {
+      await markConversationRead(id);
+    } catch (e) {
+      console.error("[group-detail] markConversationRead failed:", e);
+    }
   }
 
   // Schreib-Recht: in Channels nur Admin/Manager; in Gruppen + Events alle Member

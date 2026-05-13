@@ -14,6 +14,19 @@ export default async function AdminEventsPage() {
     .order("start_at", { ascending: false })
     .limit(80);
 
+  const { data: creators } = await supabase
+    .from("profiles")
+    .select("id, display_name, tiktok_username")
+    .eq("role", "creator")
+    .eq("status", "active")
+    .order("display_name", { ascending: true });
+
+  const creatorOptions = (creators ?? []).map((c) => ({
+    id: c.id,
+    label: c.display_name,
+    hint: c.tiktok_username ? `@${c.tiktok_username}` : undefined,
+  }));
+
   return (
     <>
       <PortalNav userId={profile.id}
@@ -25,7 +38,7 @@ export default async function AdminEventsPage() {
           Event <span className="text-champagne">Management.</span>
         </h1>
 
-        <EventForm />
+        <EventForm creators={creatorOptions} />
 
         <div className="mt-16 mb-6 flex items-baseline justify-between">
           <p className="eyebrow">Alle Events</p>

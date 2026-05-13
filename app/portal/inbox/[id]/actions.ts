@@ -57,9 +57,14 @@ export async function markRead(
   }
 
   // Inbox-Liste + Detail-Page revalidieren — Unread-Badge verschwindet
-  // nach Page-Open sofort.
-  revalidatePath("/portal/inbox");
-  revalidatePath(`/portal/inbox/${messageId}`);
+  // nach Page-Open sofort. revalidatePath kann beim Aufruf aus
+  // Server-Component-Render in seltenen Faellen werfen → try/catch.
+  try {
+    revalidatePath("/portal/inbox");
+    revalidatePath(`/portal/inbox/${messageId}`);
+  } catch {
+    /* ignore — naechster Page-Visit nutzt force-dynamic sowieso */
+  }
 }
 
 export async function acknowledgeMessage(messageId: string) {

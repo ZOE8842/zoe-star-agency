@@ -18,17 +18,36 @@ export default async function AdminEventEditPage({ params }: Props) {
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules",
+      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules, visibility_mode",
     )
     .eq("id", id)
     .maybeSingle();
   if (!event) notFound();
 
-  const { count: signupCount } = await supabase
-    .from("event_signups")
-    .select("id", { count: "exact", head: true })
-    .eq("event_id", id)
-    .in("status", ["signed", "confirmed"]);
+  const [{ count: signupCount }, { data: allowedRows }, { data: creators }] = await Promise.all([
+    supabase
+      .from("event_signups")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", id)
+      .in("status", ["signed", "confirmed"]),
+    supabase
+      .from("event_allowed_profiles")
+      .select("profile_id")
+      .eq("event_id", id),
+    supabase
+      .from("profiles")
+      .select("id, display_name, tiktok_username")
+      .eq("role", "creator")
+      .eq("status", "active")
+      .order("display_name", { ascending: true }),
+  ]);
+
+  const allowedIds = (allowedRows ?? []).map((r) => r.profile_id);
+  const creatorOptions = (creators ?? []).map((c) => ({
+    id: c.id,
+    label: c.display_name,
+    hint: c.tiktok_username ? `@${c.tiktok_username}` : undefined,
+  }));
 
   const initial: EventInitial = {
     id: event.id,
@@ -44,6 +63,8 @@ export default async function AdminEventEditPage({ params }: Props) {
     rules: event.rules ?? null,
     cover_image_url: event.cover_image_url ?? null,
     status: event.status,
+    visibility_mode: (event.visibility_mode as "all" | "selected" | null) ?? "all",
+    allowed_profile_ids: allowedIds,
   };
 
   return (
@@ -81,7 +102,7 @@ export default async function AdminEventEditPage({ params }: Props) {
           <StatusActions eventId={event.id} current={event.status} />
         </section>
 
-        <EventForm initial={initial} />
+        <EventForm initial={initial} creators={creatorOptions} />
       </main>
     </>
   );

@@ -24,6 +24,8 @@ type EventInput = {
   rules?: string | null;
   cover_image_url?: string | null;
   status: string;
+  visibility_mode?: "all" | "selected";
+  allowed_profile_ids?: string[];
 };
 
 function admin() {
@@ -73,6 +75,14 @@ export async function adminCreateEvent(
     const err = validate(input);
     if (err) return { ok: false, error: err };
 
+    const visibility = input.visibility_mode === "selected" ? "selected" : "all";
+    const allowedIds = visibility === "selected"
+      ? (input.allowed_profile_ids ?? []).filter((id) => typeof id === "string" && id.length > 0)
+      : [];
+    if (visibility === "selected" && allowedIds.length === 0) {
+      return { ok: false, error: "Bei 'Ausgewaehlte Creator' mindestens 1 Profil waehlen." };
+    }
+
     const sb = admin();
     const { data, error } = await sb
       .from("events")
@@ -89,12 +99,27 @@ export async function adminCreateEvent(
         rules: input.rules?.trim() || null,
         cover_image_url: input.cover_image_url?.trim() || null,
         status: input.status,
+        visibility_mode: visibility,
         created_by: profile.id,
       })
       .select("id")
       .single();
 
     if (error) return { ok: false, error: error.message };
+
+    if (visibility === "selected" && allowedIds.length > 0) {
+      const allowRows = allowedIds.map((pid) => ({
+        event_id: data.id,
+        profile_id: pid,
+      }));
+      const { error: aErr } = await sb.from("event_allowed_profiles").insert(allowRows);
+      if (aErr) {
+        // Rollback Event, sonst dangling
+        await sb.from("events").delete().eq("id", data.id);
+        return { ok: false, error: `Allowed-Profiles-Insert fehlgeschlagen: ${aErr.message}` };
+      }
+    }
+
     revalidatePath("/portal/admin/events");
     revalidatePath("/portal/events");
     return { ok: true, id: data.id };
@@ -112,6 +137,11 @@ export async function adminUpdateEvent(
     const err = validate(input);
     if (err) return { ok: false, error: err };
 
+    const visibility = input.visibility_mode === "selected" ? "selected" : "all";
+    const allowedIds = visibility === "selected"
+      ? (input.allowed_profile_ids ?? []).filter((id) => typeof id === "string" && id.length > 0)
+      : [];
+
     const sb = admin();
     const { error } = await sb
       .from("events")
@@ -128,10 +158,22 @@ export async function adminUpdateEvent(
         rules: input.rules?.trim() || null,
         cover_image_url: input.cover_image_url?.trim() || null,
         status: input.status,
+        visibility_mode: visibility,
       })
       .eq("id", id);
 
     if (error) return { ok: false, error: error.message };
+
+    // Allowed-Profiles synchronisieren: alte loeschen, neue setzen
+    await sb.from("event_allowed_profiles").delete().eq("event_id", id);
+    if (visibility === "selected" && allowedIds.length > 0) {
+      const allowRows = allowedIds.map((pid) => ({
+        event_id: id,
+        profile_id: pid,
+      }));
+      await sb.from("event_allowed_profiles").insert(allowRows);
+    }
+
     revalidatePath("/portal/admin/events");
     revalidatePath(`/portal/admin/events/${id}`);
     revalidatePath("/portal/events");

@@ -22,6 +22,7 @@ interface EventRow {
   registration_url: string | null;
   rules: string | null;
   winners: Array<{ display_name?: string; rank?: number; note?: string }> | null;
+  visibility_mode: string | null;
 }
 
 export default async function EventsPage({ searchParams }: SearchProps) {
@@ -34,7 +35,7 @@ export default async function EventsPage({ searchParams }: SearchProps) {
   let query = supabase
     .from("events")
     .select(
-      "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners",
+      "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners, visibility_mode",
     )
     .in("status", ["open", "closed", "archived"])
     .order("start_at", { ascending: tab === "past" ? false : true })
@@ -52,7 +53,28 @@ export default async function EventsPage({ searchParams }: SearchProps) {
   }
 
   const { data: events } = await query;
-  const rows = (events as EventRow[]) ?? [];
+  const allRows = (events as EventRow[]) ?? [];
+
+  // Sichtbarkeits-Filter: visibility_mode='all' fuer alle, 'selected' nur
+  // wenn Creator in event_allowed_profiles steht. Admin/Manager sieht alles.
+  const isStaff = profile.role === "admin" || profile.role === "manager";
+  let allowedEventIds = new Set<string>();
+  if (!isStaff && allRows.some((e) => e.visibility_mode === "selected")) {
+    const selectedIds = allRows.filter((e) => e.visibility_mode === "selected").map((e) => e.id);
+    const { data: allowedFor } = selectedIds.length > 0
+      ? await supabase
+          .from("event_allowed_profiles")
+          .select("event_id")
+          .eq("profile_id", profile.id)
+          .in("event_id", selectedIds)
+      : { data: [] };
+    allowedEventIds = new Set((allowedFor ?? []).map((r) => r.event_id));
+  }
+  const rows = allRows.filter((e) => {
+    if (isStaff) return true;
+    if (e.visibility_mode !== "selected") return true; // 'all' oder NULL
+    return allowedEventIds.has(e.id);
+  });
 
   const { data: signups } = await supabase
     .from("event_signups")

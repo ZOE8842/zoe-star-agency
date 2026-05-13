@@ -14,7 +14,9 @@ interface MemberOption {
 export function CreateGroupForm({ members }: { members: MemberOption[] }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<"group" | "channel" | "event">("group");
+  // V1.7: Events sind ein eigenes System unter /portal/admin/events — kein
+  // Inbox-Conversation-Type mehr. Nur Gruppe + Channel.
+  const [type, setType] = useState<"group" | "channel">("group");
   const [query, setQuery] = useState("");
   // Array statt Set — Set in useState laeuft in React 19 / Next 16
   // gelegentlich in StrictMode-Reconciliation-Pitfalls. Array ist explizit
@@ -81,7 +83,7 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
       <div>
         <label className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-3">Typ</label>
         <div className="flex flex-wrap gap-2">
-          {(["group", "channel", "event"] as const).map((t) => (
+          {(["group", "channel"] as const).map((t) => (
             <button
               key={t}
               type="button"
@@ -92,7 +94,7 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
                   : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
               }`}
             >
-              {t === "group" ? "Gruppe" : t === "channel" ? "Channel" : "Event"}
+              {t === "group" ? "Gruppe" : "Channel"}
             </button>
           ))}
         </div>

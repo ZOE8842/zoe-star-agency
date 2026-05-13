@@ -8,7 +8,10 @@ import { revalidatePath } from "next/cache";
 import { createClient as createSsr } from "@/lib/supabase/server";
 import { createClient as createSr } from "@supabase/supabase-js";
 
-type ConvType = "group" | "channel" | "event";
+// V1.7: Events sind ein eigenes System (events-Tabelle). Inbox-Conversations
+// haben nur noch group + channel als Typen fuer neue Eintraege. Bestehende
+// type='event'-Rows in conversations bleiben sichtbar (RLS unveraendert).
+type ConvType = "group" | "channel";
 
 function admin() {
   return createSr(
@@ -70,7 +73,7 @@ export async function createGroupConversation(input: {
       return { ok: false, error: "Titel zu kurz." };
     }
     if (input.title.length > 120) return { ok: false, error: "Titel zu lang." };
-    if (!["group", "channel", "event"].includes(input.type)) {
+    if (!["group", "channel"].includes(input.type)) {
       return { ok: false, error: "Ungueltiger Typ." };
     }
     // Defensive: input.memberIds robust normalisieren (akzeptiert Array,
@@ -244,9 +247,14 @@ export async function markConversationRead(
       .update({ last_read_at: new Date().toISOString() })
       .eq("conversation_id", conversationId)
       .eq("profile_id", user.id);
-    // Inbox-Liste + Bell-Indicator revalidieren — Unread-Badge geht weg
-    revalidatePath("/portal/inbox");
-    revalidatePath(`/portal/inbox/group/${conversationId}`);
+    // Inbox-Liste + Bell-Indicator revalidieren — Unread-Badge geht weg.
+    // revalidatePath kann aus Server-Component-Render werfen → try/catch.
+    try {
+      revalidatePath("/portal/inbox");
+      revalidatePath(`/portal/inbox/group/${conversationId}`);
+    } catch {
+      /* ignore */
+    }
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
