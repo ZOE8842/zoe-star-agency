@@ -47,10 +47,17 @@ export default async function GroupChatPage({ params }: Props) {
   const senderMap = new Map<string, string>();
   profileMap.forEach((p, id) => senderMap.set(id, formatPartnerLabel(p)));
 
-  // Mark-Read (best-effort, async)
+  // Mark-Read: synchron mit revalidatePath → Inbox-Liste + Bell-Indicator
+  // werden sofort aktualisiert, Unread-Badge verschwindet nach Page-Open.
   if (member) {
-    markConversationRead(id).catch(() => {});
+    await markConversationRead(id);
   }
+
+  // Schreib-Recht: in Channels nur Admin/Manager; in Gruppen + Events alle Member
+  const canWrite =
+    conv.type === "channel"
+      ? isAdmin || profile.role === "manager"
+      : !!member || isAdmin || profile.role === "manager";
 
   return (
     <>
@@ -139,7 +146,17 @@ export default async function GroupChatPage({ params }: Props) {
           )}
         </article>
 
-        <GroupReplyForm conversationId={conv.id} />
+        {canWrite ? (
+          <GroupReplyForm conversationId={conv.id} />
+        ) : (
+          <div className="border-t border-cream/[0.06] pt-4 mt-6">
+            <p className="text-cream/45 text-sm">
+              {conv.type === "channel"
+                ? "In diesem Channel schreibt nur ZOE Management."
+                : "Du kannst hier aktuell nicht schreiben."}
+            </p>
+          </div>
+        )}
       </main>
     </>
   );

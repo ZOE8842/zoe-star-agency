@@ -37,6 +37,12 @@ async function requireConversationMember(conversationId: string) {
   const supabase = await createSsr();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Nicht eingeloggt.");
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const profileRole = profile?.role ?? "creator";
   const { data: member } = await supabase
     .from("conversation_members")
     .select("id, role")
@@ -44,16 +50,13 @@ async function requireConversationMember(conversationId: string) {
     .eq("profile_id", user.id)
     .maybeSingle();
   if (!member) {
-    // Admin darf auch ohne Member-Eintrag
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    if (!profile || profile.role !== "admin") throw new Error("Kein Zugriff.");
-    return { user, role: "owner" as const };
+    // Admin/Manager darf auch ohne Member-Eintrag
+    if (profileRole !== "admin" && profileRole !== "manager") {
+      throw new Error("Kein Zugriff.");
+    }
+    return { user, role: "owner" as const, profileRole };
   }
-  return { user, role: member.role };
+  return { user, role: member.role, profileRole };
 }
 
 export async function createGroupConversation(input: {
@@ -171,12 +174,24 @@ export async function sendToConversation(input: {
   body: string;
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   try {
-    const { user } = await requireConversationMember(input.conversationId);
+    const { user, profileRole } = await requireConversationMember(input.conversationId);
     const body = input.body.trim();
     if (body.length < 1) return { ok: false, error: "Nachricht zu kurz." };
     if (body.length > 5000) return { ok: false, error: "Nachricht zu lang." };
 
     const sb = admin();
+
+    // Channel-Write-Permission: nur Admin/Manager duerfen in Channels schreiben.
+    // Gruppen + Events: alle Mitglieder duerfen schreiben.
+    const { data: convMeta } = await sb
+      .from("conversations")
+      .select("type")
+      .eq("id", input.conversationId)
+      .maybeSingle();
+    if (!convMeta) return { ok: false, error: "Conversation nicht gefunden." };
+    if (convMeta.type === "channel" && profileRole !== "admin" && profileRole !== "manager") {
+      return { ok: false, error: "In Channels schreiben nur Admin/Manager." };
+    }
     const subject = body.length > 60 ? `${body.slice(0, 57)}...` : body;
     const nowIso = new Date().toISOString();
 
@@ -229,6 +244,9 @@ export async function markConversationRead(
       .update({ last_read_at: new Date().toISOString() })
       .eq("conversation_id", conversationId)
       .eq("profile_id", user.id);
+    // Inbox-Liste + Bell-Indicator revalidieren — Unread-Badge geht weg
+    revalidatePath("/portal/inbox");
+    revalidatePath(`/portal/inbox/group/${conversationId}`);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
