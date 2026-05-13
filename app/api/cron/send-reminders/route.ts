@@ -122,11 +122,24 @@ export async function GET(request: NextRequest) {
     }
 
     for (const r of recipients) {
-      // Schon gelesen? (aus batched-Set)
       if (readSet.has(`${msg.id}:${r.id}`)) continue;
-
-      // Schon Reminder geschickt? (aus batched-Set)
       if (reminderSet.has(`/portal/inbox/${msg.id}:${r.id}`)) continue;
+
+      // Lock-Insert ZUERST → bei Insert-Failure (z.B. Race mit parallelem
+      // Cron-Run) kein Send. Verhindert Doppel-Send-Risk.
+      const { error: lockErr } = await supabase.from("notifications").insert({
+        user_id: r.id, type: "reminder",
+        title: "Ungelesene Nachricht",
+        body: msg.subject,
+        link: `/portal/inbox/${msg.id}`,
+        channel: ["email"],
+        status: "read",
+        read_at: now.toISOString(),
+      });
+      if (lockErr) {
+        stats.errors.push(`unread_lock/${r.id}: ${lockErr.message}`);
+        continue;
+      }
 
       try {
         await resend.emails.send({
@@ -135,19 +148,10 @@ export async function GET(request: NextRequest) {
           subject: `Ungelesene Nachricht: ${msg.subject}`,
           text: `Du hast eine ungelesene Nachricht im ZOE Portal:\n\n"${msg.subject}"\n\nBitte einloggen: ${process.env.NEXT_PUBLIC_SITE_URL}/portal/inbox\n\nZOE Star Agency`,
         });
-
-        await supabase.from("notifications").insert({
-          user_id: r.id, type: "reminder",
-          title: "Ungelesene Nachricht",
-          body: msg.subject,
-          link: `/portal/inbox/${msg.id}`,
-          channel: ["email"],
-          status: "read",
-          read_at: now.toISOString(),
-        });
         stats.unread++;
       } catch (e: any) {
         stats.errors.push(`unread/${r.id}: ${e.message}`);
+        // Lock-Row bleibt drin → kein Spam-Retry. Akzeptabel.
       }
     }
   }
@@ -193,6 +197,20 @@ export async function GET(request: NextRequest) {
     : { data: [] };
   const ackedSet = new Set((ackReads ?? []).map((r) => `${r.message_id}:${r.reader_id}`));
 
+  // Dedupe: bereits gesendete ack-Reminder (innerhalb 24h Window)
+  const ackReminderLinks = ackMessageIds.map((id) => `/portal/inbox/${id}#ack`);
+  const { data: existingAckReminders } = ackReminderLinks.length > 0
+    ? await supabase
+        .from("notifications")
+        .select("user_id, link")
+        .eq("type", "reminder")
+        .in("link", ackReminderLinks)
+        .gte("created_at", _24h)
+    : { data: [] };
+  const ackReminderSet = new Set(
+    (existingAckReminders ?? []).map((n) => `${n.link}:${n.user_id}`),
+  );
+
   for (const msg of ackMessages || []) {
     let recipients: { id: string; email: string }[] = [];
     if (msg.recipient_id) {
@@ -206,6 +224,23 @@ export async function GET(request: NextRequest) {
 
     for (const r of recipients) {
       if (ackedSet.has(`${msg.id}:${r.id}`)) continue;
+      const ackLink = `/portal/inbox/${msg.id}#ack`;
+      if (ackReminderSet.has(`${ackLink}:${r.id}`)) continue;
+
+      // Lock-Insert ZUERST → kein Doppel-Send bei parallelen Runs.
+      const { error: lockErr } = await supabase.from("notifications").insert({
+        user_id: r.id,
+        type: "reminder",
+        title: "Pflicht-Nachricht offen",
+        body: msg.subject,
+        link: ackLink,
+        channel: ["email"],
+        status: "unread",
+      });
+      if (lockErr) {
+        stats.errors.push(`ack_lock/${r.id}: ${lockErr.message}`);
+        continue;
+      }
 
       try {
         await resend.emails.send({
@@ -235,12 +270,6 @@ export async function GET(request: NextRequest) {
     .lt("created_at", _12h)
     .limit(50);
 
-  // PERF: admins einmal holen (statt 1x pro Ticket)
-  const { data: supportAdmins } = pendingTickets && pendingTickets.length > 0
-    ? await supabase.from("profiles")
-        .select("email, display_name").eq("role", "admin").eq("status", "active")
-    : { data: [] };
-
   // PERF: support_messages-Replies fuer alle Tickets gebatched
   const ticketIds = (pendingTickets ?? []).map((t) => t.id);
   const repliedTickets = new Set<string>();
@@ -259,10 +288,49 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  for (const ticket of pendingTickets || []) {
-    if (repliedTickets.has(ticket.id)) continue; // schon geantwortet
+  // Dedupe: support-Reminder pro Ticket+Admin max 1× pro 24h.
+  // Admin-IDs nochmal expliziter holen (email-Result hatte keine id).
+  const { data: supportAdminFull } = pendingTickets && pendingTickets.length > 0
+    ? await supabase.from("profiles")
+        .select("id, email, display_name").eq("role", "admin").eq("status", "active")
+    : { data: [] };
+  const supportTicketIds = (pendingTickets ?? []).filter((t) => !repliedTickets.has(t.id)).map((t) => t.id);
+  const supportReminderLinks = supportTicketIds.map((id) => `/portal/admin/support#ticket-${id}`);
+  const { data: existingSupportReminders } = supportReminderLinks.length > 0
+    ? await supabase
+        .from("notifications")
+        .select("user_id, link")
+        .eq("type", "reminder")
+        .in("link", supportReminderLinks)
+        .gte("created_at", _24h)
+    : { data: [] };
+  const supportReminderSet = new Set(
+    (existingSupportReminders ?? []).map((n) => `${n.link}:${n.user_id}`),
+  );
 
-    for (const admin of supportAdmins || []) {
+  for (const ticket of pendingTickets || []) {
+    if (repliedTickets.has(ticket.id)) continue;
+
+    for (const admin of supportAdminFull || []) {
+      if (!admin.email || !admin.id) continue;
+      const ticketLink = `/portal/admin/support#ticket-${ticket.id}`;
+      if (supportReminderSet.has(`${ticketLink}:${admin.id}`)) continue;
+
+      // Lock-Insert ZUERST → kein Doppel-Send.
+      const { error: lockErr } = await supabase.from("notifications").insert({
+        user_id: admin.id,
+        type: "reminder",
+        title: "Support-Ticket offen",
+        body: ticket.subject,
+        link: ticketLink,
+        channel: ["email"],
+        status: "unread",
+      });
+      if (lockErr) {
+        stats.errors.push(`support_lock/${admin.id}/${ticket.id}: ${lockErr.message}`);
+        continue;
+      }
+
       try {
         await resend.emails.send({
           from: `ZOE Star Agency <${fromEmail}>`,
@@ -317,21 +385,27 @@ export async function GET(request: NextRequest) {
       for (const admin of admins || []) {
         if (backstageDupSet.has(admin.id)) continue;
 
+        // Lock-Insert ZUERST → kein Doppel-Send bei parallelem Run.
+        const { error: lockErr } = await supabase.from("notifications").insert({
+          user_id: admin.id,
+          type: "reminder",
+          title: "Backstage-Sync 2 Tage offline",
+          body: "Daily-Sync hat 2× in Folge fehlgeschlagen — bitte Admin-Health pruefen.",
+          link: "/portal/admin/analyse/health",
+          channel: ["email"],
+          status: "unread",
+        });
+        if (lockErr) {
+          stats.errors.push(`backstage_alert_lock/${admin.id}: ${lockErr.message}`);
+          continue;
+        }
+
         try {
           await resend.emails.send({
             from: `ZOE Star Agency <${fromEmail}>`,
             to: admin.email,
             subject: "⚠ Backstage-Sync faellt seit 2 Tagen aus",
             text: `Hi ${admin.display_name},\n\nder Backstage-Daily-Sync hat in den letzten 2 Tagen kein einziges Mal sauber durchgelaufen.\n\nMoegliche Ursachen:\n- zoeapp Chrome-Profile ausgeloggt\n- TikTok-Backstage-Layout geaendert\n- Windows-Task-Scheduler haengt\n\nCheck: ${process.env.NEXT_PUBLIC_SITE_URL}/portal/admin/analyse/health\nDetails: data_source_health Tabelle, source='backstage_sync'\n\nZOE Star Agency`,
-          });
-          await supabase.from("notifications").insert({
-            user_id: admin.id,
-            type: "reminder",
-            title: "Backstage-Sync 2 Tage offline",
-            body: "Daily-Sync hat 2× in Folge fehlgeschlagen — bitte Admin-Health pruefen.",
-            link: "/portal/admin/analyse/health",
-            channel: ["email"],
-            status: "unread",
           });
           stats.backstage_alert++;
         } catch (e) {
