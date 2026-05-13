@@ -141,7 +141,7 @@ export async function adminCreateEvent(
 export async function adminUpdateEvent(
   id: string,
   input: EventInput,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; verified_requires_registration?: boolean }> {
   const TAG = "[AURA-RUNTIME-LOG adminUpdateEvent]";
   try {
     await requireAdmin();
@@ -208,7 +208,10 @@ export async function adminUpdateEvent(
     revalidatePath(`/portal/admin/events/${id}`);
     revalidatePath("/portal/events");
     revalidatePath(`/portal/events/${id}`);
-    return { ok: true };
+    return {
+      ok: true,
+      verified_requires_registration: verifyRow?.requires_registration ?? undefined,
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
   }

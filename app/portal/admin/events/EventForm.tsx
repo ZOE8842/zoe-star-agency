@@ -98,6 +98,11 @@ export function EventForm({
     );
   }
 
+  function toggleRequiresRegistration(v: boolean) {
+    console.log("[AURA-CLIENT-LOG EventForm] toggle click → setting requiresRegistration to:", v, "(was:", requiresRegistration, ")");
+    setRequiresRegistration(v);
+  }
+
   async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -154,10 +159,14 @@ export function EventForm({
       allowed_profile_ids: visibilityMode === "selected" ? allowedIds : [],
       requires_registration: requiresRegistration,
     };
+    console.log("[AURA-CLIENT-LOG EventForm] submit isEdit:", isEdit,
+      "payload.requires_registration:", payload.requires_registration,
+      "type:", typeof payload.requires_registration);
 
     const r = isEdit
       ? await adminUpdateEvent(initial!.id, payload)
       : await adminCreateEvent(payload);
+    console.log("[AURA-CLIENT-LOG EventForm] action result:", r);
 
     if (!r.ok) {
       setError(r.error ?? "Fehler beim Speichern.");
@@ -165,7 +174,10 @@ export function EventForm({
       return;
     }
 
-    setSuccess(isEdit ? "Event aktualisiert." : "Event angelegt.");
+    const verifyMsg = isEdit && typeof (r as { verified_requires_registration?: boolean }).verified_requires_registration === "boolean"
+      ? ` · DB requires_registration nach Save = ${(r as { verified_requires_registration: boolean }).verified_requires_registration}`
+      : "";
+    setSuccess((isEdit ? "Event aktualisiert." : "Event angelegt.") + verifyMsg);
     setLoading(false);
     if (!isEdit) {
       setTitle("");
@@ -320,9 +332,8 @@ export function EventForm({
               <button
                 key={String(v)}
                 type="button"
-                onClick={() => setRequiresRegistration(v)}
-                disabled={source === "tiktok"}
-                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                onClick={() => toggleRequiresRegistration(v)}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.25em] border transition-colors ${
                   requiresRegistration === v
                     ? "bg-champagne text-ink border-champagne"
                     : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
@@ -334,10 +345,13 @@ export function EventForm({
           </div>
           <p className="text-cream/45 text-xs leading-relaxed mt-2 max-w-xl">
             {source === "tiktok"
-              ? "TikTok-Events leiten immer extern weiter. Toggle hat keinen Effekt."
+              ? "TikTok-Events: Toggle wirkt auf Portal-Anmeldung, externe Registration via Registration-URL bleibt."
               : requiresRegistration
               ? "Creator sieht 'Im Portal anmelden'-Button. Anmeldungen werden gezaehlt."
               : "Creator sieht 'Keine Anmeldung erforderlich'. Kein Button, nur Info-Anzeige."}
+          </p>
+          <p className="mt-2 px-3 py-2 border border-yellow-400/30 bg-yellow-400/[0.04] text-yellow-300/85 text-[11px] font-mono">
+            DEBUG · requiresRegistration state = {String(requiresRegistration)} · type = {typeof requiresRegistration} · source = {source} · isEdit = {String(isEdit)}
           </p>
         </Field>
 
