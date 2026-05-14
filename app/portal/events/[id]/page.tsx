@@ -25,7 +25,7 @@ export default async function EventDetailPage({ params }: Props) {
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, source, start_at, end_at, status, max_participants, cover_image_url, prize_description, registration_url, rules, winners, created_at, requires_registration, target_categories, target_languages, visibility_mode",
+      "id, title, description, category, source, start_at, end_at, status, max_participants, cover_image_url, prize_description, registration_url, rules, winners, created_at, requires_registration, target_categories, target_languages, visibility_mode, chat_conversation_id",
     )
     .eq("id", id)
     .maybeSingle();
@@ -74,6 +74,22 @@ export default async function EventDetailPage({ params }: Props) {
     .select("id", { count: "exact", head: true })
     .eq("event_id", id)
     .in("status", ["signed", "confirmed"]);
+
+  // Chat-Link nur zeigen wenn Chat existiert UND User Member ist (oder Staff).
+  let chatVisibleHref: string | null = null;
+  if (event.chat_conversation_id) {
+    if (isAdmin || profile.role === "manager") {
+      chatVisibleHref = `/portal/inbox/group/${event.chat_conversation_id}`;
+    } else {
+      const { data: cm } = await supabase
+        .from("conversation_members")
+        .select("id")
+        .eq("conversation_id", event.chat_conversation_id)
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      if (cm) chatVisibleHref = `/portal/inbox/group/${event.chat_conversation_id}`;
+    }
+  }
 
   const signupsFull = !!(event.max_participants && (signupCount ?? 0) >= event.max_participants);
   // Defensive: nur exakt false bedeutet "keine Anmeldung". Null, undefined,
@@ -191,6 +207,21 @@ export default async function EventDetailPage({ params }: Props) {
             <span className="text-cream/55 text-[10px] uppercase tracking-[0.25em]">
               {STATUS_LABEL[event.status]}
             </span>
+          </div>
+        )}
+
+        {chatVisibleHref && (
+          <div className="border border-champagne/30 px-5 py-4 mb-8 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-cream/85 text-sm">
+              Event-Chat verfuegbar — Austausch mit Admin + anderen Teilnehmern.
+            </p>
+            <Link
+              href={chatVisibleHref}
+              className="btn-cta btn-shimmer"
+            >
+              Chat oeffnen
+              <span className="btn-cta-arrow" aria-hidden>→</span>
+            </Link>
           </div>
         )}
 

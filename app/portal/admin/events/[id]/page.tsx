@@ -5,6 +5,7 @@ import { PortalNav } from "@/components/PortalNav";
 import { EventForm, type EventInitial } from "../EventForm";
 import { StatusActions } from "./StatusActions";
 import { DeleteEventButton } from "./DeleteEventButton";
+import { EventChatActions } from "./EventChatActions";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function AdminEventEditPage({ params }: Props) {
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules, visibility_mode, requires_registration, target_categories, target_languages",
+      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules, visibility_mode, requires_registration, target_categories, target_languages, chat_conversation_id",
     )
     .eq("id", id)
     .maybeSingle();
@@ -130,6 +131,18 @@ export default async function AdminEventEditPage({ params }: Props) {
             <span className="text-cream/70"> Beendet</span> · Archiv-Anzeige
           </p>
           <StatusActions eventId={event.id} current={event.status} />
+        </section>
+
+        <section className="border border-champagne/15 p-6 md:p-7 mb-8">
+          <p className="eyebrow mb-2">Event-Chat</p>
+          <p className="text-cream/45 text-xs leading-relaxed mb-4 max-w-xl">
+            Optionaler Group-Chat. Members: Admin + Manager + bestaetigte Anmeldungen.
+            Sync laeuft NICHT automatisch — nach neuen Anmeldungen manuell synchronisieren.
+          </p>
+          <EventChatActions
+            eventId={event.id}
+            chatConversationId={event.chat_conversation_id ?? null}
+          />
         </section>
 
         <EventForm
