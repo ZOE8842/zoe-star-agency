@@ -1,11 +1,23 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
+// Supabase-Host aus Env ableiten (statt hardcoded). Erlaubt Wechsel des
+// Supabase-Projekts ohne Code-Aenderung. Fallback fuer lokale Builds ohne env.
+const supabaseHost = (() => {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!url) return "vvmsftyyijeyshikshsi.supabase.co";
+    return new URL(url).hostname;
+  } catch {
+    return "vvmsftyyijeyshikshsi.supabase.co";
+  }
+})();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "vvmsftyyijeyshikshsi.supabase.co" },
+      { protocol: "https", hostname: supabaseHost },
     ],
   },
 };

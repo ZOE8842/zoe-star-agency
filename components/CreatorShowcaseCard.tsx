@@ -3,6 +3,7 @@
 // Vertikales Frame als Magazin-Cover. Subject = Bild ODER Z-Brand-Mark.
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowExternalIcon, TikTokIcon, InstagramIcon } from "./SocialIcons";
 
 export interface CreatorShowcase {
@@ -55,21 +56,21 @@ export function CreatorShowcaseCard({
         {/* Echtes Bild ODER Subject-Platzhalter */}
         {imageSrc ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={imageSrc}
               alt={displayName}
-              loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out group-hover:opacity-0"
+              fill
+              sizes="(max-width: 768px) 50vw, 33vw"
+              className="object-cover transition-opacity duration-700 ease-out group-hover:opacity-0"
             />
             {imageSrc2 && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
+              <Image
                 src={imageSrc2}
                 alt=""
                 aria-hidden
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out"
+                fill
+                sizes="(max-width: 768px) 50vw, 33vw"
+                className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out"
               />
             )}
           </>

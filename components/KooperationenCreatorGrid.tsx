@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useMemo } from "react";
 import { ArrowExternalIcon } from "./SocialIcons";
 
@@ -112,11 +113,12 @@ export function KooperationenCreatorGrid({
               >
                 <div className="aspect-[4/5] overflow-hidden bg-ink relative">
                   {c.showcaseImage ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <Image
                       src={c.showcaseImage}
                       alt={c.displayName}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-cream/30 font-display italic text-sm">

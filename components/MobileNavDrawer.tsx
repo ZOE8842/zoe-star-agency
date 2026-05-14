@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 interface NavItem {
@@ -139,9 +140,9 @@ export function MobileNavDrawer({
             }}
           >
             {avatarUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={avatarUrl} alt="" loading="lazy"
+              <Image
+                src={avatarUrl} alt=""
+                width={40} height={40}
                 className="w-10 h-10 rounded-full object-cover"
                 style={{ border: "1px solid rgba(212,175,107,0.30)" }}
               />

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -61,12 +62,14 @@ export default async function CreatorDetailPage({ params }: Params) {
               {/* Showcase-Bilder */}
               <div className="md:col-span-7">
                 {c.showcaseImage ? (
-                  <div className="aspect-[3/4] md:aspect-[4/5] overflow-hidden border border-champagne/20 bg-ink">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                  <div className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden border border-champagne/20 bg-ink">
+                    <Image
                       src={c.showcaseImage}
                       alt={name}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 60vw"
+                      className="object-cover"
+                      priority
                     />
                   </div>
                 ) : (
@@ -81,9 +84,15 @@ export default async function CreatorDetailPage({ params }: Params) {
                 {c.showcaseImages[1] && (
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     {c.showcaseImages.slice(1, 3).map((src, i) => (
-                      <div key={i} className="aspect-square overflow-hidden border border-champagne/15">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={src} alt="" aria-hidden className="w-full h-full object-cover" />
+                      <div key={i} className="relative aspect-square overflow-hidden border border-champagne/15">
+                        <Image
+                          src={src}
+                          alt=""
+                          aria-hidden
+                          fill
+                          sizes="(max-width: 768px) 50vw, 30vw"
+                          className="object-cover"
+                        />
                       </div>
                     ))}
                   </div>
