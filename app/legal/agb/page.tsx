@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "AGB",
   description: "Allgemeine Geschäftsbedingungen ZOE Star Agency",
+  alternates: { canonical: "/legal/agb" },
 };
 
 export default function AGBPage() {

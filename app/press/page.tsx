@@ -4,6 +4,7 @@ import { ComingSoonPage } from "@/components/ComingSoonPage";
 export const metadata: Metadata = {
   title: "Press",
   description: "Presseanfragen, Interviews, Pressefotos. Wir freuen uns auf Anfragen.",
+  alternates: { canonical: "/press" },
 };
 
 export default function Page() {

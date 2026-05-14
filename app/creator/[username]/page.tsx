@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openGraph: c.showcaseImage
       ? { images: [{ url: c.showcaseImage }] }
       : undefined,
+    alternates: { canonical: `/creator/${encodeURIComponent(c.tiktokUsername ?? username)}` },
   };
 }
 

@@ -4,6 +4,7 @@ import { ComingSoonPage } from "@/components/ComingSoonPage";
 export const metadata: Metadata = {
   title: "Studio",
   description: "Eigene Formate, eigene Marken, eigene IP. Studio-Entwicklung für die nächste Generation.",
+  alternates: { canonical: "/studio" },
 };
 
 export default function Page() {

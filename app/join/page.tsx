@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Creator werden",
   description:
     "Bewirb dich bei ZOE Star Agency. Wir suchen Creator mit eigener Stimme und Lust auf langfristiges Wachstum.",
+  alternates: { canonical: "/join" },
 };
 
 export default function JoinPage() {

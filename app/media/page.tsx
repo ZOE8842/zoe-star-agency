@@ -4,6 +4,7 @@ import { ComingSoonPage } from "@/components/ComingSoonPage";
 export const metadata: Metadata = {
   title: "Media",
   description: "Brand-Kooperationen, redaktionelle Kampagnen und Content-Produktion. Premium-Production für moderne Marken.",
+  alternates: { canonical: "/media" },
 };
 
 export default function Page() {

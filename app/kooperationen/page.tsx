@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   title: "Kooperationen — TikTok LIVE Reichweite",
   description:
     "ZOE⭐ STAR AGENCY · TikTok Elite Agency Club Deutschland. Echte LIVE-Zahlen, aktive Creator, langfristige Brand-Kooperationen.",
+  alternates: { canonical: "/kooperationen" },
 };
 
 // Echte Backstage-Stats — Stand April 2026, eigene Agency-Daten

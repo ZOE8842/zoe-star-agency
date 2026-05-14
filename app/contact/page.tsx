@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Kontakt",
   description:
     "Nimm Kontakt mit ZOE Star Agency auf — für Creator-Anfragen, Brand-Kooperationen oder allgemeine Fragen.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

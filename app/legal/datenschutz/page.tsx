@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Datenschutz",
   description: "Datenschutzerklärung gemäß DSGVO und TDDDG",
+  alternates: { canonical: "/legal/datenschutz" },
 };
 
 export default function DatenschutzPage() {

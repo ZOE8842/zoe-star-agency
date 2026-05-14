@@ -1,15 +1,16 @@
 import type { MetadataRoute } from "next";
+import { baseUrl, PUBLIC_ROUTES } from "@/lib/seo/routes";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zoe-star.de";
+  const base = baseUrl();
+  const allow = PUBLIC_ROUTES.map((r) => (r.path ? `/${r.path}` : "/"));
+  // Creator-Profile-Routes sind dynamisch — Crawler darf alle.
+  allow.push("/creator");
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/agency", "/kooperationen", "/events", "/press",
-                "/studio", "/journal", "/media", "/contact", "/join",
-                "/legal/agb", "/legal/datenschutz", "/legal/impressum",
-                "/legal/portal-regeln", "/about"],
+        allow,
         disallow: ["/portal", "/api"],
       },
     ],

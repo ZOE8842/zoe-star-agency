@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { baseUrl } from "@/lib/seo/routes";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,7 +20,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://zoe-star.de"),
+  metadataBase: new URL(baseUrl()),
   title: {
     default: "ZOE Star Agency · Premium Talent · Media · Entertainment",
     template: "%s · ZOE Star Agency",

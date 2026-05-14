@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Creator",
   description:
     "ZOE⭐ STAR AGENCY — TikTok LIVE Creator Management. Match-/Battle-Strategien, Ranking-Aufbau, Community-Wachstum, Brand-Deals.",
+  alternates: { canonical: "/agency" },
 };
 
 const SERVICES = [

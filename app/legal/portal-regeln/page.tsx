@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Zusammenarbeit & Standards",
   description: "Hinweise zur Zusammenarbeit im ZOE-Portal — partnerschaftlich, vertraulich, professionell.",
+  alternates: { canonical: "/legal/portal-regeln" },
 };
 
 export default function PortalRegelnPage() {

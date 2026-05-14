@@ -1,29 +1,41 @@
 import type { MetadataRoute } from "next";
+import { baseUrl, PUBLIC_ROUTES } from "@/lib/seo/routes";
+import { fetchCooperationCreators } from "@/lib/showcase/public";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zoe-star.de";
+// Sitemap-Refresh stuendlich. Verhindert Latenzspike bei wachsendem
+// Creator-Roster und entlastet die Sitemap-Crawl-Requests.
+export const revalidate = 3600;
+
+// Dynamische Sitemap. Public-Routes aus zentraler Registry + alle
+// freigegebenen Creator-Profile (cooperation-confirmed = oeffentlich
+// sichtbar unter /creator/[username]). Bei Build/Crawl-Time gerendert.
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const base = baseUrl();
   const now = new Date();
-  const pages = [
-    { url: "", priority: 1.0, changeFrequency: "weekly" as const },
-    { url: "agency", priority: 0.9, changeFrequency: "monthly" as const },
-    { url: "kooperationen", priority: 0.85, changeFrequency: "monthly" as const },
-    { url: "events", priority: 0.8, changeFrequency: "weekly" as const },
-    { url: "press", priority: 0.6, changeFrequency: "monthly" as const },
-    { url: "studio", priority: 0.6, changeFrequency: "monthly" as const },
-    { url: "media", priority: 0.5, changeFrequency: "monthly" as const },
-    { url: "journal", priority: 0.5, changeFrequency: "monthly" as const },
-    { url: "contact", priority: 0.7, changeFrequency: "yearly" as const },
-    { url: "join", priority: 0.8, changeFrequency: "monthly" as const },
-    { url: "about", priority: 0.4, changeFrequency: "yearly" as const },
-    { url: "legal/agb", priority: 0.3, changeFrequency: "yearly" as const },
-    { url: "legal/datenschutz", priority: 0.3, changeFrequency: "yearly" as const },
-    { url: "legal/impressum", priority: 0.3, changeFrequency: "yearly" as const },
-    { url: "legal/portal-regeln", priority: 0.3, changeFrequency: "yearly" as const },
-  ];
-  return pages.map((p) => ({
-    url: `${base}/${p.url}`,
+
+  const staticEntries: MetadataRoute.Sitemap = PUBLIC_ROUTES.map((r) => ({
+    url: r.path ? `${base}/${r.path}` : base,
     lastModified: now,
-    changeFrequency: p.changeFrequency,
-    priority: p.priority,
+    changeFrequency: r.changeFrequency,
+    priority: r.priority,
   }));
+
+  // Creator-Profile-Routes
+  let creatorEntries: MetadataRoute.Sitemap = [];
+  try {
+    const creators = await fetchCooperationCreators();
+    creatorEntries = creators
+      .filter((c) => c.tiktokUsername)
+      .map((c) => ({
+        url: `${base}/creator/${encodeURIComponent(c.tiktokUsername!)}`,
+        lastModified: c.approvedAt ? new Date(c.approvedAt) : now,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }));
+  } catch {
+    // Sitemap soll bei DB-Ausfall nicht ganz brechen — Static-Entries reichen
+  }
+
+  return [...staticEntries, ...creatorEntries];
 }

@@ -1,0 +1,48 @@
+// Zentrale Public-Route-Registry. Single source of truth fuer
+// robots.ts + sitemap.ts + Canonical-Tags. Aenderungen hier propagieren
+// automatisch in alle drei.
+
+import type { MetadataRoute } from "next";
+
+export interface PublicRoute {
+  /** Path-Segment ohne fuehrenden Slash. Leerer String = Root "/". */
+  path: string;
+  /** Sitemap-Priority */
+  priority: number;
+  /** Sitemap-changeFrequency */
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+}
+
+export const PUBLIC_ROUTES: PublicRoute[] = [
+  { path: "",                       priority: 1.0,  changeFrequency: "weekly" },
+  { path: "agency",                 priority: 0.9,  changeFrequency: "monthly" },
+  { path: "kooperationen",          priority: 0.85, changeFrequency: "monthly" },
+  { path: "events",                 priority: 0.8,  changeFrequency: "weekly" },
+  { path: "join",                   priority: 0.8,  changeFrequency: "monthly" },
+  { path: "contact",                priority: 0.7,  changeFrequency: "yearly" },
+  { path: "press",                  priority: 0.6,  changeFrequency: "monthly" },
+  { path: "studio",                 priority: 0.6,  changeFrequency: "monthly" },
+  { path: "media",                  priority: 0.5,  changeFrequency: "monthly" },
+  { path: "journal",                priority: 0.5,  changeFrequency: "monthly" },
+  { path: "about",                  priority: 0.4,  changeFrequency: "yearly" },
+  { path: "legal/agb",              priority: 0.3,  changeFrequency: "yearly" },
+  { path: "legal/datenschutz",      priority: 0.3,  changeFrequency: "yearly" },
+  { path: "legal/impressum",        priority: 0.3,  changeFrequency: "yearly" },
+  { path: "legal/portal-regeln",    priority: 0.3,  changeFrequency: "yearly" },
+];
+
+// Hostname-Normalisierung: NEXT_PUBLIC_SITE_URL ist Single-Source. Wenn
+// kein env gesetzt → Fallback ohne www. Alle Canonical/Sitemap/Robots-
+// Outputs verwenden EINEN normalisierten Host.
+export function baseUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zoe-star.de";
+  // trailing slash entfernen damit `${base}/path` keinen "//path" baut
+  return raw.replace(/\/+$/, "");
+}
+
+export function canonical(path: string = ""): string {
+  const base = baseUrl();
+  if (!path || path === "/") return base;
+  const clean = path.replace(/^\/+/, "");
+  return `${base}/${clean}`;
+}

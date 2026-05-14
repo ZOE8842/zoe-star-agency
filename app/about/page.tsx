@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Über uns",
   description:
     "ZOE⭐ STAR AGENCY — Teil des TikTok Elite Agency Club Deutschland. Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {
