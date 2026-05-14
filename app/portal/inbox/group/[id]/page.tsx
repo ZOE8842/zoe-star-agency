@@ -6,6 +6,7 @@ import { PortalNav } from "@/components/PortalNav";
 import { markConversationRead } from "@/lib/inbox/conversations";
 import { loadProfileLabels, formatPartnerLabel } from "@/lib/inbox/profile-labels";
 import { GroupReplyForm } from "./GroupReplyForm";
+import { GroupMembersDisclosure, type GroupMemberInfo } from "@/components/inbox/GroupMembersDisclosure";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,41 @@ export default async function GroupChatPage({ params }: Props) {
     .order("sent_at", { ascending: true })
     .limit(200);
 
+  // V2 · Group-Members fuer Disclosure-Liste. Service-Role weil profiles-RLS
+  // Cross-Reads blockt. Hart gefiltert ueber conversation_id.
+  const { data: cmRows } = await sr
+    .from("conversation_members")
+    .select("profile_id, role")
+    .eq("conversation_id", id);
+  const memberProfileIds = (cmRows ?? []).map((r) => r.profile_id);
+  const { data: memberProfiles } = memberProfileIds.length
+    ? await sr
+        .from("profiles")
+        .select("id, display_name, tiktok_username, role")
+        .in("id", memberProfileIds)
+    : { data: [] };
+  const profileLookup = new Map<string, { id: string; display_name: string | null; tiktok_username: string | null; role: string }>(
+    (memberProfiles ?? []).map((p) => [p.id, p]),
+  );
+  const groupMembers: GroupMemberInfo[] = (cmRows ?? []).map((m) => {
+    const p = profileLookup.get(m.profile_id);
+    return {
+      id: m.profile_id,
+      display_name: p?.display_name ?? null,
+      tiktok_username: p?.tiktok_username ?? null,
+      role: p?.role ?? "creator",
+      member_role: m.role,
+      is_me: m.profile_id === profile.id,
+    };
+  }).sort((a, b) => {
+    // Owner zuerst, dann Du, dann display_name alphabetisch
+    if (a.member_role === "owner" && b.member_role !== "owner") return -1;
+    if (b.member_role === "owner" && a.member_role !== "owner") return 1;
+    if (a.is_me && !b.is_me) return -1;
+    if (b.is_me && !a.is_me) return 1;
+    return (a.display_name ?? "").localeCompare(b.display_name ?? "");
+  });
+
   // Service-Role-Lookup, weil profiles-RLS Cross-User-Reads blockiert
   const senderIds = (msgs ?? []).map((m) => m.sender_id).filter((id): id is string => !!id);
   const profileMap = await loadProfileLabels(senderIds);
@@ -111,7 +147,7 @@ export default async function GroupChatPage({ params }: Props) {
           )}
         </div>
 
-        <div className="mb-10 pb-6 border-b border-cream/[0.06]">
+        <div className="mb-8 pb-6 border-b border-cream/[0.06]">
           <p className="text-cream/45 text-[10px] uppercase tracking-[0.3em] mb-2">
             {conv.type === "channel" ? "Channel" : conv.type === "event" ? "Event" : "Gruppe"}
           </p>
@@ -119,6 +155,8 @@ export default async function GroupChatPage({ params }: Props) {
             {conv.title}
           </h1>
         </div>
+
+        <GroupMembersDisclosure members={groupMembers} />
 
         <article className="space-y-4 mb-6">
           {(msgs ?? []).map((m) => {
