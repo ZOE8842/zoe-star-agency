@@ -462,6 +462,7 @@ export default async function AdminPage() {
                 <AdminTile href="/portal/admin/inbox/groups" title="Gruppen" hint="Channels · Events · Community" />
                 <AdminTile href="/portal/admin/downloads" title="Downloads" hint="Asset-Library" />
                 <AdminTile href="/portal/admin/diagnostics" title="Diagnostics" hint="DB-State · Runtime-Check" />
+                <AdminTile href="/portal/admin/audit-logs" title="Audit-Logs" hint="Trail aller Admin-Mutations" />
               </>
             )}
             <AdminTile href="/portal/admin/events" title="Events" hint="CRUD + Anmeldungen" />

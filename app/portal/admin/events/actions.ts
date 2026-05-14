@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin, requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { createClient as createSrClient } from "@supabase/supabase-js";
+import { writeAudit } from "@/lib/audit/log";
 
 const CATEGORIES = ["live", "battle", "ranking", "special", "announcement"] as const;
 // event_status-Enum in DB: draft / open / closed / archived
@@ -132,6 +133,14 @@ export async function adminCreateEvent(
 
     revalidatePath("/portal/admin/events");
     revalidatePath("/portal/events");
+    await writeAudit({
+      actorId: profile.id,
+      actorRole: profile.role,
+      action: "event.create",
+      targetTable: "events",
+      targetId: data.id,
+      payload: { title: input.title, source: input.source, status: input.status, visibility },
+    });
     return { ok: true, id: data.id };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
@@ -143,7 +152,7 @@ export async function adminUpdateEvent(
   input: EventInput,
 ): Promise<{ ok: boolean; error?: string; verified_requires_registration?: boolean }> {
   try {
-    await requireManagerOrAdmin();
+    const { profile } = await requireManagerOrAdmin();
     const err = validate(input);
     if (err) return { ok: false, error: err };
 
@@ -201,6 +210,19 @@ export async function adminUpdateEvent(
     revalidatePath(`/portal/admin/events/${id}`);
     revalidatePath("/portal/events");
     revalidatePath(`/portal/events/${id}`);
+    await writeAudit({
+      actorId: profile.id,
+      actorRole: profile.role,
+      action: "event.update",
+      targetTable: "events",
+      targetId: id,
+      payload: {
+        title: input.title,
+        status: input.status,
+        visibility,
+        requires_registration: updatePayload.requires_registration,
+      },
+    });
     return {
       ok: true,
       verified_requires_registration: verifyRow?.requires_registration ?? undefined,
@@ -215,7 +237,7 @@ export async function adminSetEventStatus(
   status: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await requireManagerOrAdmin();
+    const { profile } = await requireManagerOrAdmin();
     if (!(STATUSES as readonly string[]).includes(status)) return { ok: false, error: "Status ungueltig." };
     const sb = admin();
     const { error } = await sb.from("events").update({ status }).eq("id", id);
@@ -224,6 +246,14 @@ export async function adminSetEventStatus(
     revalidatePath(`/portal/admin/events/${id}`);
     revalidatePath("/portal/events");
     revalidatePath(`/portal/events/${id}`);
+    await writeAudit({
+      actorId: profile.id,
+      actorRole: profile.role,
+      action: "event.status",
+      targetTable: "events",
+      targetId: id,
+      payload: { status },
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
@@ -243,13 +273,21 @@ export async function adminDeleteEvent(
   id: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await requireAdmin();
+    const { profile } = await requireAdmin();
     if (!id || typeof id !== "string") return { ok: false, error: "Ungueltige Event-ID." };
     const sb = admin();
     const { error } = await sb.from("events").delete().eq("id", id);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/portal/admin/events");
     revalidatePath("/portal/events");
+    await writeAudit({
+      actorId: profile.id,
+      actorRole: profile.role,
+      action: "event.delete",
+      targetTable: "events",
+      targetId: id,
+      payload: {},
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };

@@ -7,6 +7,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient as createSsr } from "@/lib/supabase/server";
 import { createClient as createSr } from "@supabase/supabase-js";
+import { writeAudit } from "@/lib/audit/log";
 
 // V1.7: Events sind ein eigenes System (events-Tabelle). Inbox-Conversations
 // haben nur noch group + channel als Typen fuer neue Eintraege. Bestehende
@@ -33,7 +34,7 @@ async function requireAdminOrManager() {
   if (!profile || (profile.role !== "admin" && profile.role !== "manager")) {
     throw new Error("Nur Admin/Manager.");
   }
-  return { user, role: profile.role };
+  return { user, role: profile.role as string };
 }
 
 async function requireConversationMember(conversationId: string) {
@@ -69,7 +70,7 @@ export async function createGroupConversation(input: {
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const TAG = "[createGroupConversation]";
   try {
-    const { user } = await requireAdminOrManager();
+    const { user, role } = await requireAdminOrManager();
 
     if (!input.title || input.title.trim().length < 2) {
       return { ok: false, error: "Titel zu kurz." };
@@ -131,6 +132,14 @@ export async function createGroupConversation(input: {
 
     revalidatePath("/portal/admin/inbox/groups");
     revalidatePath("/portal/inbox");
+    await writeAudit({
+      actorId: user.id,
+      actorRole: role,
+      action: "conversation.create",
+      targetTable: "conversations",
+      targetId: conv.id,
+      payload: { type: input.type, title: input.title.trim(), memberCount: memberIds.length },
+    });
     return { ok: true, id: conv.id };
   } catch (e) {
     console.error(TAG, "exception:", e);
@@ -143,7 +152,7 @@ export async function addConversationMember(
   profileId: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await requireAdminOrManager();
+    const { user, role } = await requireAdminOrManager();
     const sb = admin();
     const { error } = await sb
       .from("conversation_members")
@@ -153,6 +162,14 @@ export async function addConversationMember(
     }
     revalidatePath(`/portal/admin/inbox/groups/${conversationId}`);
     revalidatePath("/portal/inbox");
+    await writeAudit({
+      actorId: user.id,
+      actorRole: role,
+      action: "conversation.member.add",
+      targetTable: "conversation_members",
+      targetId: `${conversationId}:${profileId}`,
+      payload: { conversation_id: conversationId, profile_id: profileId },
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
@@ -164,7 +181,7 @@ export async function removeConversationMember(
   profileId: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await requireAdminOrManager();
+    const { user, role } = await requireAdminOrManager();
     const sb = admin();
     const { error } = await sb
       .from("conversation_members")
@@ -174,6 +191,14 @@ export async function removeConversationMember(
     if (error) return { ok: false, error: error.message };
     revalidatePath(`/portal/admin/inbox/groups/${conversationId}`);
     revalidatePath("/portal/inbox");
+    await writeAudit({
+      actorId: user.id,
+      actorRole: role,
+      action: "conversation.member.remove",
+      targetTable: "conversation_members",
+      targetId: `${conversationId}:${profileId}`,
+      payload: { conversation_id: conversationId, profile_id: profileId },
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Fehler" };
