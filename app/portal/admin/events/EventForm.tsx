@@ -73,6 +73,7 @@ export function EventForm({
   const [coverUrl, setCoverUrl] = useState(initial?.cover_image_url ?? "");
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
+  const [coverFileName, setCoverFileName] = useState<string | null>(null);
   const [status, setStatus] = useState<string>(initial?.status ?? "open");
   const [visibilityMode, setVisibilityMode] = useState<"all" | "selected">(
     initial?.visibility_mode === "selected" ? "selected" : "all",
@@ -105,6 +106,7 @@ export function EventForm({
   async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCoverFileName(file.name);
     setCoverUploading(true);
     setCoverError(null);
     try {
@@ -259,21 +261,26 @@ export function EventForm({
               />
             )}
             <div className="flex flex-wrap items-center gap-3">
-              <label className="inline-flex items-center px-4 py-2 border border-champagne/40 text-champagne text-[10px] uppercase tracking-[0.25em] cursor-pointer hover:bg-champagne/10 transition-colors">
+              <label className="inline-flex items-center px-4 py-2 border border-champagne/40 text-champagne text-[10px] uppercase tracking-[0.25em] cursor-pointer hover:bg-champagne/10 transition-colors focus-within:ring-2 focus-within:ring-champagne focus-within:ring-offset-2 focus-within:ring-offset-ink">
                 {coverUploading ? "Laedt hoch…" : coverUrl ? "Bild ersetzen" : "Bild hochladen"}
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleCoverUpload}
                   disabled={coverUploading}
-                  className="hidden"
+                  className="sr-only"
                 />
               </label>
+              {coverFileName && (
+                <span className="text-cream/65 text-xs truncate max-w-[200px]" title={coverFileName}>
+                  {coverFileName}
+                </span>
+              )}
               {coverUrl && (
                 <button
                   type="button"
-                  onClick={() => setCoverUrl("")}
-                  className="text-cream/45 hover:text-red-300 text-[10px] uppercase tracking-[0.25em]"
+                  onClick={() => { setCoverUrl(""); setCoverFileName(null); }}
+                  className="text-cream/45 hover:text-red-300 text-[10px] uppercase tracking-[0.25em] focus:outline-none focus:ring-2 focus:ring-red-400/60 px-2 py-1"
                 >
                   Entfernen
                 </button>
@@ -421,9 +428,19 @@ export function EventForm({
       {error && <div className="border border-red-500/40 bg-red-500/10 px-4 py-2 text-red-300 text-sm">{error}</div>}
       {success && <div className="border border-green-500/40 bg-green-500/10 px-4 py-2 text-green-300 text-sm">{success}</div>}
 
-      <button type="submit" disabled={loading} className="btn-primary text-[10px] py-3 px-7 disabled:opacity-50">
-        {loading ? (isEdit ? "Speichere…" : "Lege an…") : (isEdit ? "Aenderungen speichern" : "Event anlegen")}
-      </button>
+      {/* Sticky Save-Bar — bleibt auf Mobile + Desktop am unteren Rand sichtbar.
+          Bei langer Form muss der Admin nicht scrollen um zu speichern. */}
+      <div
+        className="sticky bottom-0 left-0 right-0 -mx-8 -mb-8 mt-6 px-8 pt-4 bg-ink/95 backdrop-blur-sm border-t border-champagne/20 flex items-center justify-between gap-3 flex-wrap"
+        style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+      >
+        <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em]">
+          {isEdit ? "Aenderungen werden direkt gespeichert" : "Neues Event anlegen"}
+        </p>
+        <button type="submit" disabled={loading} className="btn-primary text-[10px] py-3 px-7 disabled:opacity-50">
+          {loading ? (isEdit ? "Speichere…" : "Lege an…") : (isEdit ? "Aenderungen speichern" : "Event anlegen")}
+        </button>
+      </div>
     </form>
   );
 }
