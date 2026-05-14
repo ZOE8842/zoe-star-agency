@@ -7,6 +7,7 @@ import { markConversationRead } from "@/lib/inbox/conversations";
 import { loadProfileLabels, formatPartnerLabel } from "@/lib/inbox/profile-labels";
 import { GroupReplyForm } from "./GroupReplyForm";
 import { GroupMembersDisclosure, type GroupMemberInfo } from "@/components/inbox/GroupMembersDisclosure";
+import { GroupAckButton } from "@/components/inbox/GroupAckButton";
 
 export const dynamic = "force-dynamic";
 
@@ -55,10 +56,28 @@ export default async function GroupChatPage({ params }: Props) {
   // eigene direct + broadcasts liefert; Gruppen-Messages wuerden gefiltert.
   const { data: msgs } = await sr
     .from("messages")
-    .select("id, sender_id, body, sent_at")
+    .select("id, sender_id, body, sent_at, requires_ack")
     .eq("conversation_id", id)
     .order("sent_at", { ascending: true })
     .limit(200);
+
+  // V2 · Acknowledge-Status: fuer alle requires_ack-Messages in der Liste
+  // pruefen ob aktueller User schon acked hat + Gesamt-Ack-Count fuer Staff.
+  const ackMsgIds = (msgs ?? []).filter((m) => m.requires_ack).map((m) => m.id);
+  const { data: ackReads } = ackMsgIds.length
+    ? await sr
+        .from("message_reads")
+        .select("message_id, reader_id, acknowledged_at")
+        .in("message_id", ackMsgIds)
+        .not("acknowledged_at", "is", null)
+    : { data: [] };
+  const myAckSet = new Set(
+    (ackReads ?? []).filter((r) => r.reader_id === profile.id).map((r) => r.message_id),
+  );
+  const ackCountMap = new Map<string, number>();
+  for (const r of ackReads ?? []) {
+    ackCountMap.set(r.message_id, (ackCountMap.get(r.message_id) ?? 0) + 1);
+  }
 
   // V2 · Group-Members fuer Disclosure-Liste. Service-Role weil profiles-RLS
   // Cross-Reads blockt. Hart gefiltert ueber conversation_id.
@@ -162,6 +181,9 @@ export default async function GroupChatPage({ params }: Props) {
           {(msgs ?? []).map((m) => {
             const isFromMe = m.sender_id === profile.id;
             const senderName = m.sender_id ? senderMap.get(m.sender_id) : null;
+            const needsAck = !!m.requires_ack && !isFromMe;
+            const myAcked = myAckSet.has(m.id);
+            const ackCount = ackCountMap.get(m.id) ?? 0;
             return (
               <div
                 key={m.id}
@@ -190,7 +212,22 @@ export default async function GroupChatPage({ params }: Props) {
                     {new Date(m.sent_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
                     {" · "}
                     {new Date(m.sent_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })}
+                    {m.requires_ack && <span className="text-champagne ml-2">· Pflicht</span>}
                   </p>
+                  {needsAck && (
+                    <GroupAckButton
+                      messageId={m.id}
+                      conversationId={conv.id}
+                      acknowledged={myAcked}
+                      ackCount={ackCount}
+                      showCount={isStaff}
+                    />
+                  )}
+                  {isFromMe && m.requires_ack && isStaff && (
+                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em] mt-2 px-1">
+                      {ackCount > 0 ? `${ackCount} Bestaetigungen` : "Noch keine Bestaetigung"}
+                    </p>
+                  )}
                 </div>
               </div>
             );
@@ -208,7 +245,10 @@ export default async function GroupChatPage({ params }: Props) {
         </article>
 
         {canWrite ? (
-          <GroupReplyForm conversationId={conv.id} />
+          <GroupReplyForm
+            conversationId={conv.id}
+            showAckToggle={conv.type === "channel" && isStaff}
+          />
         ) : (
           <div className="border-t border-cream/[0.06] pt-4 mt-6">
             <p className="text-cream/45 text-sm">

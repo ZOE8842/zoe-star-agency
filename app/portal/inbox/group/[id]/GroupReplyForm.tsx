@@ -4,9 +4,16 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { sendToConversation } from "@/lib/inbox/conversations";
 
-export function GroupReplyForm({ conversationId }: { conversationId: string }) {
+interface Props {
+  conversationId: string;
+  /** Wenn true: Toggle "Bestaetigung erforderlich" wird angezeigt (Channel + Staff). */
+  showAckToggle?: boolean;
+}
+
+export function GroupReplyForm({ conversationId, showAckToggle = false }: Props) {
   const router = useRouter();
   const [body, setBody] = useState("");
+  const [requiresAck, setRequiresAck] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -15,12 +22,17 @@ export function GroupReplyForm({ conversationId }: { conversationId: string }) {
     setError(null);
     if (body.trim().length < 1) return;
     startTransition(async () => {
-      const r = await sendToConversation({ conversationId, body: body.trim() });
+      const r = await sendToConversation({
+        conversationId,
+        body: body.trim(),
+        requires_ack: showAckToggle && requiresAck,
+      });
       if (!r.ok) {
         setError(r.error ?? "Fehler.");
         return;
       }
       setBody("");
+      setRequiresAck(false);
       router.refresh();
     });
   }
@@ -35,6 +47,17 @@ export function GroupReplyForm({ conversationId }: { conversationId: string }) {
         placeholder="Antworten…"
         className="w-full bg-transparent border-b border-cream/[0.08] focus:border-champagne/60 px-0 py-2 text-cream text-base focus:outline-none placeholder-cream/30 resize-none"
       />
+      {showAckToggle && (
+        <label className="mt-3 flex items-center gap-2 text-cream/55 text-[10px] uppercase tracking-[0.25em] cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={requiresAck}
+            onChange={(e) => setRequiresAck(e.target.checked)}
+            className="accent-champagne"
+          />
+          Bestaetigung erforderlich
+        </label>
+      )}
       <div className="flex items-center justify-between gap-3 mt-3">
         <span className="text-cream/25 text-[10px] uppercase tracking-[0.25em]">
           {body.length} / 5000

@@ -183,6 +183,8 @@ export async function removeConversationMember(
 export async function sendToConversation(input: {
   conversationId: string;
   body: string;
+  /** Channel-Posts mit requires_ack: Empfaenger sehen einen "Bestaetigen"-Button. */
+  requires_ack?: boolean;
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   try {
     const { user, profileRole } = await requireConversationMember(input.conversationId);
@@ -205,6 +207,11 @@ export async function sendToConversation(input: {
     }
     const subject = body.length > 60 ? `${body.slice(0, 57)}...` : body;
     const nowIso = new Date().toISOString();
+    // requires_ack nur fuer Channel-Posts und nur fuer Staff erlauben.
+    const requiresAck =
+      !!input.requires_ack
+      && convMeta.type === "channel"
+      && (profileRole === "admin" || profileRole === "manager");
 
     const { data: msg, error: mErr } = await sb
       .from("messages")
@@ -215,6 +222,7 @@ export async function sendToConversation(input: {
         body,
         category: "general",
         sent_at: nowIso,
+        requires_ack: requiresAck,
       })
       .select("id")
       .single();

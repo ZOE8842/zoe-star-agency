@@ -108,3 +108,49 @@ export async function acknowledgeMessage(messageId: string) {
   revalidatePath("/portal/inbox");
   return { success: true };
 }
+
+// V2 · Group-Channel Acknowledge. Gleiche message_reads-Logik wie
+// direct-Acknowledge, aber zusaetzlich Revalidate fuer den Gruppen-Pfad.
+export async function acknowledgeGroupMessage(
+  messageId: string,
+  conversationId: string,
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Nicht eingeloggt." };
+
+  const admin = createSrvClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+
+  const now = new Date().toISOString();
+  const { data: existing } = await admin
+    .from("message_reads")
+    .select("id")
+    .eq("message_id", messageId)
+    .eq("reader_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    await admin
+      .from("message_reads")
+      .update({ acknowledged_at: now, read_at: now })
+      .eq("id", existing.id);
+  } else {
+    await admin.from("message_reads").insert({
+      message_id: messageId,
+      reader_id: user.id,
+      read_at: now,
+      acknowledged_at: now,
+    });
+  }
+
+  try {
+    revalidatePath(`/portal/inbox/group/${conversationId}`);
+  } catch {
+    /* render context — naechster Page-Visit ist force-dynamic */
+  }
+  return { success: true };
+}
