@@ -1,7 +1,15 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { ReactNode } from "react";
+import { createElement, useEffect, useRef, useState, type ReactNode } from "react";
+
+// MotionReveal — pure CSS + IntersectionObserver (kein framer-motion).
+// Audit P3-11: Public-Pages laden jetzt KEIN framer-motion Bundle mehr.
+// Verhalten identisch zur framer-motion-Variante:
+//   - initial opacity-0 + translate-y-4
+//   - bei Viewport-Enter (20% sichtbar) → opacity-1 + translate-y-0
+//   - prefers-reduced-motion respektiert (sofort sichtbar)
+//   - delay konfigurierbar
+//   - viewport: once (eintritt einmalig)
 
 interface Props {
   children: ReactNode;
@@ -10,21 +18,54 @@ interface Props {
   as?: "div" | "section" | "article" | "h1" | "h2" | "p";
 }
 
-export function MotionReveal({ children, delay = 0, className, as = "div" }: Props) {
-  const reduce = useReducedMotion();
-  const Component = motion[as] as any;
+export function MotionReveal({ children, delay = 0, className = "", as = "div" }: Props) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [reduced, setReduced] = useState(false);
 
-  return (
-    <Component
-      initial={reduce ? false : { opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-    >
-      {children}
-    </Component>
-  );
+  useEffect(() => {
+    if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+      setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (reduced) {
+      setVisible(true);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setVisible(true);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { threshold: 0.2 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [reduced]);
+
+  const style: React.CSSProperties = reduced
+    ? {}
+    : {
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(16px)",
+        transition: `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
+        willChange: visible ? "auto" : "opacity, transform",
+      };
+
+  return createElement(as, { ref, className, style }, children);
 }
 
 interface StaggerProps {
