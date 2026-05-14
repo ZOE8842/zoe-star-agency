@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { TikTokIcon, InstagramIcon, ArrowExternalIcon } from "@/components/SocialIcons";
 import { SectionNumber } from "@/components/SectionNumber";
 import { fetchCreatorByUsername } from "@/lib/showcase/public";
+import { JsonLd, breadcrumbSchema, creatorPersonSchema } from "@/components/JsonLd";
 
 interface Params {
   params: Promise<{ username: string }>;
@@ -40,6 +41,23 @@ export default async function CreatorDetailPage({ params }: Params) {
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbSchema([
+            { name: "ZOE Star Agency", path: "/" },
+            { name: "Creator", path: "/kooperationen" },
+            { name, path: c.tiktokUsername ? `/creator/${encodeURIComponent(c.tiktokUsername)}` : "/" },
+          ]),
+          creatorPersonSchema({
+            name,
+            username: c.tiktokUsername,
+            bio: c.bio,
+            imageUrl: c.showcaseImage,
+            tiktokUrl: c.tiktokUrl,
+            instagramUrl: c.instagramUrl,
+          }),
+        ]}
+      />
       <Header />
       <main className="bg-ink relative overflow-hidden">
         {/* BACK */}
