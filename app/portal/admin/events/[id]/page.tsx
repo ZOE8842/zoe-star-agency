@@ -20,7 +20,7 @@ export default async function AdminEventEditPage({ params }: Props) {
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules, visibility_mode, requires_registration",
+      "id, title, description, category, source, start_at, end_at, max_participants, status, cover_image_url, prize_description, registration_url, rules, visibility_mode, requires_registration, target_categories, target_languages",
     )
     .eq("id", id)
     .maybeSingle();
@@ -38,11 +38,18 @@ export default async function AdminEventEditPage({ params }: Props) {
       .eq("event_id", id),
     supabase
       .from("profiles")
-      .select("id, display_name, tiktok_username")
+      .select("id, display_name, tiktok_username, category, language")
       .eq("role", "creator")
       .eq("status", "active")
       .order("display_name", { ascending: true }),
   ]);
+
+  const availableCategories = Array.from(
+    new Set((creators ?? []).map((c) => c.category).filter((s): s is string => !!s)),
+  ).sort();
+  const availableLanguages = Array.from(
+    new Set((creators ?? []).map((c) => c.language).filter((s): s is string => !!s)),
+  ).sort();
 
   const allowedIds = (allowedRows ?? []).map((r) => r.profile_id);
   const creatorOptions = (creators ?? []).map((c) => ({
@@ -68,6 +75,8 @@ export default async function AdminEventEditPage({ params }: Props) {
     visibility_mode: (event.visibility_mode as "all" | "selected" | null) ?? "all",
     allowed_profile_ids: allowedIds,
     requires_registration: event.requires_registration ?? true,
+    target_categories: event.target_categories ?? [],
+    target_languages: event.target_languages ?? [],
   };
 
   return (
@@ -123,7 +132,12 @@ export default async function AdminEventEditPage({ params }: Props) {
           <StatusActions eventId={event.id} current={event.status} />
         </section>
 
-        <EventForm initial={initial} creators={creatorOptions} />
+        <EventForm
+          initial={initial}
+          creators={creatorOptions}
+          availableCategories={availableCategories}
+          availableLanguages={availableLanguages}
+        />
 
         {isAdmin && (
           <section id="gefahrenzone" className="border-2 border-red-500/40 bg-red-500/[0.03] p-6 md:p-7 mt-12 scroll-mt-24">

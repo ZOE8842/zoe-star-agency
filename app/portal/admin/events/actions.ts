@@ -28,6 +28,8 @@ type EventInput = {
   visibility_mode?: "all" | "selected";
   allowed_profile_ids?: string[];
   requires_registration?: boolean | string;
+  target_categories?: string[];
+  target_languages?: string[];
 };
 
 // Defensive Boolean-Normalisierung. RSC-Server-Action-Boundary kann
@@ -36,6 +38,13 @@ type EventInput = {
 function normalizeRequiresRegistration(v: boolean | string | undefined): boolean {
   if (v === false || v === "false" || v === "off" || v === "no" || v === "0") return false;
   return true; // default true (Anmeldung erforderlich)
+}
+
+// Trim string-Array, leere Strings raus, undefined/null → null (keine Filter).
+function normalizeStringArray(v: string[] | undefined | null): string[] | null {
+  if (!Array.isArray(v)) return null;
+  const cleaned = v.map((s) => (typeof s === "string" ? s.trim() : "")).filter((s) => s.length > 0);
+  return cleaned.length === 0 ? null : cleaned;
 }
 
 function admin() {
@@ -111,6 +120,8 @@ export async function adminCreateEvent(
         status: input.status,
         visibility_mode: visibility,
         requires_registration: normalizeRequiresRegistration(input.requires_registration),
+        target_categories: normalizeStringArray(input.target_categories),
+        target_languages: normalizeStringArray(input.target_languages),
         created_by: profile.id,
       })
       .select("id")
@@ -177,6 +188,8 @@ export async function adminUpdateEvent(
       status: input.status,
       visibility_mode: visibility,
       requires_registration: normalizeRequiresRegistration(input.requires_registration),
+      target_categories: normalizeStringArray(input.target_categories),
+      target_languages: normalizeStringArray(input.target_languages),
     };
     const { error } = await sb
       .from("events")

@@ -25,6 +25,8 @@ export interface EventInitial {
   visibility_mode?: "all" | "selected" | null;
   allowed_profile_ids?: string[];
   requires_registration?: boolean;
+  target_categories?: string[] | null;
+  target_languages?: string[] | null;
 }
 
 export interface CreatorOption {
@@ -51,9 +53,13 @@ function localToIso(local: string): string {
 export function EventForm({
   initial,
   creators = [],
+  availableCategories = [],
+  availableLanguages = [],
 }: {
   initial?: EventInitial;
   creators?: CreatorOption[];
+  availableCategories?: string[];
+  availableLanguages?: string[];
 }) {
   const router = useRouter();
   const isEdit = !!initial;
@@ -83,6 +89,12 @@ export function EventForm({
   const [requiresRegistration, setRequiresRegistration] = useState<boolean>(
     initial?.requires_registration !== false,
   );
+  const [targetCategories, setTargetCategories] = useState<string[]>(initial?.target_categories ?? []);
+  const [targetLanguages, setTargetLanguages] = useState<string[]>(initial?.target_languages ?? []);
+
+  function toggleInArray(arr: string[], v: string): string[] {
+    return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+  }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -159,6 +171,8 @@ export function EventForm({
       visibility_mode: visibilityMode,
       allowed_profile_ids: visibilityMode === "selected" ? allowedIds : [],
       requires_registration: requiresRegistration,
+      target_categories: targetCategories,
+      target_languages: targetLanguages,
     };
     const r = isEdit
       ? await adminUpdateEvent(initial!.id, payload)
@@ -412,6 +426,65 @@ export function EventForm({
                   <li className="text-cream/35 text-sm px-3 py-2">Keine Treffer.</li>
                 )}
               </ul>
+            </div>
+          )}
+        </Field>
+
+        <Field label="Zielgruppen-Filter (optional)" full>
+          <p className="text-cream/45 text-xs leading-relaxed mb-3 max-w-xl">
+            Optional: Event nur fuer Creator deren Kategorie ODER Sprache matcht.
+            Beide gesetzt → AND-Logik. Leer → kein Filter. Staff sieht immer alles.
+          </p>
+          {availableCategories.length > 0 && (
+            <div className="mb-4">
+              <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">
+                Kategorien · {targetCategories.length} ausgewaehlt
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {availableCategories.map((cat) => {
+                  const on = targetCategories.includes(cat);
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setTargetCategories(toggleInArray(targetCategories, cat))}
+                      className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.22em] border transition-colors ${
+                        on
+                          ? "bg-champagne text-ink border-champagne"
+                          : "border-champagne/30 text-cream/65 hover:border-champagne/60 hover:text-cream"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {availableLanguages.length > 0 && (
+            <div>
+              <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">
+                Sprachen · {targetLanguages.length} ausgewaehlt
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {availableLanguages.map((lang) => {
+                  const on = targetLanguages.includes(lang);
+                  return (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => setTargetLanguages(toggleInArray(targetLanguages, lang))}
+                      className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.22em] border transition-colors ${
+                        on
+                          ? "bg-champagne text-ink border-champagne"
+                          : "border-champagne/30 text-cream/65 hover:border-champagne/60 hover:text-cream"
+                      }`}
+                    >
+                      {lang}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </Field>

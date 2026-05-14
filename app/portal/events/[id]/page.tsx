@@ -25,11 +25,33 @@ export default async function EventDetailPage({ params }: Props) {
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, source, start_at, end_at, status, max_participants, cover_image_url, prize_description, registration_url, rules, winners, created_at, requires_registration",
+      "id, title, description, category, source, start_at, end_at, status, max_participants, cover_image_url, prize_description, registration_url, rules, winners, created_at, requires_registration, target_categories, target_languages, visibility_mode",
     )
     .eq("id", id)
     .maybeSingle();
   if (!event) notFound();
+
+  // V2-5 · Zielgruppen-Filter auch auf Detail-Page. Wenn Creator nicht
+  // matcht und auch nicht "selected"-allowed → notFound (versteckt URL).
+  if (!isAdmin) {
+    const myCategory = (profile as { category?: string | null }).category ?? null;
+    const myLanguage = (profile as { language?: string | null }).language ?? null;
+    if (Array.isArray(event.target_categories) && event.target_categories.length > 0) {
+      if (!myCategory || !event.target_categories.includes(myCategory)) notFound();
+    }
+    if (Array.isArray(event.target_languages) && event.target_languages.length > 0) {
+      if (!myLanguage || !event.target_languages.includes(myLanguage)) notFound();
+    }
+    if (event.visibility_mode === "selected") {
+      const { data: allowed } = await supabase
+        .from("event_allowed_profiles")
+        .select("event_id")
+        .eq("event_id", id)
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      if (!allowed) notFound();
+    }
+  }
 
   // Drafts nur fuer Admins sichtbar
   if (event.status === "draft" && !isAdmin) notFound();

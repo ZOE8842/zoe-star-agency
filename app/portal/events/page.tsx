@@ -24,6 +24,8 @@ interface EventRow {
   winners: Array<{ display_name?: string; rank?: number; note?: string }> | null;
   visibility_mode: string | null;
   requires_registration: boolean | null;
+  target_categories: string[] | null;
+  target_languages: string[] | null;
 }
 
 export default async function EventsPage({ searchParams }: SearchProps) {
@@ -36,7 +38,7 @@ export default async function EventsPage({ searchParams }: SearchProps) {
   let query = supabase
     .from("events")
     .select(
-      "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners, visibility_mode, requires_registration",
+      "id, title, description, category, start_at, end_at, status, cover_image_url, source, prize_description, registration_url, rules, winners, visibility_mode, requires_registration, target_categories, target_languages",
     )
     .in("status", ["open", "closed", "archived"])
     .order("start_at", { ascending: tab === "past" ? false : true })
@@ -71,10 +73,22 @@ export default async function EventsPage({ searchParams }: SearchProps) {
       : { data: [] };
     allowedEventIds = new Set((allowedFor ?? []).map((r) => r.event_id));
   }
+  // V2-5 · Zielgruppen-Filter (Category + Language). Staff sieht immer alles.
+  // Wenn target_categories/target_languages gesetzt sind, muss profile.category
+  // bzw. profile.language matchen (AND-Logik wenn beide gesetzt).
+  const myCategory = (profile as { category?: string | null }).category ?? null;
+  const myLanguage = (profile as { language?: string | null }).language ?? null;
+
   const rows = allRows.filter((e) => {
     if (isStaff) return true;
-    if (e.visibility_mode !== "selected") return true; // 'all' oder NULL
-    return allowedEventIds.has(e.id);
+    if (e.visibility_mode === "selected" && !allowedEventIds.has(e.id)) return false;
+    if (Array.isArray(e.target_categories) && e.target_categories.length > 0) {
+      if (!myCategory || !e.target_categories.includes(myCategory)) return false;
+    }
+    if (Array.isArray(e.target_languages) && e.target_languages.length > 0) {
+      if (!myLanguage || !e.target_languages.includes(myLanguage)) return false;
+    }
+    return true;
   });
 
   const { data: signups } = await supabase

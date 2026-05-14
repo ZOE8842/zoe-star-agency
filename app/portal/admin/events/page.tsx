@@ -16,7 +16,7 @@ export default async function AdminEventsPage() {
 
   const { data: creators } = await supabase
     .from("profiles")
-    .select("id, display_name, tiktok_username")
+    .select("id, display_name, tiktok_username, category, language")
     .eq("role", "creator")
     .eq("status", "active")
     .order("display_name", { ascending: true });
@@ -26,6 +26,13 @@ export default async function AdminEventsPage() {
     label: c.display_name,
     hint: c.tiktok_username ? `@${c.tiktok_username}` : undefined,
   }));
+
+  const availableCategories = Array.from(
+    new Set((creators ?? []).map((c) => c.category).filter((s): s is string => !!s)),
+  ).sort();
+  const availableLanguages = Array.from(
+    new Set((creators ?? []).map((c) => c.language).filter((s): s is string => !!s)),
+  ).sort();
 
   return (
     <>
@@ -40,7 +47,11 @@ export default async function AdminEventsPage() {
           Event <span className="text-champagne">Management.</span>
         </h1>
 
-        <EventForm creators={creatorOptions} />
+        <EventForm
+          creators={creatorOptions}
+          availableCategories={availableCategories}
+          availableLanguages={availableLanguages}
+        />
 
         <div className="mt-16 mb-6 flex items-baseline justify-between">
           <p className="eyebrow">Alle Events</p>
