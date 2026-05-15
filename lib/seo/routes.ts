@@ -32,8 +32,9 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
 ];
 
 // Hostname-Normalisierung: NEXT_PUBLIC_SITE_URL ist Single-Source. Wenn
-// kein env gesetzt → Fallback ohne www. Alle Canonical/Sitemap/Robots-
-// Outputs verwenden EINEN normalisierten Host.
+// kein env gesetzt → Fallback https://www.zoe-star.de (canonical primary).
+// Alle Canonical/Sitemap/Robots-Outputs verwenden EINEN normalisierten Host.
+// Apex zoe-star.de redirected via vercel.json permanent (308) auf www.
 export function baseUrl(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zoe-star.de";
   // trailing slash entfernen damit `${base}/path` keinen "//path" baut

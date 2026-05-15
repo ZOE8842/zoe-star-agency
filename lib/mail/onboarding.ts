@@ -36,7 +36,7 @@ function formatExpiry(iso: string | null | undefined): string | null {
 }
 
 export function buildInviteMail(input: InviteMailInput): InviteMailOutput {
-  const site = input.siteUrl || "https://zoe-star.de";
+  const site = input.siteUrl || "https://www.zoe-star.de";
   const greeting = input.recipientName?.trim()
     ? `An ${escapeHtml(input.recipientName.trim())},`
     : "An eine ausgewählte Stimme,";

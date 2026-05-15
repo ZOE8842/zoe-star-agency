@@ -1,6 +1,6 @@
 # ZOE Star Agency · Webapp · Phase 1 MVP
 
-Premium-Brand-Website + Creator-Portal unter `zoe-star.de`.
+Premium-Brand-Website + Creator-Portal unter `www.zoe-star.de` (canonical · Apex `zoe-star.de` redirected 308).
 
 **Stack:** Next.js 14 (App Router) · Tailwind · Framer Motion · Supabase (Auth/DB/Storage) · Resend · Vercel · Dogado-DNS.
 
@@ -65,18 +65,20 @@ vercel env add NEXT_PUBLIC_SITE_URL production
 vercel --prod
 ```
 
-### 5. Domain bei Dogado verbinden
+### 5. Domain bei Dogado verbinden (Stand: www = canonical)
 1. Dogado-Customer-Center → DNS-Verwaltung → `zoe-star.de`
-2. CNAME-Eintrag setzen:
+2. CNAME-Eintrag (canonical Primary):
    ```
    www.zoe-star.de → cname.vercel-dns.com
    ```
-3. Apex-Domain (`zoe-star.de`) als A-Record:
+3. Apex (`zoe-star.de`) als A-Record:
    ```
    zoe-star.de → 76.76.21.21
    ```
 4. SSL-Cert wird automatisch von Vercel ausgestellt (~5 min)
-5. In Vercel: Domain → "Add Domain" → `zoe-star.de`
+5. In Vercel: Domain → "Add Domain" für beide. Apex zoe-star.de wird via
+   vercel.json `redirects` permanent (308) auf https://www.zoe-star.de
+   umgeleitet (single canonical für SEO).
 
 ---
 

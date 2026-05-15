@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 5) Mail bauen + versenden
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zoe-star.de";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zoe-star.de";
   const { subject, html, text } = buildInviteMail({
     inviteCode: invite.code,
     intendedRole: role,
