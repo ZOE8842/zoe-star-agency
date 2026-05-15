@@ -99,21 +99,18 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
             <Cell value={formatDate(data.last_live_date)} label="Letzter LIVE-Tag" />
           </div>
           <p className="text-cream/40 text-xs mt-3">
-            Stand: {formatSync(data.synced_at)} Uhr · taeglich aktualisiert um 09:00 Uhr
+            Stand: {formatSync(data.synced_at)} Uhr
           </p>
         </>
       ) : (
         <div className="border border-champagne/15 p-7 md:p-9">
           <p className="font-display italic text-cream text-2xl md:text-3xl leading-snug mb-3">
-            Deine Monatsdaten <span className="text-champagne">werden vorbereitet.</span>
+            Deine Monatsdaten <span className="text-champagne">werden aktuell vorbereitet.</span>
           </p>
-          <p className="text-cream/55 text-sm md:text-base leading-relaxed mb-5 max-w-[44ch]">
-            Sobald deine LIVE-Daten synchronisiert sind, siehst du hier deine
-            Uebersicht — gueltige LIVE-Tage, LIVE-Stunden, durchschnittliche
-            Zuschauer und letzter LIVE-Tag.
-          </p>
-          <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-            Sync laeuft taeglich um 09:00 Uhr Berlin
+          <p className="text-cream/55 text-sm md:text-base leading-relaxed max-w-[44ch]">
+            Sobald der Daten-Sync aktiv ist, siehst du hier deine laufenden
+            LIVE-Zahlen fuer den aktuellen Monat — gueltige LIVE-Tage,
+            LIVE-Stunden, durchschnittliche Zuschauer und letzter LIVE-Tag.
           </p>
         </div>
       )}
