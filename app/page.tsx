@@ -25,6 +25,11 @@ import {
 // Public-Showcase-Queries leben in lib/showcase/public.ts (zentral genutzt von
 // Homepage, /creator und /kooperationen).
 
+// ISR: Homepage einmal pro Stunde re-rendern. Verhindert Cold-Start-TTFB-Spike
+// auf jeder Visit (vorher 2.5s+ kalt, ~200ms warm). Random-Pick aus
+// fetchHomepageCreators() bleibt — pro Cache-Generation einmal gewuerfelt.
+export const revalidate = 3600;
+
 // Fallback wenn DB leer: NUR Agency selbst, keine erfundenen Creator-Profile.
 // Echte Creator erscheinen erst wenn Member-Bereich live ist und Admin
 // echte Showcase-Bilder approved hat.
