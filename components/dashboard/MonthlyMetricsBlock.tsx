@@ -47,9 +47,27 @@ function formatSync(ts: string): string {
   return new Date(ts).toLocaleString("de-DE", {
     day: "2-digit",
     month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatDayDe(d: Date): string {
+  return d.toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+// Zeitraum-Label: "Zeitraum: 01.MM.YYYY – DD.MM.YYYY"
+// upperBound = synced_at (Date des letzten Server-Stands), sonst null → "heute".
+function rangeLabel(monthIso: string, upperBound: string | null): string {
+  const [y, m] = monthIso.split("-").map((s) => parseInt(s, 10));
+  const start = new Date(y, m - 1, 1);
+  const end = upperBound ? new Date(upperBound) : null;
+  return `Zeitraum: ${formatDayDe(start)} – ${end ? formatDayDe(end) : "heute"}`;
 }
 
 const STATUS_LABEL: Record<NonNullable<Metric["activity_status"]>, string> = {
@@ -99,7 +117,7 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
             <Cell value={formatDate(data.last_live_date)} label="Letzter LIVE-Tag" />
           </div>
           <p className="text-cream/40 text-xs mt-3">
-            Stand: {formatSync(data.synced_at)} Uhr
+            {rangeLabel(data.month, data.synced_at)} · Stand: {formatSync(data.synced_at)} Uhr
           </p>
         </>
       ) : (
@@ -107,10 +125,13 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
           <p className="font-display italic text-cream text-2xl md:text-3xl leading-snug mb-3">
             Deine Monatsdaten <span className="text-champagne">werden aktuell vorbereitet.</span>
           </p>
-          <p className="text-cream/55 text-sm md:text-base leading-relaxed max-w-[44ch]">
+          <p className="text-cream/55 text-sm md:text-base leading-relaxed mb-4 max-w-[44ch]">
             Sobald der Daten-Sync aktiv ist, siehst du hier deine laufenden
             LIVE-Zahlen fuer den aktuellen Monat — gueltige LIVE-Tage,
             LIVE-Stunden, durchschnittliche Zuschauer und letzter LIVE-Tag.
+          </p>
+          <p className="text-cream/40 text-xs">
+            {rangeLabel(month, null)}
           </p>
         </div>
       )}
