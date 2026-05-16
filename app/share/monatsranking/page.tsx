@@ -214,19 +214,9 @@ export default async function MonatsrankingSharePage({ searchParams }: PageProps
           </div>
         </div>
 
-        {/* ============ FOOTER (minimal · nur Wortmark) ============ */}
-        <div style={{
-          position: "absolute", bottom: 46, left: 0, right: 0, textAlign: "center",
-        }}>
-          <div className="gold-line" />
-          <div style={{ height: 18 }} />
-          <div style={{
-            fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontSize: 22, color: "#e8c990", letterSpacing: "0.18em",
-          }}>
-            Z.O.E. Star Agency
-          </div>
-        </div>
+        {/* FOOTER LOCKED-OUT (User-Decision V11.3):
+            Kein Z.O.E.-Wortmark, kein Stern, kein Branding-Block unten.
+            Brand-Identitaet kommt allein aus dem Header. */}
       </div>
     </>
   );
@@ -243,11 +233,11 @@ interface CardProps {
 function Card({ emoji, title, entries, showValues, wide }: CardProps) {
   return (
     <div style={{
-      border: "1px solid rgba(232,201,144,0.28)",
-      background: "linear-gradient(165deg, rgba(232,201,144,0.06) 0%, rgba(20,12,4,0.55) 100%)",
-      boxShadow: "inset 0 1px 0 rgba(232,201,144,0.12), 0 6px 24px rgba(0,0,0,0.45)",
-      padding: wide ? "22px 28px" : "22px 24px",
-      minHeight: wide ? 150 : 210,
+      border: "1px solid rgba(232,201,144,0.30)",
+      background: "linear-gradient(165deg, rgba(232,201,144,0.07) 0%, rgba(20,12,4,0.50) 100%)",
+      boxShadow: "inset 0 1px 0 rgba(232,201,144,0.10)",
+      padding: wide ? "26px 32px" : "26px 28px",
+      minHeight: wide ? 175 : 245,
     }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
         <span style={{ fontSize: 26 }}>{emoji}</span>
@@ -259,35 +249,43 @@ function Card({ emoji, title, entries, showValues, wide }: CardProps) {
         </span>
       </div>
       <div style={{
-        height: 1, background: "linear-gradient(90deg, #e8c990 0%, rgba(232,201,144,0.4) 40%, transparent 100%)",
-        marginTop: 10, marginBottom: 14, opacity: 0.7,
+        height: 1, background: "linear-gradient(90deg, #e8c990 0%, rgba(232,201,144,0.3) 30%, transparent 100%)",
+        marginTop: 10, marginBottom: 12, opacity: 0.55,
       }} />
       {entries.length === 0 ? (
         <div style={{ fontSize: 17, color: "#8a7a5a", fontStyle: "italic" }}>noch keine Daten</div>
       ) : (
         <ol style={{ margin: 0, padding: 0, listStyle: "none" }}>
-          {entries.map((e) => (
-            <li key={e.rank} style={{
-              display: "flex", alignItems: "baseline", justifyContent: "space-between",
-              padding: "8px 0", borderBottom: "1px solid rgba(232,201,144,0.10)",
-            }}>
-              <span style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-                <span style={{
-                  fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-                  fontWeight: 600, fontSize: 25, color: "#e8c990", width: 22,
-                }}>{e.rank}.</span>
-                <span style={{ fontSize: 21, color: "#f5edd6", fontWeight: 400 }}>{e.name}</span>
-              </span>
-              {showValues && e.value && (
-                <span style={{
-                  fontSize: 19, color: "#e8c990", fontWeight: 500,
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  {e.value}
+          {entries.map((e) => {
+            const isFirst = e.rank === 1;
+            return (
+              <li key={e.rank} style={{
+                display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                padding: "12px 0", borderBottom: "1px solid rgba(232,201,144,0.10)",
+              }}>
+                <span style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+                  <span style={{
+                    fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
+                    fontWeight: 600, fontSize: 28, color: "#e8c990", width: 24,
+                  }}>{e.rank}.</span>
+                  <span style={{
+                    fontSize: isFirst ? 26 : 25,
+                    color: isFirst ? "#fff3d0" : "#f5edd6",
+                    fontWeight: isFirst ? 500 : 400,
+                    letterSpacing: "0.005em",
+                  }}>{e.name}</span>
                 </span>
-              )}
-            </li>
-          ))}
+                {showValues && e.value && (
+                  <span style={{
+                    fontSize: 21, color: isFirst ? "#f0d29a" : "#c9ac7a", fontWeight: 500,
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {e.value}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ol>
       )}
     </div>
