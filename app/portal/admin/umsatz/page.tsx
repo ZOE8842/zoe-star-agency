@@ -11,7 +11,19 @@ import { PortalNav } from "@/components/PortalNav";
 
 export const dynamic = "force-dynamic";
 
-type SubTab = "current" | "forecast" | "missing";
+type SubTab = "current" | "forecast" | "missing" | "creator";
+
+interface CreatorAggRow {
+  tiktok_username: string;
+  display_name: string | null;
+  total_sum_usd: number;
+  activity_sum_usd: number;
+  tier_sum_usd: number;
+  incremental_sum_usd: number;
+  forecast_current_usd: number | null;
+  months_count: number;
+  last_sync: string | null;
+}
 
 interface Row {
   profile_id: string | null;
@@ -87,17 +99,23 @@ interface PageProps {
 export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { profile } = await requireAdmin();
   const sp = await searchParams;
-  const tab: SubTab = sp.tab === "forecast" ? "forecast" : sp.tab === "missing" ? "missing" : "current";
+  const tab: SubTab =
+    sp.tab === "forecast" ? "forecast" :
+    sp.tab === "missing"  ? "missing"  :
+    sp.tab === "creator"  ? "creator"  : "current";
 
   const db = sr();
   const month = currentMonthIso();
 
-  const { data: metrics } = await db
+  // Fuer Creator-Tab brauchen wir ALLE Perioden, fuer andere nur den aktuellen Monat
+  const baseQuery = db
     .from("creator_revenue_metrics")
     .select(
-      "profile_id, tiktok_username, tiktok_handle_normalized, period_month, activity_revenue_usd, tier_revenue_usd, incremental_revenue_usd, total_revenue_usd, last_period_total_usd, forecast_revenue_usd, forecast_diamonds, forecast_bonus_usd, missing_revenue_usd, missing_diamonds, missing_next_tier_label, missing_status",
-    )
-    .eq("period_month", month);
+      "profile_id, tiktok_username, tiktok_handle_normalized, period_month, activity_revenue_usd, tier_revenue_usd, incremental_revenue_usd, total_revenue_usd, last_period_total_usd, forecast_revenue_usd, forecast_diamonds, forecast_bonus_usd, missing_revenue_usd, missing_diamonds, missing_next_tier_label, missing_status, synced_at",
+    );
+  const { data: metrics } = tab === "creator"
+    ? await baseQuery
+    : await baseQuery.eq("period_month", month);
 
   const handles = (metrics ?? []).map((m) => m.tiktok_handle_normalized);
   const { data: profiles } = handles.length > 0
@@ -130,8 +148,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
     rows.sort((a, b) => (b.total_revenue_usd ?? 0) - (a.total_revenue_usd ?? 0));
   } else if (tab === "forecast") {
     rows.sort((a, b) => (b.forecast_revenue_usd ?? 0) - (a.forecast_revenue_usd ?? 0));
-  } else {
-    // missing: reached zuerst, dann near, dann critical, dann none
+  } else if (tab === "missing") {
     const rank = (s: string | null): number =>
       s === "reached" ? 0 : s === "near" ? 1 : s === "critical" ? 2 : 3;
     rows.sort((a, b) => {
@@ -139,6 +156,76 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
       if (r !== 0) return r;
       return (b.missing_revenue_usd ?? 0) - (a.missing_revenue_usd ?? 0);
     });
+  }
+  // tab === "creator" wird unten aggregiert (eigene Render-Logik)
+
+  // ============= CREATOR-AGGREGATION =============
+  // Gruppiert pro handle ueber ALLE Perioden. Sum-Felder + months_count + last_sync.
+  // forecast_current_usd = forecast aus Row mit period_month == aktueller Monat.
+  let creatorAgg: CreatorAggRow[] = [];
+  if (tab === "creator") {
+    const groups = new Map<string, {
+      tiktok_username: string;
+      display_name: string | null;
+      activity_sum: number; tier_sum: number; incr_sum: number; total_sum: number;
+      months: Set<string>;
+      forecast_current: number | null;
+      last_sync: string | null;
+    }>();
+    for (const r of rows) {
+      const key = r.tiktok_username.toLowerCase();
+      let g = groups.get(key);
+      if (!g) {
+        g = {
+          tiktok_username: r.tiktok_username,
+          display_name: r.display_name,
+          activity_sum: 0, tier_sum: 0, incr_sum: 0, total_sum: 0,
+          months: new Set(),
+          forecast_current: null,
+          last_sync: null,
+        };
+        groups.set(key, g);
+      }
+      const total = r.total_revenue_usd ??
+        ((r.activity_revenue_usd ?? 0) + (r.tier_revenue_usd ?? 0) + (r.incremental_revenue_usd ?? 0));
+      g.activity_sum += r.activity_revenue_usd ?? 0;
+      g.tier_sum     += r.tier_revenue_usd ?? 0;
+      g.incr_sum     += r.incremental_revenue_usd ?? 0;
+      g.total_sum    += total;
+      g.months.add(r.period_month);
+      if (r.period_month === month) {
+        g.forecast_current = r.forecast_revenue_usd;
+      }
+      // last_sync: rohe synced_at-Iso aus Row. Wir nutzen das spaeter beim Render.
+      // (rows[] enthaelt synced_at nicht direkt — wir koennen es nicht
+      //  aus dem Row-Type holen ohne Type-Erweiterung; pragmatisch leer
+      //  lassen und unten ueber metrics-array nachschauen)
+    }
+    // last_sync per handle: max synced_at aus metrics
+    if (metrics) {
+      const maxByHandle = new Map<string, string>();
+      for (const m of metrics) {
+        const key = (m.tiktok_username ?? "").toLowerCase();
+        const cur = maxByHandle.get(key);
+        const s = (m as { synced_at?: string }).synced_at ?? "";
+        if (s && (!cur || s > cur)) maxByHandle.set(key, s);
+      }
+      for (const [key, g] of groups) {
+        g.last_sync = maxByHandle.get(key) ?? null;
+      }
+    }
+    creatorAgg = [...groups.values()].map((g) => ({
+      tiktok_username: g.tiktok_username,
+      display_name: g.display_name,
+      total_sum_usd: g.total_sum,
+      activity_sum_usd: g.activity_sum,
+      tier_sum_usd: g.tier_sum,
+      incremental_sum_usd: g.incr_sum,
+      forecast_current_usd: g.forecast_current,
+      months_count: g.months.size,
+      last_sync: g.last_sync,
+    }));
+    creatorAgg.sort((a, b) => b.total_sum_usd - a.total_sum_usd);
   }
 
   const monthLabel = new Date(month).toLocaleDateString("de-DE", { month: "long", year: "numeric" });
@@ -174,10 +261,13 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
         </div>
 
         {/* SUB-TABS */}
-        <div className="grid grid-cols-3 gap-2.5 md:flex md:flex-wrap md:gap-2 mb-6 md:mb-5 border-b border-champagne/15 pb-3">
-          {(["current","forecast","missing"] as const).map((t) => {
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:flex md:flex-wrap md:gap-2 mb-6 md:mb-5 border-b border-champagne/15 pb-3">
+          {(["current","forecast","missing","creator"] as const).map((t) => {
             const active = t === tab;
-            const label = t === "current" ? "Current" : t === "forecast" ? "Forecast" : "Missing";
+            const label = t === "current" ? "Current"
+                        : t === "forecast" ? "Forecast"
+                        : t === "missing" ? "Missing"
+                        : "Creator";
             return (
               <a key={t} href={`?tab=${t}`}
                  className={[
@@ -226,10 +316,77 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
               </p>
             </>
           )}
+          {tab === "creator" && (
+            <>
+              <p className="text-cream/85 text-sm mb-3">
+                Wer hat seit Backstage-Start am meisten eingebracht?
+              </p>
+              <p className="text-cream/55 text-xs leading-relaxed">
+                Aggregiert ueber alle vorhandenen Monate. Sortierung nach Gesamtumsatz DESC.
+                Klick auf Creator-Zeile oeffnet die Monats-Historie.
+              </p>
+            </>
+          )}
         </div>
 
-        {/* TABELLE */}
-        {rows.length === 0 ? (
+        {/* ============= CREATOR-TAB (aggregiert) ============= */}
+        {tab === "creator" && (
+          creatorAgg.length === 0 ? (
+            <div className="border border-champagne/15 p-7 text-center">
+              <p className="text-cream/55">
+                Noch keine Revenue-Daten vorhanden.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto border border-champagne/15">
+              <table className="w-full text-sm">
+                <thead className="bg-champagne/5">
+                  <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-cream/55">
+                    <th className="px-3 py-3">#</th>
+                    <th className="px-3 py-3">Creator</th>
+                    <th className="px-3 py-3 text-right">Gesamt Umsatz</th>
+                    <th className="px-3 py-3 text-right">Activity</th>
+                    <th className="px-3 py-3 text-right">Tier</th>
+                    <th className="px-3 py-3 text-right">Incremental</th>
+                    <th className="px-3 py-3 text-right">Forecast aktuell</th>
+                    <th className="px-3 py-3 text-right">Monate</th>
+                    <th className="px-3 py-3 text-right">Letzter Sync</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {creatorAgg.map((c, i) => (
+                    <tr key={c.tiktok_username} className="border-t border-champagne/10 hover:bg-champagne/[0.05]">
+                      <td className="px-3 py-3 text-cream/40 font-display italic text-base">{i + 1}</td>
+                      <td className="px-3 py-3">
+                        <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
+                           className="block group">
+                          <div className="text-cream font-medium group-hover:text-champagne transition-colors">
+                            {c.display_name || c.tiktok_username}
+                          </div>
+                          <div className="text-cream/45 text-xs">@{c.tiktok_username}</div>
+                        </a>
+                      </td>
+                      <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(c.total_sum_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.activity_sum_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.tier_sum_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.incremental_sum_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.forecast_current_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{c.months_count}</td>
+                      <td className="px-3 py-3 text-right text-cream/60 text-xs">
+                        {c.last_sync
+                          ? new Date(c.last_sync).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+
+        {/* ============= TABELLE fuer Current/Forecast/Missing ============= */}
+        {tab !== "creator" && (rows.length === 0 ? (
           <div className="border border-champagne/15 p-7 text-center">
             <p className="text-cream/55 mb-3">
               Noch keine Backstage-Anreize-Daten fuer {monthLabel}.
@@ -341,7 +498,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
               </tbody>
             </table>
           </div>
-        )}
+        ))}
 
         <p className="text-cream/35 text-xs mt-6 leading-relaxed max-w-3xl">
           Quelle: TikTok Backstage Anreize-Pages (Desktop-Version, da Mobile
