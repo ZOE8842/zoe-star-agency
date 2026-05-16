@@ -60,8 +60,9 @@ type TabKey =
   | "live-tage"
   | "zuschauer"
   | "neue-follower"
-  | "geschenkquote"
-  | "wiedergabezeit";
+  | "schenkende"
+  | "wiedergabezeit"
+  | "portalstatus";
 
 interface TabDef {
   key: TabKey;
@@ -70,6 +71,8 @@ interface TabDef {
   beschreibung: string;
   legende: Array<{ term: string; def: string }>;
   sortKey: (r: Row) => number;
+  // Optional Custom-Sort fuer Portalstatus-Tab (Gruppierung statt einfache Zahl)
+  customSort?: (a: Row, b: Row) => number;
   columns: Array<{
     key: string;
     label: string;
@@ -147,7 +150,6 @@ const TABS: TabDef[] = [
     sortKey: (r) => r.diamonds_month ?? 0,
     columns: [
       { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username, align: "left" },
-      { key: "portal",  label: "Portal", align: "center", render: () => "" },     // badge via custom-cell
       { key: "diamanten", label: "💎 Diamanten", align: "right", render: (r) => fmtInt(r.diamonds_month) },
       { key: "tage", label: "LIVE-Tage", align: "right", render: (r) => String(r.valid_live_days) },
       { key: "zeit", label: "LIVE-Zeit", align: "right", render: (r) => fmtHours(r.live_minutes_total, r.live_hours_display) },
@@ -169,7 +171,6 @@ const TABS: TabDef[] = [
     sortKey: (r) => r.live_minutes_total,
     columns: [
       { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username },
-      { key: "portal", label: "Portal", align: "center", render: () => "" },
       { key: "zeit", label: "⏱ LIVE-Zeit", align: "right", render: (r) => fmtHours(r.live_minutes_total, r.live_hours_display) },
       { key: "tage", label: "LIVE-Tage", align: "right", render: (r) => String(r.valid_live_days) },
       { key: "streams", label: "Streams", align: "right", render: (r) => fmtInt(r.streams_count) },
@@ -190,7 +191,6 @@ const TABS: TabDef[] = [
     sortKey: (r) => r.valid_live_days,
     columns: [
       { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username },
-      { key: "portal", label: "Portal", align: "center", render: () => "" },
       { key: "tage", label: "🔥 LIVE-Tage", align: "right", render: (r) => String(r.valid_live_days) },
       { key: "zeit", label: "LIVE-Zeit", align: "right", render: (r) => fmtHours(r.live_minutes_total, r.live_hours_display) },
       { key: "activity", label: "Aktivitaet", align: "center", render: () => "" },
@@ -213,7 +213,6 @@ const TABS: TabDef[] = [
     sortKey: (r) => r.approx_total_viewers,
     columns: [
       { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username },
-      { key: "portal", label: "Portal", align: "center", render: () => "" },
       { key: "viewers_total", label: "👀 Zuschauer (gesch.)", align: "right", render: (r) => fmtInt(r.approx_total_viewers) },
       { key: "live_views", label: "Aufrufe", align: "right", render: (r) => fmtInt(r.live_views) },
       { key: "impr", label: "Reichweite", align: "right", render: (r) => fmtInt(r.impressions) },
@@ -236,7 +235,6 @@ const TABS: TabDef[] = [
     sortKey: (r) => r.followers_gained ?? 0,
     columns: [
       { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username },
-      { key: "portal", label: "Portal", align: "center", render: () => "" },
       { key: "fol", label: "📈 Neue Follower", align: "right", render: (r) => fmtInt(r.followers_gained) },
       { key: "zuschauer_tag", label: "Ø Zuschauer/Tag", align: "right", render: (r) => fmtInt(r.average_viewers) },
       { key: "impr", label: "Reichweite", align: "right", render: (r) => fmtInt(r.impressions) },
@@ -244,23 +242,29 @@ const TABS: TabDef[] = [
     ],
   },
 
-  // ---------- 6. GESCHENKQUOTE ----------
+  // ---------- 6. SCHENKENDE (vorher Geschenkquote — V8: faireres Ranking) ----------
+  // User-Korrektur 2026-05-16:
+  //   Geschenkquote ist als Ranking unfair, weil ein Creator mit wenig
+  //   LIVE-Zeit / wenigen Zuschauern leicht eine hohe Quote bekommt.
+  //   Schenkende = Anzahl unique Spender → echte Community-Breite.
   {
-    key: "geschenkquote",
-    emoji: "🎁",
-    label: "Geschenkquote",
-    beschreibung: "Sortiert nach Anteil der Zuschauer, die Geschenke schicken.",
+    key: "schenkende",
+    emoji: "👤",
+    label: "Schenkende",
+    beschreibung: "Sortiert nach der Anzahl der Personen, die im aktuellen Monat Geschenke gesendet haben.",
     legende: [
-      { term: "Geschenkquote", def: "Anteil der Zuschauer, die Gifts gesendet haben (%)" },
-      { term: "Gifts", def: "Gesamtzahl gesendeter Gifts im Monat" },
-      { term: "Schenkende", def: "Anzahl unterschiedlicher Personen, die geschenkt haben" },
+      { term: "Schenkende", def: "Personen, die Geschenke gesendet haben (unique gifters)" },
+      { term: "Geschenke", def: "Gesamte Anzahl der erhaltenen Geschenke" },
       { term: "Ø Zuschauer/Tag", def: "Tagesmittel der Zuschauer-Zahl" },
+      { term: "Diamanten", def: "Gesamte verdiente Diamanten im Monat" },
     ],
-    sortKey: (r) => r.gift_rate ?? 0,
+    sortKey: (r) => r.gifters_count ?? 0,
     columns: [
       { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username },
-      { key: "portal", label: "Portal", align: "center", render: () => "" },
-      { key: "rate", label: "🎁 Geschenkquote", align: "right", render: (r) => fmtFloat(r.gift_rate, " %") },
+      { key: "gifters", label: "👤 Schenkende", align: "right", render: (r) => fmtInt(r.gifters_count) },
+      { key: "gifts", label: "Geschenke", align: "right", render: (r) => fmtInt(r.gifts_count) },
+      { key: "zuschauer_tag", label: "Ø Zuschauer/Tag", align: "right", render: (r) => fmtInt(r.average_viewers) },
+      { key: "diamanten", label: "💎 Diamanten", align: "right", render: (r) => fmtInt(r.diamonds_month) },
       { key: "gifts", label: "Gifts", align: "right", render: (r) => fmtInt(r.gifts_count) },
       { key: "gifters", label: "Schenkende", align: "right", render: (r) => fmtInt(r.gifters_count) },
       { key: "zuschauer_tag", label: "Ø Zuschauer/Tag", align: "right", render: (r) => fmtInt(r.average_viewers) },
@@ -281,10 +285,50 @@ const TABS: TabDef[] = [
     sortKey: (r) => r.watchtime_avg_seconds ?? 0,
     columns: [
       { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username },
-      { key: "portal", label: "Portal", align: "center", render: () => "" },
       { key: "wt", label: "⏳ Wiedergabezeit/Z.", align: "right", render: (r) => fmtSeconds(r.watchtime_avg_seconds) },
       { key: "zuschauer_tag", label: "Ø Zuschauer/Tag", align: "right", render: (r) => fmtInt(r.average_viewers) },
       { key: "zeit", label: "LIVE-Zeit", align: "right", render: (r) => fmtHours(r.live_minutes_total, r.live_hours_display) },
+      { key: "last", label: "Letzter LIVE", align: "right", render: (r) => fmtDate(r.last_live_date) },
+    ],
+  },
+
+  // ---------- 8. PORTALSTATUS (V8 · eigener Kontroll-Tab) ----------
+  // Gruppiert nach Portal-Zugehoerigkeit, kein Leistungs-Ranking sondern
+  // Onboarding-/Pflege-Sicht: wer ist im Portal, wer fehlt, wer onboarded.
+  // Reihenfolge: 1) nur Backstage  2) pending  3) inaktiv  4) aktiv
+  //   damit Handlungsbedarfs-Cases zuerst sichtbar sind.
+  {
+    key: "portalstatus",
+    emoji: "🧾",
+    label: "Portalstatus",
+    beschreibung: "Zeigt, welche Backstage-Creator bereits im Portal sind und welche noch fehlen. Reihenfolge: Handlungsbedarf zuerst.",
+    legende: [
+      { term: "Status", def: "Nur Backstage / Portal pending / Portal inaktiv / Portal aktiv" },
+      { term: "Onboarding", def: "onboarded (Setup fertig) · pending (Setup offen) · — (kein Profil)" },
+      { term: "Handle", def: "Normalisierter TikTok-Handle (lowercase, ohne @)" },
+      { term: "Diamanten", def: "Mai-Gesamtdiamanten zur Einschaetzung der Onboarding-Prioritaet" },
+    ],
+    sortKey: () => 0, // wird vom customSort ueberschrieben
+    customSort: (a, b) => {
+      // Status-Rank: niedriger = weiter oben
+      const rank = (r: Row): number => {
+        if (r.profile_id === null) return 0;          // Nur Backstage zuerst
+        if (r.portal_status === "pending") return 1;  // Pending
+        if (r.portal_status === "inactive") return 2; // Inaktiv
+        return 3;                                     // Aktiv
+      };
+      const ra = rank(a);
+      const rb = rank(b);
+      if (ra !== rb) return ra - rb;
+      // Innerhalb gleicher Gruppe: Diamanten DESC (Prioritaet)
+      return (b.diamonds_month ?? 0) - (a.diamonds_month ?? 0);
+    },
+    columns: [
+      { key: "creator", label: "Creator", render: (r) => r.display_name || r.tiktok_username },
+      { key: "handle", label: "Handle", render: (r) => `@${r.tiktok_username}` },
+      { key: "status_badge", label: "Status", align: "center", render: () => "" },
+      { key: "onboarding", label: "Onboarding", align: "center", render: () => "" },
+      { key: "diamanten", label: "💎 Diamanten", align: "right", render: (r) => fmtInt(r.diamonds_month) },
       { key: "last", label: "Letzter LIVE", align: "right", render: (r) => fmtDate(r.last_live_date) },
     ],
   },
@@ -364,8 +408,12 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
     };
   });
 
-  // Sortierung: nach Tab-Sort-Key DESC, Class B (no profile) sortieren mit
-  rows.sort((a, b) => tab.sortKey(b) - tab.sortKey(a));
+  // Sortierung: customSort (z.B. Portalstatus-Gruppierung) oder Tab-Sort-Key DESC
+  if (tab.customSort) {
+    rows.sort(tab.customSort);
+  } else {
+    rows.sort((a, b) => tab.sortKey(b) - tab.sortKey(a));
+  }
 
   const monthLabel = new Date(month).toLocaleDateString("de-DE", {
     month: "long",
@@ -477,12 +525,31 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
                         {i + 1}
                       </td>
                       {tab.columns.map((c) => {
-                        // Custom-Cells fuer Badges (portal + activity)
-                        if (c.key === "portal") {
+                        // Custom-Cells fuer Badges (status_badge + onboarding + activity)
+                        if (c.key === "status_badge") {
                           return (
                             <td key={c.key} className="px-3 py-3 text-center">
                               <span className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${pb.cls}`}>
                                 {pb.label}
+                              </span>
+                            </td>
+                          );
+                        }
+                        if (c.key === "onboarding") {
+                          const obLabel = r.profile_id == null
+                            ? "—"
+                            : r.onboarding_completed
+                              ? "onboarded"
+                              : "pending";
+                          const obCls = r.profile_id == null
+                            ? "border border-cream/15 text-cream/35"
+                            : r.onboarding_completed
+                              ? "border border-champagne/30 text-champagne/80"
+                              : "border border-yellow-400/40 text-yellow-300/85";
+                          return (
+                            <td key={c.key} className="px-3 py-3 text-center">
+                              <span className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${obCls}`}>
+                                {obLabel}
                               </span>
                             </td>
                           );
