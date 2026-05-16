@@ -24,6 +24,12 @@ interface MonthRow {
   missing_next_tier_label: string | null;
   missing_status: string | null;
   synced_at: string | null;
+  // V12.8 Legacy (Pre-Maerz)
+  legacy_revenue_usd: number | null;
+  legacy_activity_usd: number | null;
+  legacy_incremental_usd: number | null;
+  legacy_beginner_bonus_usd: number | null;
+  legacy_program_label: string | null;
 }
 
 function sr() {
@@ -70,7 +76,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
   const { data: metrics } = await db
     .from("creator_revenue_metrics")
     .select(
-      "period_month, activity_revenue_usd, tier_revenue_usd, incremental_revenue_usd, total_revenue_usd, forecast_revenue_usd, forecast_diamonds, missing_diamonds, missing_next_tier_label, missing_status, synced_at, tiktok_username",
+      "period_month, activity_revenue_usd, tier_revenue_usd, incremental_revenue_usd, total_revenue_usd, forecast_revenue_usd, forecast_diamonds, missing_diamonds, missing_next_tier_label, missing_status, synced_at, tiktok_username, legacy_revenue_usd, legacy_activity_usd, legacy_incremental_usd, legacy_beginner_bonus_usd, legacy_program_label",
     )
     .eq("tiktok_handle_normalized", normalized)
     .order("period_month", { ascending: false });
@@ -87,6 +93,11 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
     missing_next_tier_label: m.missing_next_tier_label,
     missing_status:          m.missing_status,
     synced_at:               m.synced_at,
+    legacy_revenue_usd:        m.legacy_revenue_usd,
+    legacy_activity_usd:       m.legacy_activity_usd,
+    legacy_incremental_usd:    m.legacy_incremental_usd,
+    legacy_beginner_bonus_usd: m.legacy_beginner_bonus_usd,
+    legacy_program_label:      m.legacy_program_label,
   }));
   const username = metrics?.[0]?.tiktok_username ?? normalized;
 
@@ -161,12 +172,15 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
               />
             </div>
 
-            {/* ============= Pre-Maerz-Disclaimer (wenn relevant) ============= */}
+            {/* ============= Pre-Maerz-Disclaimer (V12.8) ============= */}
             {rows.some((r) => r.period_month < NEW_METRICS_CUTOFF) && (
-              <div className="border border-champagne/20 bg-champagne/[0.04] p-4 mb-6 text-xs text-cream/70 leading-relaxed">
-                Fuer aeltere Monate (vor Maerz 2026) waren einige Umsatzmetriken in
-                Backstage noch anders aufgebaut. Fehlende Felder werden als
-                „nicht verfuegbar" angezeigt, nicht als 0.
+              <div className="border border-champagne/25 bg-champagne/[0.05] p-4 mb-6 text-xs text-cream/75 leading-relaxed">
+                <div className="text-champagne/90 font-medium mb-1 uppercase tracking-[0.2em] text-[10px]">Legacy-TikTok-Bonusprogramm vor März 2026</div>
+                Pre-Maerz nutzte ein anderes Anreiz-System mit drei Cards:
+                Aktivitätsaufgabe, Inkrementelle Umsatzaufgabe und Anfänger*innen-Meilenstein-Bonus.
+                Diese Werte erscheinen in der „Legacy"-Spalte (Hover zeigt die Aufschluesselung).
+                Die neuen Spalten Activity/Tier/Incremental bleiben fuer Pre-Maerz-Monate „n.v."
+                weil das jeweilige Anreiz-System damals noch nicht existierte.
               </div>
             )}
 
@@ -180,6 +194,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                     <th className="px-3 py-3 text-right">Activity</th>
                     <th className="px-3 py-3 text-right">Tier</th>
                     <th className="px-3 py-3 text-right">Incremental</th>
+                    <th className="px-3 py-3 text-right">Legacy</th>
                     <th className="px-3 py-3 text-right">Forecast</th>
                     <th className="px-3 py-3 text-right">Forecast Diamonds</th>
                     <th className="px-3 py-3 text-right">Missing Diamonds</th>
@@ -197,11 +212,25 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                       isPreNew && (v === null || v === undefined) ? "n.v." : fmtBigInt(v);
                     return (
                       <tr key={r.period_month} className="border-t border-champagne/10 hover:bg-champagne/[0.03]">
-                        <td className="px-3 py-3 text-cream font-medium">{fmtMonthLong(r.period_month)}</td>
+                        <td className="px-3 py-3 text-cream font-medium">
+                          {fmtMonthLong(r.period_month)}
+                          {r.legacy_program_label && (
+                            <span title={r.legacy_program_label} className="ml-2 text-[9px] uppercase tracking-[0.2em] text-champagne/55 border border-champagne/25 px-1.5 py-0.5">
+                              Legacy
+                            </span>
+                          )}
+                        </td>
                         <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(r.total_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.activity_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.tier_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.incremental_revenue_usd)}</td>
+                        <td className="px-3 py-3 text-right text-cream/70">
+                          {r.legacy_revenue_usd != null ? (
+                            <span title={`Aktivitätsaufgabe ${fmtUsd(r.legacy_activity_usd)} + Inkrementelle Umsatzaufgabe ${fmtUsd(r.legacy_incremental_usd)}${r.legacy_beginner_bonus_usd ? ` + Anfänger-Meilenstein ${fmtUsd(r.legacy_beginner_bonus_usd)}` : ''}`}>
+                              {fmtUsd(r.legacy_revenue_usd)}
+                            </span>
+                          ) : isPreNew ? "n.v." : "—"}
+                        </td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.forecast_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naBigInt(r.forecast_diamonds)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naBigInt(r.missing_diamonds)}</td>

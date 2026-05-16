@@ -36,6 +36,12 @@ const RevenueRowSchema = z.object({
   missing_diamonds:        z.number().finite().nonnegative().nullable().optional(),
   missing_next_tier_label: z.string().nullable().optional(),
   missing_status:          z.enum(["near","critical","reached","none"]).nullable().optional(),
+  // V12.8 Legacy-Felder (Pre-Maerz Bonusprogramm · Migration 0049)
+  legacy_revenue_usd:        z.number().finite().nonnegative().nullable().optional(),
+  legacy_activity_usd:       z.number().finite().nonnegative().nullable().optional(),
+  legacy_incremental_usd:    z.number().finite().nonnegative().nullable().optional(),
+  legacy_beginner_bonus_usd: z.number().finite().nonnegative().nullable().optional(),
+  legacy_program_label:      z.string().nullable().optional(),
   raw_snapshot:            z.record(z.string(), z.unknown()).optional(),
 });
 

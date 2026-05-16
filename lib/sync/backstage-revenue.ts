@@ -14,7 +14,7 @@ export interface RevenueRow {
   tiktok_username: string;
   period_month: string;                  // YYYY-MM-01
 
-  // Current (Tab 1)
+  // Current (Tab 1) · NEUES System ab Maerz 2026
   activity_revenue_usd?: number | null;
   tier_revenue_usd?: number | null;
   incremental_revenue_usd?: number | null;
@@ -31,6 +31,14 @@ export interface RevenueRow {
   missing_diamonds?: number | null;
   missing_next_tier_label?: string | null;
   missing_status?: "near" | "critical" | "reached" | "none" | null;
+
+  // V12.8 LEGACY-Felder · Pre-Maerz Backstage-Bonusprogramm (Migration 0049)
+  // Aktivitätsaufgabe + Inkrementelle Umsatzaufgabe + Anfänger-Meilenstein-Bonus
+  legacy_revenue_usd?: number | null;
+  legacy_activity_usd?: number | null;
+  legacy_incremental_usd?: number | null;
+  legacy_beginner_bonus_usd?: number | null;
+  legacy_program_label?: string | null;
 
   raw_snapshot?: Record<string, unknown>;
 }
@@ -164,23 +172,30 @@ export async function syncBackstageRevenue(
       return Number.isFinite(n) ? Math.max(0, n) : null;
     };
 
-    // total_revenue_usd auto-berechnen NUR wenn mind. eine Komponente nicht-null ist.
+    // total_revenue_usd auto-berechnen aus NEUEN + LEGACY-Komponenten.
     // Codex-CRITICAL-Fix: null ?? 0 wuerde fehlgeschlagenen Scrape als verifiziertes 0 speichern.
     const a = clipFloat(row.activity_revenue_usd);
     const t = clipFloat(row.tier_revenue_usd);
     const i = clipFloat(row.incremental_revenue_usd);
+    const lA = clipFloat(row.legacy_activity_usd);
+    const lI = clipFloat(row.legacy_incremental_usd);
+    const lB = clipFloat(row.legacy_beginner_bonus_usd);
+    const lR = clipFloat(row.legacy_revenue_usd);
     const totalProvided = clipFloat(row.total_revenue_usd);
-    const hasAnyComponent = a !== null || t !== null || i !== null;
+    const hasAnyNewComponent = a !== null || t !== null || i !== null;
+    const hasAnyLegacyComponent = lA !== null || lI !== null || lB !== null || lR !== null;
     const total = totalProvided !== null
       ? totalProvided
-      : hasAnyComponent
+      : hasAnyNewComponent
         ? (a ?? 0) + (t ?? 0) + (i ?? 0)
-        : null;
+        : hasAnyLegacyComponent
+          ? (lR ?? ((lA ?? 0) + (lI ?? 0) + (lB ?? 0)))
+          : null;
 
-    // Codex-CRITICAL-Fix + MEDIUM-Skip: Phantom-Skip
-    // Wenn ALLE Pflichtfelder null → kein Push (Daten-Layer-Failure, kein verifiziertes Null-Umsatz)
+    // V12.8 Phantom-Skip erweitert um Legacy-Felder
     const hasAnyMeaningfulField =
-      hasAnyComponent ||
+      hasAnyNewComponent ||
+      hasAnyLegacyComponent ||
       totalProvided !== null ||
       clipFloat(row.forecast_revenue_usd) !== null ||
       clipFloat(row.forecast_bonus_usd) !== null ||
@@ -230,6 +245,12 @@ export async function syncBackstageRevenue(
           missing_diamonds:        clipInt(row.missing_diamonds),
           missing_next_tier_label: row.missing_next_tier_label ?? null,
           missing_status:          row.missing_status ?? null,
+          // V12.8 Legacy-Felder
+          legacy_revenue_usd:        clipFloat(row.legacy_revenue_usd),
+          legacy_activity_usd:       clipFloat(row.legacy_activity_usd),
+          legacy_incremental_usd:    clipFloat(row.legacy_incremental_usd),
+          legacy_beginner_bonus_usd: clipFloat(row.legacy_beginner_bonus_usd),
+          legacy_program_label:      row.legacy_program_label ?? null,
           source:                  "backstage",
           synced_at:               new Date().toISOString(),
           raw_snapshot:            row.raw_snapshot ?? null,
