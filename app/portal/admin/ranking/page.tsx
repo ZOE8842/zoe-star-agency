@@ -558,21 +558,33 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
           </div>
         </div>
 
-        {/* TABS */}
-        <div className="flex flex-wrap gap-2 mb-5 border-b border-champagne/15 pb-3">
+        {/* TABS · V10 Layout-Rework (User-Decision 2026-05-16)
+            Mobile: strict 2-col grid, gleiche Hoehe/Breite/Padding fuer
+                    alle 10 Tabs → ruhige Symmetrie statt "content-based"
+            Desktop (md+): wrap-flow wie zuvor, hor. Tab-Bar
+            Monatsranking + Tagesranking sind die zwei "Showpieces":
+            subtile Gold-Fuellung + staerkere Border, gleiche Geometrie. */}
+        <div className="grid grid-cols-2 gap-2.5 md:flex md:flex-wrap md:gap-2 mb-6 md:mb-5 border-b border-champagne/15 pb-3">
           {TABS.map((t) => {
             const active = t.key === activeTab;
+            const showcase = t.key === "daily" || t.key === "tagesranking";
             return (
               <a
                 key={t.key}
                 href={`?tab=${t.key}`}
-                className={`text-[11px] uppercase tracking-[0.2em] px-3 py-2 transition-all ${
+                className={[
+                  "text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-3 py-2",
+                  "min-h-[44px] inline-flex items-center justify-center text-center leading-tight gap-1.5",
+                  "transition-all",
                   active
-                    ? "bg-champagne text-ink"
-                    : "border border-champagne/30 text-cream/70 hover:border-champagne hover:text-champagne"
-                }`}
+                    ? "bg-champagne text-ink border border-champagne"
+                    : showcase
+                      ? "border border-champagne/60 bg-champagne/[0.06] text-champagne/90 hover:bg-champagne/10 hover:border-champagne"
+                      : "border border-champagne/25 text-cream/70 hover:border-champagne hover:text-champagne",
+                ].join(" ")}
               >
-                {t.emoji} {t.label}
+                <span className="text-sm md:text-[13px] leading-none shrink-0">{t.emoji}</span>
+                <span className="truncate">{t.label}</span>
               </a>
             );
           })}
