@@ -10,7 +10,10 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
 //
 // V4 Nav-Refactor: Admin/Manager bekommen "MASTER" → /portal/admin
 // statt parallelem "Dashboard" + "Admin"-Extralink.
-function buildNavItems(isStaff: boolean) {
+//
+// V7 (2026-05-16): "Ranking" wird zu Admin-LIVE-Analyse, NUR fuer Admin
+// sichtbar. Manager verliert den Reiter (Scope-Verschaerfung User-Decision).
+function buildNavItems(isStaff: boolean, isAdmin: boolean) {
   const items: Array<{ href: string; label: string; indicator?: true }> = [
     isStaff
       ? { href: "/portal/admin", label: "Master" }
@@ -23,11 +26,9 @@ function buildNavItems(isStaff: boolean) {
     { href: "/portal/info", label: "Info" },
     { href: "/portal/profile", label: "Profile" },
   ];
-  // V5: Admin/Manager bekommen "Ranking" als eigenen sichtbaren Reiter
-  // direkt nach "Master". Ziel: Creator-Ranking ohne URL-Wissen
-  // erreichbar. Manager darf rein (requireManagerOrAdmin auf der Seite).
-  if (isStaff) {
-    items.splice(1, 0, { href: "/portal/admin/ranking", label: "Ranking" });
+  // V7: Admin-LIVE-Analyse nur fuer Admin, nicht fuer Manager
+  if (isAdmin) {
+    items.splice(1, 0, { href: "/portal/admin/ranking", label: "LIVE-Analyse" });
   }
   return items;
 }
@@ -45,7 +46,7 @@ interface Props {
 
 export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isManager, avatarUrl }: Props) {
   const isStaff = !!isAdmin || !!isManager;
-  const navItems = buildNavItems(isStaff);
+  const navItems = buildNavItems(isStaff, !!isAdmin);
   // V3-Datenschutz: keine Email-Initials. Fallback ist Display-Name oder
   // TikTok-Username (kein PII).
   const initials = (displayName || tiktokUsername || "")
