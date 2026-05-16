@@ -21,6 +21,17 @@ export interface BackstageRow {
   average_viewers: number;
   last_live_date?: string | null;      // ISO YYYY-MM-DD
   activity_status?: "aktiv" | "unregelmaessig" | "inaktiv" | null;
+  // Phase-5-KPIs (Migration 0044) — alle optional, additive
+  diamonds_month?: number | null;
+  gift_rate?: number | null;
+  impressions?: number | null;
+  live_views?: number | null;
+  followers_gained?: number | null;
+  ctr?: number | null;
+  watchtime_avg_seconds?: number | null;
+  streams_count?: number | null;
+  gifts_count?: number | null;
+  gifters_count?: number | null;
   raw_snapshot?: Record<string, unknown>;
 }
 
@@ -186,6 +197,18 @@ export async function syncBackstageMetrics(
       .eq("month", month)
       .maybeSingle();
 
+    // Phase-5-KPI defensive parsing (alle optional, clip auf >= 0, NULL bei undefined)
+    const clipInt = (v: unknown): number | null => {
+      if (v === null || v === undefined || v === "") return null;
+      const n = Math.floor(Number(v));
+      return Number.isFinite(n) ? Math.max(0, n) : null;
+    };
+    const clipFloat = (v: unknown): number | null => {
+      if (v === null || v === undefined || v === "") return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.max(0, n) : null;
+    };
+
     const { error: upsertErr } = await sb
       .from("creator_monthly_metrics")
       .upsert(
@@ -199,6 +222,17 @@ export async function syncBackstageMetrics(
           average_viewers: avgViewers,
           last_live_date: row.last_live_date ?? null,
           activity_status: status,
+          // Phase-5-KPIs (Migration 0044)
+          diamonds_month:        clipInt(row.diamonds_month) ?? 0,
+          gift_rate:             clipFloat(row.gift_rate),
+          impressions:           clipInt(row.impressions),
+          live_views:            clipInt(row.live_views),
+          followers_gained:      clipInt(row.followers_gained),
+          ctr:                   clipFloat(row.ctr),
+          watchtime_avg_seconds: clipInt(row.watchtime_avg_seconds),
+          streams_count:         clipInt(row.streams_count),
+          gifts_count:           clipInt(row.gifts_count),
+          gifters_count:         clipInt(row.gifters_count),
           raw_snapshot: row.raw_snapshot ?? null,
           source: "backstage",
           synced_at: new Date().toISOString(),

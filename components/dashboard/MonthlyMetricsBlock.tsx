@@ -13,6 +13,19 @@ interface Metric {
   activity_status: "aktiv" | "unregelmaessig" | "inaktiv" | null;
   synced_at: string;
   month: string;
+  // Phase-5-KPIs (Migration 0044)
+  diamonds_month: number | null;
+  gift_rate: number | null;
+}
+
+function formatDiamonds(n: number | null): string {
+  if (n == null || n <= 0) return "—";
+  return n.toLocaleString("de-DE");
+}
+
+function formatPercent(n: number | null): string {
+  if (n == null) return "—";
+  return `${n.toString().replace(".", ",")} %`;
 }
 
 interface Props {
@@ -89,7 +102,7 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
   const { data } = await supabase
     .from("creator_monthly_metrics")
     .select(
-      "valid_live_days, live_minutes_total, live_hours_display, average_viewers, last_live_date, activity_status, synced_at, month",
+      "valid_live_days, live_minutes_total, live_hours_display, average_viewers, last_live_date, activity_status, synced_at, month, diamonds_month, gift_rate",
     )
     .eq("profile_id", profileId)
     .eq("month", month)
@@ -116,6 +129,12 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
             <Cell value={String(data.average_viewers)} label="Ø Zuschauer" />
             <Cell value={formatDate(data.last_live_date)} label="Letzter LIVE-Tag" />
           </div>
+          {(data.diamonds_month != null || data.gift_rate != null) && (
+            <div className="grid grid-cols-2 gap-px bg-champagne/15 mt-px">
+              <Cell value={formatDiamonds(data.diamonds_month)} label="💎 Diamanten" />
+              <Cell value={formatPercent(data.gift_rate)} label="Geschenkquote" />
+            </div>
+          )}
           <p className="text-cream/40 text-xs mt-3">
             {rangeLabel(data.month, data.synced_at)} · Stand: {formatSync(data.synced_at)} Uhr
           </p>

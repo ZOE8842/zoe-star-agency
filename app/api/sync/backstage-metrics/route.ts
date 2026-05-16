@@ -35,6 +35,17 @@ const RowSchema = z.object({
     .enum(["aktiv", "unregelmaessig", "inaktiv"])
     .nullable()
     .optional(),
+  // Phase-5-KPIs (Migration 0044) · alle optional/nullable, additive
+  diamonds_month:        z.number().finite().nonnegative().nullable().optional(),
+  gift_rate:             z.number().finite().nonnegative().nullable().optional(),
+  impressions:           z.number().finite().nonnegative().nullable().optional(),
+  live_views:            z.number().finite().nonnegative().nullable().optional(),
+  followers_gained:      z.number().finite().nonnegative().nullable().optional(),
+  ctr:                   z.number().finite().nonnegative().nullable().optional(),
+  watchtime_avg_seconds: z.number().finite().nonnegative().nullable().optional(),
+  streams_count:         z.number().finite().nonnegative().nullable().optional(),
+  gifts_count:           z.number().finite().nonnegative().nullable().optional(),
+  gifters_count:         z.number().finite().nonnegative().nullable().optional(),
   raw_snapshot: z.record(z.string(), z.unknown()).optional(),
 });
 
