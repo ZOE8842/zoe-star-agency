@@ -96,19 +96,19 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
   const displayName = pData?.display_name ?? null;
 
   // Aggregation
-  const sumActivity = rows.reduce((s, r) => s + (r.activity_revenue_usd ?? 0), 0);
-  const sumTier     = rows.reduce((s, r) => s + (r.tier_revenue_usd ?? 0), 0);
-  const sumIncr     = rows.reduce((s, r) => s + (r.incremental_revenue_usd ?? 0), 0);
-  const sumTotal    = rows.reduce((s, r) => s + (r.total_revenue_usd ?? 0), 0);
+  const sumTotal = rows.reduce((s, r) => s + (r.total_revenue_usd ?? 0), 0);
 
   // Bester / letzter Monat
   const bestMonth = [...rows].sort((a, b) => (b.total_revenue_usd ?? 0) - (a.total_revenue_usd ?? 0))[0] ?? null;
   const latestMonth = rows[0] ?? null;
-  const forecastCurrent = rows.find((r) => {
-    const now = new Date();
-    const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-    return r.period_month === iso;
-  })?.forecast_revenue_usd ?? null;
+
+  // Aktueller Monat (fuer Stat-Cards "aktueller Monat")
+  const currentIso = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  })();
+  const currentRow = rows.find((r) => r.period_month === currentIso) ?? null;
+  const forecastCurrent = currentRow?.forecast_revenue_usd ?? null;
 
   return (
     <>
@@ -141,20 +141,17 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
           </div>
         ) : (
           <>
-            {/* ============= Ueberblick-Stats · Reihenfolge: Total zuerst ============= */}
+            {/* ============= Stat-Cards · Reihenfolge: Gesamt → Forecast → aktueller Monat ============= */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
               <StatCard label="Gesamt Umsatz" value={fmtUsd(sumTotal)} highlight />
-              <StatCard label="Forecast aktueller Monat" value={fmtUsd(forecastCurrent)} highlight />
-              <StatCard label="Activity Total" value={fmtUsd(sumActivity)} />
-              <StatCard label="Tier Total" value={fmtUsd(sumTier)} />
-              <StatCard label="Incremental Total" value={fmtUsd(sumIncr)} />
+              <StatCard label="Forecast Umsatz" value={fmtUsd(forecastCurrent)} highlight />
+              <StatCard label="Total Revenue aktueller Monat" value={fmtUsd(currentRow?.total_revenue_usd ?? null)} />
+              <StatCard label="Activity Revenue" value={fmtUsd(currentRow?.activity_revenue_usd ?? null)} />
+              <StatCard label="Tier Revenue" value={fmtUsd(currentRow?.tier_revenue_usd ?? null)} />
+              <StatCard label="Incremental Revenue" value={fmtUsd(currentRow?.incremental_revenue_usd ?? null)} />
               <StatCard
                 label="Bester Monat"
                 value={bestMonth ? `${fmtUsd(bestMonth.total_revenue_usd)} · ${fmtMonthLong(bestMonth.period_month)}` : "—"}
-              />
-              <StatCard
-                label="Letzter Monat"
-                value={latestMonth ? `${fmtUsd(latestMonth.total_revenue_usd)} · ${fmtMonthLong(latestMonth.period_month)}` : "—"}
               />
               <StatCard
                 label="Letzter Sync"
@@ -229,20 +226,26 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
           </>
         )}
 
-        {/* Historie-Nachlade-Button · Phase 2 (vorerst Hinweis) */}
-        <div className="mt-8 border border-champagne/15 p-5">
-          <p className="text-cream/85 text-sm mb-2">Historie nachladen</p>
-          <p className="text-cream/55 text-xs leading-relaxed mb-3">
-            Optional: aeltere Monate aus Backstage rueckwirkend scrapen.
-            Phase 2 — kommt sobald Backstage-Monatswahl im Scraper integriert ist.
-            Aktuell laeuft der Auto-Sync 4× taeglich nur fuer den aktuellen Monat.
+        {/* HISTORIE-NACHLADE-WORKFLOW · Phase 4
+            Webapp (Vercel) kann nicht direkt Workstation-Scraper triggern
+            (zwei getrennte Maschinen, keine API zwischen ihnen).
+            Pragmatisch: kopierfertiger CLI-Befehl + Workflow-Hinweis.
+            User triggert auf Workstation manuell. */}
+        <div className="mt-8 border border-champagne/20 p-5">
+          <p className="text-cream/85 text-sm mb-3 font-medium">Historie nachladen (manuell)</p>
+          <p className="text-cream/55 text-xs leading-relaxed mb-4 max-w-2xl">
+            Backstage hat einen Anchor-Detail-Monatsfilter mit ~30-Tage-Window.
+            Fuer aeltere Monate auf der Workstation diesen Befehl ausfuehren —
+            der Scraper akzeptiert beliebige <code className="text-champagne/85">--month YYYY-MM</code>:
           </p>
-          <button
-            disabled
-            className="text-[10px] uppercase tracking-[0.25em] px-4 py-2 border border-champagne/20 text-cream/35 cursor-not-allowed"
-          >
-            Historie laden · noch nicht aktiv
-          </button>
+          <pre className="bg-black/40 border border-champagne/15 p-3 text-cream/85 text-xs overflow-x-auto leading-relaxed select-all">{`# April 2026 fuer ${normalized}
+cd "G:\\Meine Ablage\\ZOE_STAR_AGENCY_WEBAPP\\workstation"
+python backstage_revenue_scraper.py --month 2026-04 --only ${normalized} --push-after`}</pre>
+          <p className="text-cream/40 text-[10px] mt-3 leading-relaxed">
+            Falls Backstage den gewuenschten Monat noch zeigt: Werte werden gepusht,
+            inserted ggf. mit <code>force=true</code> wenn der Monat schon existiert.
+            Vergangene Monate sind ansonsten frozen (Auto-Sync ueberschreibt sie nicht).
+          </p>
         </div>
       </main>
     </>

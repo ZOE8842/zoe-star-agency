@@ -16,10 +16,11 @@ type SubTab = "current" | "forecast" | "missing" | "creator";
 interface CreatorAggRow {
   tiktok_username: string;
   display_name: string | null;
-  total_sum_usd: number;
-  activity_sum_usd: number;
-  tier_sum_usd: number;
-  incremental_sum_usd: number;
+  total_sum_usd: number;          // lifetime SUM (Gesamt Umsatz)
+  current_total_usd: number | null;        // Total Revenue · aktueller Monat
+  current_activity_usd: number | null;     // Activity Revenue · aktueller Monat
+  current_tier_usd: number | null;         // Tier Revenue · aktueller Monat
+  current_incremental_usd: number | null;  // Incremental Revenue · aktueller Monat
   forecast_current_usd: number | null;
   months_count: number;
   last_sync: string | null;
@@ -167,8 +168,12 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
     const groups = new Map<string, {
       tiktok_username: string;
       display_name: string | null;
-      activity_sum: number; tier_sum: number; incr_sum: number; total_sum: number;
+      total_sum: number;
       months: Set<string>;
+      current_total: number | null;
+      current_activity: number | null;
+      current_tier: number | null;
+      current_incr: number | null;
       forecast_current: number | null;
       last_sync: string | null;
     }>();
@@ -179,8 +184,12 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
         g = {
           tiktok_username: r.tiktok_username,
           display_name: r.display_name,
-          activity_sum: 0, tier_sum: 0, incr_sum: 0, total_sum: 0,
+          total_sum: 0,
           months: new Set(),
+          current_total: null,
+          current_activity: null,
+          current_tier: null,
+          current_incr: null,
           forecast_current: null,
           last_sync: null,
         };
@@ -188,18 +197,15 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
       }
       const total = r.total_revenue_usd ??
         ((r.activity_revenue_usd ?? 0) + (r.tier_revenue_usd ?? 0) + (r.incremental_revenue_usd ?? 0));
-      g.activity_sum += r.activity_revenue_usd ?? 0;
-      g.tier_sum     += r.tier_revenue_usd ?? 0;
-      g.incr_sum     += r.incremental_revenue_usd ?? 0;
-      g.total_sum    += total;
+      g.total_sum += total;
       g.months.add(r.period_month);
       if (r.period_month === month) {
-        g.forecast_current = r.forecast_revenue_usd;
+        g.current_total      = r.total_revenue_usd;
+        g.current_activity   = r.activity_revenue_usd;
+        g.current_tier       = r.tier_revenue_usd;
+        g.current_incr       = r.incremental_revenue_usd;
+        g.forecast_current   = r.forecast_revenue_usd;
       }
-      // last_sync: rohe synced_at-Iso aus Row. Wir nutzen das spaeter beim Render.
-      // (rows[] enthaelt synced_at nicht direkt — wir koennen es nicht
-      //  aus dem Row-Type holen ohne Type-Erweiterung; pragmatisch leer
-      //  lassen und unten ueber metrics-array nachschauen)
     }
     // last_sync per handle: max synced_at aus metrics
     if (metrics) {
@@ -218,12 +224,13 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
       tiktok_username: g.tiktok_username,
       display_name: g.display_name,
       total_sum_usd: g.total_sum,
-      activity_sum_usd: g.activity_sum,
-      tier_sum_usd: g.tier_sum,
-      incremental_sum_usd: g.incr_sum,
-      forecast_current_usd: g.forecast_current,
-      months_count: g.months.size,
-      last_sync: g.last_sync,
+      current_total_usd:       g.current_total,
+      current_activity_usd:    g.current_activity,
+      current_tier_usd:        g.current_tier,
+      current_incremental_usd: g.current_incr,
+      forecast_current_usd:    g.forecast_current,
+      months_count:            g.months.size,
+      last_sync:               g.last_sync,
     }));
     creatorAgg.sort((a, b) => b.total_sum_usd - a.total_sum_usd);
   }
@@ -345,6 +352,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                     <th className="px-3 py-3">#</th>
                     <th className="px-3 py-3">Creator</th>
                     <th className="px-3 py-3 text-right">Gesamt Umsatz</th>
+                    <th className="px-3 py-3 text-right">Total Revenue</th>
                     <th className="px-3 py-3 text-right">Activity</th>
                     <th className="px-3 py-3 text-right">Tier</th>
                     <th className="px-3 py-3 text-right">Incremental</th>
@@ -367,9 +375,10 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                         </a>
                       </td>
                       <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(c.total_sum_usd)}</td>
-                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.activity_sum_usd)}</td>
-                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.tier_sum_usd)}</td>
-                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.incremental_sum_usd)}</td>
+                      <td className="px-3 py-3 text-right text-champagne/85">{fmtUsd(c.current_total_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.current_activity_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.current_tier_usd)}</td>
+                      <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.current_incremental_usd)}</td>
                       <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(c.forecast_current_usd)}</td>
                       <td className="px-3 py-3 text-right text-cream/80">{c.months_count}</td>
                       <td className="px-3 py-3 text-right text-cream/60 text-xs">
