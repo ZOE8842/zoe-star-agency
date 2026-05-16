@@ -4,6 +4,7 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AvatarStack } from "@/components/AvatarStack";
 import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock";
+import { PerformanceInsightBlock } from "@/components/dashboard/PerformanceInsightBlock";
 import { FollowPromptCard } from "@/components/dashboard/FollowPromptCard";
 import { ShowcaseInterestBanner } from "@/components/dashboard/ShowcaseInterestBanner";
 import { TodayQueue } from "@/components/dashboard/TodayQueue";
@@ -242,6 +243,9 @@ export default async function DashboardPage() {
 
         {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
         <MonthlyMetricsBlock supabase={supabase} profileId={profile.id} />
+
+        {/* PERFORMANCE-INSIGHT — kompaktes Coaching basierend auf Phase-5-KPIs */}
+        <PerformanceInsightBlock supabase={supabase} profileId={profile.id} firstName={firstName} />
 
         {/* FOLLOW-PROMPT — verschwindet wenn alle 3 Kanaele markiert oder
             wenn dismissed. Self-Report, kein Auto-Verify. */}
