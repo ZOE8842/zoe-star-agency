@@ -47,7 +47,14 @@ export interface RevenueSyncResult {
   updated: number;
   pool_only: number;
   skipped: number;
+  frozen_skipped: number;   // vergangene Monate, die nicht ueberschrieben wurden
   errors: RevenueSyncError[];
+}
+
+// Aktueller Monat ISO (UTC ist OK, da period_month nur per Datum verglichen wird)
+function currentMonthIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
 const MONTH_RE = /^\d{4}-\d{2}-01$/;
@@ -68,14 +75,18 @@ export function normalizeHandle(raw: string | null | undefined): string {
 
 export async function syncBackstageRevenue(
   rows: RevenueRow[],
+  opts?: { force?: boolean },
 ): Promise<RevenueSyncResult> {
   const sb = srClient();
+  const force = !!opts?.force;
+  const currentMonth = currentMonthIso();
   const result: RevenueSyncResult = {
     total: rows.length,
     inserted: 0,
     updated: 0,
     pool_only: 0,
     skipped: 0,
+    frozen_skipped: 0,
     errors: [],
   };
 
@@ -160,6 +171,14 @@ export async function syncBackstageRevenue(
       .eq("period_month", period)
       .maybeSingle();
 
+    // FREEZE-Regel: vergangene Monate werden NUR EINMAL gespeichert.
+    // Wenn period < currentMonth UND row existiert → skip (kein Overwrite).
+    // Ausnahme: opts.force === true (manueller Rebuild).
+    if (existing && !force && period < currentMonth) {
+      result.frozen_skipped++;
+      continue;
+    }
+
     const { error: upsertErr } = await sb
       .from("creator_revenue_metrics")
       .upsert(
@@ -209,6 +228,8 @@ export async function syncBackstageRevenue(
       updated: result.updated,
       pool_only: result.pool_only,
       skipped: result.skipped,
+      frozen_skipped: result.frozen_skipped,
+      force: !!opts?.force,
       error_count: result.errors.length,
       errors: result.errors.slice(0, 50),
     },

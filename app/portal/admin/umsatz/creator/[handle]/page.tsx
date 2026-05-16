@@ -141,9 +141,10 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
           </div>
         ) : (
           <>
-            {/* ============= Ueberblick-Stats ============= */}
+            {/* ============= Ueberblick-Stats · Reihenfolge: Total zuerst ============= */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
               <StatCard label="Gesamt Umsatz" value={fmtUsd(sumTotal)} highlight />
+              <StatCard label="Forecast aktueller Monat" value={fmtUsd(forecastCurrent)} highlight />
               <StatCard label="Activity Total" value={fmtUsd(sumActivity)} />
               <StatCard label="Tier Total" value={fmtUsd(sumTier)} />
               <StatCard label="Incremental Total" value={fmtUsd(sumIncr)} />
@@ -155,7 +156,6 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 label="Letzter Monat"
                 value={latestMonth ? `${fmtUsd(latestMonth.total_revenue_usd)} · ${fmtMonthLong(latestMonth.period_month)}` : "—"}
               />
-              <StatCard label="Forecast aktueller Monat" value={fmtUsd(forecastCurrent)} highlight />
               <StatCard
                 label="Letzter Sync"
                 value={latestMonth?.synced_at
@@ -179,10 +179,10 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 <thead className="bg-champagne/5">
                   <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-cream/55">
                     <th className="px-3 py-3">Monat</th>
+                    <th className="px-3 py-3 text-right">Total</th>
                     <th className="px-3 py-3 text-right">Activity</th>
                     <th className="px-3 py-3 text-right">Tier</th>
                     <th className="px-3 py-3 text-right">Incremental</th>
-                    <th className="px-3 py-3 text-right">Total</th>
                     <th className="px-3 py-3 text-right">Forecast</th>
                     <th className="px-3 py-3 text-right">Forecast Diamonds</th>
                     <th className="px-3 py-3 text-right">Missing Diamonds</th>
@@ -201,10 +201,10 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                     return (
                       <tr key={r.period_month} className="border-t border-champagne/10 hover:bg-champagne/[0.03]">
                         <td className="px-3 py-3 text-cream font-medium">{fmtMonthLong(r.period_month)}</td>
+                        <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(r.total_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.activity_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.tier_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.incremental_revenue_usd)}</td>
-                        <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(r.total_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naMark(r.forecast_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naBigInt(r.forecast_diamonds)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{naBigInt(r.missing_diamonds)}</td>

@@ -34,6 +34,9 @@ const RevenueRowSchema = z.object({
 
 const BodySchema = z.object({
   rows: z.array(RevenueRowSchema).min(1).max(MAX_ROWS_PER_BATCH),
+  // Freeze-Override: wenn true, ueberschreibt auch vergangene Monate.
+  // Nur fuer Manual-Rebuild via History-Loader o.ae.
+  force: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -61,7 +64,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await syncBackstageRevenue(parsed.data.rows as RevenueRow[]);
+    const result = await syncBackstageRevenue(
+      parsed.data.rows as RevenueRow[],
+      { force: parsed.data.force },
+    );
     return NextResponse.json(result);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown error";

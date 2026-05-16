@@ -408,10 +408,10 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                   <th className="px-3 py-3">Creator</th>
                   {tab === "current" && (
                     <>
+                      <th className="px-3 py-3 text-right">Total</th>
                       <th className="px-3 py-3 text-right">Activity</th>
                       <th className="px-3 py-3 text-right">Tier</th>
                       <th className="px-3 py-3 text-right">Incremental</th>
-                      <th className="px-3 py-3 text-right">Total</th>
                       <th className="px-3 py-3 text-right">Last Period</th>
                     </>
                   )}
@@ -442,10 +442,10 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                     </td>
                     {tab === "current" && (
                       <>
+                        <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(r.total_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(r.activity_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(r.tier_revenue_usd)}</td>
                         <td className="px-3 py-3 text-right text-cream/80">{fmtUsd(r.incremental_revenue_usd)}</td>
-                        <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(r.total_revenue_usd)}</td>
                         <td className={`px-3 py-3 text-right ${fmtPctClass(r.total_revenue_usd, r.last_period_total_usd)}`}>
                           {fmtPct(r.total_revenue_usd, r.last_period_total_usd)}
                         </td>
@@ -479,10 +479,10 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                   <tr className="border-t border-champagne/30 bg-champagne/5 font-medium">
                     <td className="px-3 py-3"></td>
                     <td className="px-3 py-3 text-cream/85 uppercase text-[10px] tracking-[0.2em]">Total</td>
+                    <td className="px-3 py-3 text-right text-champagne">{fmtUsd(sumTotal)}</td>
                     <td className="px-3 py-3 text-right text-cream">{fmtUsd(sumActivity)}</td>
                     <td className="px-3 py-3 text-right text-cream">{fmtUsd(sumTier)}</td>
                     <td className="px-3 py-3 text-right text-cream">{fmtUsd(sumIncr)}</td>
-                    <td className="px-3 py-3 text-right text-champagne">{fmtUsd(sumTotal)}</td>
                     <td className="px-3 py-3"></td>
                   </tr>
                 )}
