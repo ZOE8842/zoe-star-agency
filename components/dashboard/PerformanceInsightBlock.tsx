@@ -49,7 +49,7 @@ interface InsightTexts {
   isEmpty: boolean;
 }
 
-function buildInsights(m: Metric | null): InsightTexts {
+function buildInsights(m: Metric | null, firstName: string): InsightTexts {
   if (!m) {
     return {
       strong: [],
@@ -71,102 +71,101 @@ function buildInsights(m: Metric | null): InsightTexts {
   const fol   = m.followers_gained ?? 0;
   const since = daysSince(m.last_live_date);
 
-  // Inaktiv (Sonderfall)
+  // Inaktiv (Sonderfall) — sanft, einladend, kein Vorwurf
   if (days === 0) {
     return {
       strong: [],
       brake: [
-        "Du warst diesen Monat noch nicht live.",
-        "Schon ein erster regelmäßiger LIVE-Tag bringt dich wieder ins Sichtfeld vom Algorithmus.",
+        `${firstName}, dein Monat ist noch komplett offen. Du warst diesen Monat noch nicht live — und genau da liegt aktuell deine grösste Chance.`,
+        "Ein erster regelmäßiger LIVE-Tag reicht schon, um wieder ins Sichtfeld vom Algorithmus zu kommen.",
       ],
       actions: [
         "Diese Woche einen festen LIVE-Tag setzen",
-        "Vorher kurze Story posten",
+        "30 Minuten vorher eine kurze Story posten",
         "Mindestens 61 Minuten am Stück streamen",
-        "Erstmal Community aufbauen, dann matchen",
       ],
       isInactive: true,
       isEmpty: false,
     };
   }
 
-  // ---------- 🔥 Was läuft stark ----------
+  // ---------- 🔥 Was läuft stark (max 2 spezifische Sätze, sonst Fallback) ----------
   const strong: string[] = [];
+  // Top-Signal zuerst (höchster Aussagewert)
   if (wt >= 60) {
-    strong.push("Deine Zuschauer bleiben deutlich länger im Stream als der Durchschnitt — das ist ein starkes Zeichen für deine LIVE-Energie.");
-  } else if (avg >= 3000 && wt >= 25) {
-    strong.push("Deine Zuschauerbindung ist gut. Wer reinkommt, bleibt eine Weile dabei.");
-  }
-  if (ctr >= 50) {
-    strong.push("Deine Reichweite läuft stark — viele klicken aktiv von außen in dein LIVE rein.");
-  } else if (ctr >= 35 && strong.length === 0) {
-    strong.push("Deine Reichweite ist solide. TikTok pushed dich aktuell stabil.");
-  }
-  if (gr >= 2.5) {
-    strong.push("Deine Community schenkt überdurchschnittlich aktiv — das zeigt echte Bindung.");
-  }
-  if (fol >= 200 && strong.length < 3) {
-    strong.push("Dein Account wächst diesen Monat sichtbar.");
-  }
-  if (dmd >= 200000 && strong.length < 3) {
-    strong.push("Deine Diamanten zeigen, dass deine LIVEs gerade richtig laufen.");
-  }
-  if (strong.length === 0 && days >= 8) {
-    strong.push("Deine Konstanz ist gut — du bist regelmäßig sichtbar.");
-  }
-  if (strong.length === 0) {
-    strong.push("Wenn du live bist, läuft es — die Daten zeigen das deutlich.");
+    strong.push("Deine Zuschauer bleiben deutlich länger im Stream als der Durchschnitt. Das ist ein starkes Zeichen für deine LIVE-Energie.");
+  } else if (gr >= 2.5) {
+    strong.push("Deine Community schenkt überdurchschnittlich aktiv. Das zeigt echte Bindung, nicht nur kurze Aufmerksamkeit.");
+  } else if (ctr >= 50) {
+    strong.push("Deine Reichweite läuft stark. Viele klicken aktiv von aussen in dein LIVE rein.");
+  } else if (avg >= 3000) {
+    strong.push("Deine Zuschauerzahlen sind solide. Wer reinkommt, bleibt eine Weile dabei.");
+  } else if (days >= 8 && hours >= 20) {
+    strong.push("Deine Konstanz stimmt. Du bist regelmäßig sichtbar — TikTok bekommt stabile Signale von dir.");
+  } else {
+    strong.push("Wenn du live bist, läuft es. Die Daten zeigen das deutlich.");
   }
 
-  // ---------- ⚠️ Was bremst ----------
-  const brake: string[] = [];
-
-  // Frequenz-Problem (höchste Prio)
-  if (days < 8) {
-    brake.push("Aktuell fehlt dir Konstanz. Du liegst unter dem Mindestziel von 8 gültigen LIVE-Tagen.");
-    if (hours < 20) {
-      brake.push("Auch die LIVE-Stunden sind noch unter den 20 Stunden, die du als Standard erreichen solltest.");
-    } else {
-      brake.push("Deine LIVE-Stunden sind stark — du musst nur wieder regelmäßiger online kommen.");
+  // Zweites Signal nur wenn deutlich anderer Aspekt
+  if (strong.length === 1) {
+    if (fol >= 300 && !strong[0].includes("Reichweite")) {
+      strong.push("Dein Account wächst diesen Monat sichtbar — neue Leute finden dich gerade aktiv.");
+    } else if (dmd >= 300000 && !strong[0].includes("Community")) {
+      strong.push("Deine Diamanten zeigen klar: deine LIVEs treffen aktuell den richtigen Nerv.");
     }
-  } else if (hours < 20) {
-    brake.push("Du bist regelmäßig live, aber die Stunden pro Stream sind noch zu kurz. Mindestziel sind 20 LIVE-Stunden im Monat.");
   }
 
-  // Pause-Warnung
-  if (since !== null && since >= 3 && days > 0) {
-    brake.push(`Dein letztes LIVE liegt ${since} Tage zurück — TikTok verliert dadurch wichtige Aktivitätssignale.`);
-  }
+  // ---------- ⚠️ Was bremst — als zusammenhängender Coaching-Text mit Absätzen ----------
+  // Strategie: 1 Hauptproblem identifizieren, sanft mit Anerkennung einleiten,
+  // dann das Problem klar benennen — kein Bullet-Spam.
+  const brake: string[] = [];
+  const hasFrequency  = days < 8;
+  const hasHours      = hours < 20;
+  const hasPause      = since !== null && since >= 3 && days > 0;
+  const hasWatchtime  = wt > 0 && wt < 20;
+  const hasDiscovery  = ctr > 0 && ctr < 25;
 
-  // Watchtime-Problem
-  if (wt > 0 && wt < 20 && brake.length < 3) {
-    brake.push("Deine Zuschauer steigen aktuell schnell wieder aus. Der Einstieg in dein LIVE muss stärker werden.");
-  }
-
-  // Discovery-Problem
-  if (ctr > 0 && ctr < 25 && brake.length < 3) {
-    brake.push("TikTok zeigt deinen LIVE aktuell nur wenigen — mehr Ankündigungen und Stories vor dem Start helfen.");
-  }
-
-  if (brake.length === 0) {
+  if (hasFrequency || hasHours || hasPause) {
+    // Frequenz-/Konstanz-Bündel (höchste Prio)
+    brake.push("Du performst stark, sobald du live bist — das siehst du an deinen aktuellen Zahlen.");
+    if (hasFrequency && hasHours) {
+      brake.push("Das eigentliche Thema ist gerade Konstanz. Du liegst noch unter dem Mindestziel von 8 LIVE-Tagen und 20 LIVE-Stunden im Monat — und genau das drückt deine Reichweite künstlich nach unten.");
+    } else if (hasFrequency) {
+      brake.push("Was dir gerade fehlt, ist Konstanz. Du liegst noch unter dem Mindestziel von 8 LIVE-Tagen — und genau das drückt deine Reichweite künstlich nach unten.");
+    } else if (hasHours) {
+      brake.push("Was dir gerade fehlt, sind Stunden pro Stream. Du bist regelmäßig dabei, aber unter den 20 LIVE-Stunden als Monats-Standard.");
+    }
+    if (hasPause) {
+      brake.push(`Dein letztes LIVE ist ${since} Tage her. TikTok verliert in der Zeit wichtige Aktivitätssignale — wenige Tage Pause kosten oft mehr Reichweite als man denkt.`);
+    }
+  } else if (hasWatchtime) {
+    brake.push("Du bringst Leute rein — aber sie steigen aktuell schneller wieder aus.");
+    brake.push("Der Einstieg ins LIVE entscheidet das. Die ersten 30-60 Sekunden müssen sofort Energie und klare Ansage liefern.");
+  } else if (hasDiscovery) {
+    brake.push("Deine Streams sind solide — aber TikTok zeigt sie aktuell nur einem kleinen Publikum.");
+    brake.push("Mit mehr Ankündigungen vor dem Start (Story, Push, kurzes Video) holst du schnell mehr Leute direkt zum LIVE-Beginn.");
+  } else {
     brake.push("Du performst aktuell stabil. Wenn du den Rhythmus hältst, bleiben deine Zahlen stark.");
   }
 
-  // ---------- 🎯 Empfehlungen ----------
+  // ---------- 🎯 Empfehlungen (max 3, prioritiert) ----------
   const actions: string[] = [];
-  if (days < 8) actions.push("Wieder regelmäßiger LIVE gehen");
-  if (hours < 20) actions.push("Mindestens 61 Minuten pro Stream");
-  if (since !== null && since >= 3) actions.push("Diese Woche schnell wieder live gehen");
-  if (ctr > 0 && ctr < 30) actions.push("30 Minuten vor LIVE eine Story posten");
-  if (wt > 0 && wt < 20) actions.push("Starker Einstieg — sofort Energie und klare Ansage");
-  if (gr > 0 && gr < 1) actions.push("Erst Community aufbauen, dann matchen");
-  if (actions.length < 3) actions.push("Feste Abendzeiten nutzen");
-  if (actions.length < 3) actions.push("Vorher ein kurzes Video posten");
-  // Cap auf 5
-  while (actions.length > 5) actions.pop();
+  if (hasPause)      actions.push("Diese Woche schnell wieder live gehen — Momentum nicht verlieren");
+  if (hasFrequency)  actions.push("Auf 8 gültige LIVE-Tage diesen Monat kommen");
+  if (hasHours)      actions.push("Mindestens 61 Minuten pro Stream — bringt dich auf 20 LIVE-Stunden");
+  if (hasDiscovery)  actions.push("30 Minuten vor LIVE eine Story posten");
+  if (hasWatchtime)  actions.push("Stärkerer Einstieg — sofort Energie in den ersten Sekunden");
+  // Fallbacks wenn alles top läuft
+  if (actions.length === 0) {
+    actions.push("Feste Abendzeiten beibehalten");
+    actions.push("Story 30 Min vor LIVE als festen Standard");
+    actions.push("Community-Aufbau vor jedem Match einplanen");
+  }
+  // Cap auf 3 (Priorität: Pause > Frequenz > Stunden > Discovery > Watchtime)
+  while (actions.length > 3) actions.pop();
 
   return {
-    strong: strong.slice(0, 3),
+    strong: strong.slice(0, 2),
     brake: brake.slice(0, 3),
     actions,
     isInactive: false,
@@ -185,7 +184,7 @@ export async function PerformanceInsightBlock({ supabase, profileId, firstName }
     .eq("month", month)
     .maybeSingle<Metric>();
 
-  const insights = buildInsights(data);
+  const insights = buildInsights(data, firstName);
 
   // Empty-State (noch kein Sync) — sanft, nicht alarmierend
   if (insights.isEmpty) {
