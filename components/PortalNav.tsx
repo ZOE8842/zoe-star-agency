@@ -27,8 +27,10 @@ function buildNavItems(isStaff: boolean, isAdmin: boolean) {
     { href: "/portal/profile", label: "Profile" },
   ];
   // V7: Admin-LIVE-Analyse nur fuer Admin, nicht fuer Manager
+  // V12: Umsatz-Modul · auch admin-only · vor LIVE-Analyse
   if (isAdmin) {
-    items.splice(1, 0, { href: "/portal/admin/ranking", label: "LIVE-Analyse" });
+    items.splice(1, 0, { href: "/portal/admin/umsatz", label: "Umsatz" });
+    items.splice(2, 0, { href: "/portal/admin/ranking", label: "LIVE-Analyse" });
   }
   return items;
 }
