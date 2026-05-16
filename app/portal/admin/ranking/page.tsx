@@ -63,7 +63,8 @@ type TabKey =
   | "schenkende"
   | "wiedergabezeit"
   | "portalstatus"
-  | "daily";
+  | "daily"
+  | "tagesranking";
 
 interface TabDef {
   key: TabKey;
@@ -334,12 +335,10 @@ const TABS: TabDef[] = [
     ],
   },
 
-  // ---------- 9. MONATSRANKING (V8.2 · vorher "Daily Ranking" benannt) ----------
-  // User-Korrektur 2026-05-16: Daten sind Monatswerte, nicht Tageswerte.
-  // Tab-Label, Headline + Footer auf "Monatsranking" / "Monatsstand" geaendert.
-  // TabKey bleibt "daily" (interner Bezeichner, URL-Backwards-Compat).
+  // ---------- 9. MONATSRANKING ----------
+  // TabKey "daily" bleibt (Backwards-Compat fuer URL).
   // Screenshot-freundliche Top-3-Uebersicht aus 7 Performance-Kategorien.
-  // Spezial-Render (Card-Grid, kein Tabellen-Layout) — siehe AdminLiveAnalysePage.
+  // Spezial-Render (Card-Grid, kein Tabellen-Layout).
   {
     key: "daily",
     emoji: "🏆",
@@ -349,6 +348,28 @@ const TABS: TabDef[] = [
       { term: "Diamanten", def: "Nur Reihenfolge (keine internen Umsatzwerte sichtbar)" },
       { term: "Stand", def: "Letzter Backstage-Sync (siehe Header)" },
       { term: "Portalstatus", def: "wird im Monatsranking bewusst NICHT angezeigt" },
+    ],
+    sortKey: () => 0,
+    columns: [],
+  },
+
+  // ---------- 10. TAGESRANKING (V9 · echtes Daily-Ranking auf Tagesbasis) ----------
+  // Liest aus creator_daily_metrics (Migration 0047) fuer EINEN globalen
+  // target_date — alle Creator werden auf den gleichen Tag verglichen.
+  // Target-Logic (Berlin-Zeit):
+  //   < 12:00 → heute - 2 Tage
+  //   >= 12:00 → heute - 1 Tag (gestern)
+  // → vermeidet halb-vollstaendige Tageswerte, garantiert fairen Vergleich.
+  // Spezial-Render: TagesrankingCards (siehe unten).
+  {
+    key: "tagesranking",
+    emoji: "🗞️",
+    label: "Tagesranking",
+    beschreibung: "Top 3 je Kategorie auf Basis eines konkreten Backstage-Tages — fair, kein Mischen von Tagen.",
+    legende: [
+      { term: "Tag", def: "Globaler target_date: vor 12:00 Berlin → heute-2, ab 12:00 → heute-1" },
+      { term: "Diamanten", def: "Nur Reihenfolge (keine internen Umsatzwerte sichtbar)" },
+      { term: "Fairness", def: "Nur Creator mit echter Datenzeile fuer den Tag werden gewertet" },
     ],
     sortKey: () => 0,
     columns: [],
@@ -378,12 +399,74 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
     )
     .eq("month", month);
 
-  // Letzter Sync fuer Stand-Anzeige (Daily Ranking + Footer)
+  // Letzter Sync fuer Stand-Anzeige (Monatsranking + Footer)
   const lastSyncIso = (metrics ?? [])
     .map((m) => (m as { synced_at?: string }).synced_at)
     .filter((s): s is string => !!s)
     .sort()
     .pop() ?? null;
+
+  // ---------- TAGESRANKING: target_date + daily_metrics ----------
+  // Berlin-Zeit ermitteln (server-side)
+  const berlinHour = (() => {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Berlin", hour: "2-digit", hour12: false,
+    });
+    return parseInt(fmt.format(new Date()), 10);
+  })();
+  const targetDate = (() => {
+    const now = new Date();
+    // Aufpassen: vergleichen wir Berlin-Hour gegen UTC-now, kann fuer
+    // Datumsberechnung wieder Berlin-Datum noetig sein. Pragmatisch:
+    // Nimm Berlin-Date als Basis.
+    const berlinDate = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+    const t = new Date(berlinDate);
+    t.setDate(t.getDate() - (berlinHour < 12 ? 2 : 1));
+    return t;
+  })();
+  const targetDateIso = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(targetDate.getDate()).padStart(2, "0")}`;
+
+  // Daily-Metrics nur laden wenn aktiver Tab "tagesranking" ist (Performance)
+  type DailyMetricRow = {
+    profile_id: string | null;
+    tiktok_username: string;
+    tiktok_handle_normalized: string;
+    metric_date: string;
+    diamonds: number | null;
+    live_minutes: number | null;
+    viewers: number | null;
+    new_followers: number | null;
+    gifters: number | null;
+    gifts: number | null;
+    watchtime_avg_seconds: number | null;
+  };
+  let dailyRows: DailyMetricRow[] = [];
+  if (activeTab === "tagesranking") {
+    const { data: dm } = await db
+      .from("creator_daily_metrics")
+      .select(
+        "profile_id, tiktok_username, tiktok_handle_normalized, metric_date, diamonds, live_minutes, viewers, new_followers, gifters, gifts, watchtime_avg_seconds",
+      )
+      .eq("metric_date", targetDateIso);
+    dailyRows = (dm ?? []) as DailyMetricRow[];
+
+    // Profile-Lookup um display_name zu ergaenzen
+    if (dailyRows.length > 0) {
+      const dailyHandles = dailyRows.map((d) => d.tiktok_handle_normalized);
+      const { data: dailyProfiles } = await db
+        .from("profiles")
+        .select("tiktok_handle_normalized, display_name")
+        .in("tiktok_handle_normalized", dailyHandles);
+      const nameMap = new Map(
+        (dailyProfiles ?? []).map((p) => [p.tiktok_handle_normalized, p.display_name]),
+      );
+      // Mutate: ergaenze display_name in row (in-place via Cast)
+      dailyRows = dailyRows.map((d) => ({
+        ...d,
+        display_name: nameMap.get(d.tiktok_handle_normalized) ?? null,
+      })) as DailyMetricRow[];
+    }
+  }
 
   // Profile-Lookup ueber Handle (Class A vs Class B)
   const handles = (metrics ?? [])
@@ -515,8 +598,13 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
           <MonatsrankingCards rows={rows} lastSyncIso={lastSyncIso} monthLabel={monthLabel} />
         )}
 
-        {/* TABELLE */}
-        {activeTab !== "daily" && (rows.length === 0 ? (
+        {/* TAGESRANKING (V9, key=tagesranking) — echtes Daily aus creator_daily_metrics */}
+        {activeTab === "tagesranking" && (
+          <TagesrankingCards rows={dailyRows} targetDateIso={targetDateIso} />
+        )}
+
+        {/* TABELLE — nur fuer Performance-Tabs + Portalstatus */}
+        {activeTab !== "daily" && activeTab !== "tagesranking" && (rows.length === 0 ? (
           <div className="border border-champagne/15 p-7 text-center">
             <p className="text-cream/55">
               Noch keine Backstage-Daten fuer {monthLabel}. Sobald der naechste
@@ -802,6 +890,137 @@ function MonatsrankingCards({ rows, lastSyncIso, monthLabel }: MonatsrankingCard
       <p className="text-cream/35 text-xs mt-5 leading-relaxed max-w-3xl">
         Quelle: Backstage Anchor-Detail · Daily-Sync 02/09/14/19 Berlin.
         Diamanten-Karte zeigt bewusst nur Reihenfolge ohne Werte.
+      </p>
+    </section>
+  );
+}
+
+// ============================================================
+// TAGESRANKING CARDS (V9 · echtes Daily aus creator_daily_metrics)
+// ============================================================
+// Liest fuer EINEN globalen target_date alle Daily-Rows.
+// Pro Kategorie Top 3. Diamanten ohne Werte.
+// Empty-State wenn keine Rows fuer target_date existieren.
+
+interface TagesrankingRow {
+  profile_id: string | null;
+  tiktok_username: string;
+  tiktok_handle_normalized: string;
+  metric_date: string;
+  diamonds: number | null;
+  live_minutes: number | null;
+  viewers: number | null;
+  new_followers: number | null;
+  gifters: number | null;
+  gifts: number | null;
+  watchtime_avg_seconds: number | null;
+  display_name?: string | null;
+}
+
+interface TagesrankingCardsProps {
+  rows: TagesrankingRow[];
+  targetDateIso: string;
+}
+
+function TagesrankingCards({ rows, targetDateIso }: TagesrankingCardsProps) {
+  const nameOf = (r: TagesrankingRow) => r.display_name || r.tiktok_username;
+  const dateLabel = new Date(targetDateIso).toLocaleDateString("de-DE", {
+    weekday: "long", day: "2-digit", month: "long", year: "numeric",
+  });
+
+  const diamanten   = pickTop3(rows, (r) => r.diamonds ?? 0,              () => "", nameOf);
+  const liveZeit    = pickTop3(rows, (r) => r.live_minutes ?? 0,          (r) => {
+    const m = r.live_minutes ?? 0;
+    const h = Math.floor(m / 60);
+    const rest = m % 60;
+    return h > 0 ? `${h}h ${rest}m` : `${m}m`;
+  }, nameOf);
+  const zuschauer   = pickTop3(rows, (r) => r.viewers ?? 0,               (r) => fmtInt(r.viewers), nameOf);
+  const neueFollow  = pickTop3(rows, (r) => r.new_followers ?? 0,         (r) => fmtInt(r.new_followers), nameOf);
+  const schenkende  = pickTop3(rows, (r) => r.gifters ?? 0,               (r) => fmtInt(r.gifters), nameOf);
+  const gifts       = pickTop3(rows, (r) => r.gifts ?? 0,                 (r) => fmtInt(r.gifts), nameOf);
+  const wiedergabe  = pickTop3(rows, (r) => r.watchtime_avg_seconds ?? 0, (r) => fmtSeconds(r.watchtime_avg_seconds), nameOf);
+
+  const noData = rows.length === 0;
+
+  return (
+    <section>
+      {/* Headline */}
+      <div className="border border-champagne/30 bg-ink/60 p-5 md:p-7 mb-5">
+        <p className="eyebrow mb-2">ZOE⭐ Tagesranking</p>
+        <h2 className="font-display italic text-cream text-2xl md:text-3xl leading-tight">
+          {dateLabel}
+        </h2>
+        <p className="text-cream/55 text-xs mt-2">
+          Letzter vollstaendiger Backstage-Tag · {rows.length} Creator gerankt
+        </p>
+      </div>
+
+      {noData ? (
+        <div className="border border-champagne/15 p-7 text-center">
+          <p className="text-cream/55">
+            Fuer {dateLabel} liegen noch keine vollstaendigen Backstage-Daten vor.
+            Sobald der naechste Daily-Run gelaufen ist, erscheint hier das Tagesranking.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <MonatsrankingCard
+            emoji="💎"
+            title="Diamanten"
+            subtitle="Wer an diesem Tag die meisten Diamanten gesammelt hat."
+            entries={diamanten}
+            showValues={false}
+          />
+          <MonatsrankingCard
+            emoji="⏱"
+            title="LIVE-Zeit"
+            subtitle="Wer an diesem Tag am laengsten LIVE war."
+            entries={liveZeit}
+            showValues={true}
+          />
+          <MonatsrankingCard
+            emoji="👀"
+            title="Zuschauer"
+            subtitle="Wer an diesem Tag die meisten Zuschauer hatte."
+            entries={zuschauer}
+            showValues={true}
+          />
+          <MonatsrankingCard
+            emoji="📈"
+            title="Neue Follower"
+            subtitle="Wer an diesem Tag am staerksten gewachsen ist."
+            entries={neueFollow}
+            showValues={true}
+          />
+          <MonatsrankingCard
+            emoji="👤"
+            title="Schenkende"
+            subtitle="Wer an diesem Tag die meisten unterschiedlichen Unterstuetzer hatte."
+            entries={schenkende}
+            showValues={true}
+          />
+          <MonatsrankingCard
+            emoji="🎁"
+            title="Gifts"
+            subtitle="Wer an diesem Tag die meisten Geschenke erhalten hat."
+            entries={gifts}
+            showValues={true}
+          />
+          <MonatsrankingCard
+            emoji="⏳"
+            title="Wiedergabezeit"
+            subtitle="Bei wem Zuschauer an diesem Tag am laengsten blieben."
+            entries={wiedergabe}
+            showValues={true}
+          />
+        </div>
+      )}
+
+      <p className="text-cream/35 text-xs mt-5 leading-relaxed max-w-3xl">
+        target_date-Logik: vor 12:00 Berlin → heute-2, ab 12:00 → gestern.
+        Nur Creator mit echter Datenzeile fuer den Tag werden gewertet.
+        Kein Fallback auf aeltere Tage.
       </p>
     </section>
   );
