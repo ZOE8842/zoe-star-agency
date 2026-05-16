@@ -117,12 +117,13 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
   const db = sr();
   const month = currentMonthIso();
 
-  // 1) Alle Creator-Profile mit gueltigem Handle, nicht-deleted, nicht excluded
+  // 1) Alle Creator-Profile mit gueltigem Handle (nicht excluded).
+  //    user_status ENUM = {active, inactive, pending} — kein 'deleted'.
+  //    Daher kein status-Filter; alle Werte sind gueltig.
   const { data: profiles } = await db
     .from("profiles")
     .select("id, tiktok_username, tiktok_handle_normalized, display_name, avatar_url, status, onboarding_completed")
     .eq("role", "creator")
-    .neq("status", "deleted")
     .not("tiktok_handle_normalized", "is", null);
 
   const eligible = (profiles ?? []).filter(

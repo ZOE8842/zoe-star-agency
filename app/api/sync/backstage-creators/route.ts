@@ -5,7 +5,9 @@
 //
 // V5-Filter (2026-05-16 · User-Decision):
 //   role = 'creator'
-//   status != 'deleted' (also active + inactive sind drin)
+//   status IN ('active', 'inactive', 'pending')
+//     → user_status ENUM hat NUR diese drei Werte (kein 'deleted').
+//     → daher: kein status-Filter, alle Werte sind valide.
 //   tiktok_handle_normalized IS NOT NULL
 //   ausschluss: 'ray_star_agency' (User-Decision, dauerhaft excluded)
 //
@@ -50,7 +52,6 @@ export async function GET(request: NextRequest) {
       .from("profiles")
       .select("tiktok_handle_normalized")
       .eq("role", "creator")
-      .neq("status", "deleted")
       .not("tiktok_handle_normalized", "is", null)
       .order("tiktok_handle_normalized", { ascending: true });
 
