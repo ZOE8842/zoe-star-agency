@@ -232,7 +232,7 @@ function Card({ emoji, title, entries, showValues, wide }: CardProps) {
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
         <span style={{ fontSize: 26 }}>{emoji}</span>
         <span style={{
-          fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontWeight: 600,
+          fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontWeight: 700,
           fontSize: 30, color: "#1a1004", letterSpacing: "0.005em",
         }}>
           {title}
@@ -256,7 +256,7 @@ function Card({ emoji, title, entries, showValues, wide }: CardProps) {
                 <span style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
                   <span style={{
                     fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-                    fontWeight: 600, fontSize: 28, color: "#a07028", width: 24,
+                    fontWeight: 700, fontSize: 32, color: "#a07028", width: 28,
                   }}>{e.rank}.</span>
                   <span style={{
                     fontSize: isFirst ? 26 : 25,
