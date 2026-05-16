@@ -165,42 +165,42 @@ export default async function MonatsrankingSharePage({ searchParams }: PageProps
         <div className="vignette" />
 
         {/* ============ HEADER ============ */}
-        <div style={{ paddingTop: 100, paddingLeft: 80, paddingRight: 80, textAlign: "center" }}>
+        <div style={{ paddingTop: 70, paddingLeft: 80, paddingRight: 80, textAlign: "center" }}>
           <div style={{
-            fontSize: 24, letterSpacing: "0.65em", color: "#e8c990",
+            fontSize: 22, letterSpacing: "0.65em", color: "#e8c990",
             fontWeight: 500, textTransform: "uppercase",
             textShadow: "0 0 25px rgba(232,201,144,0.25)",
           }}>
             ZOE ⭐
           </div>
-          <div style={{ height: 46 }} />
+          <div style={{ height: 34 }} />
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontWeight: 700, fontSize: 132, lineHeight: 0.92, margin: 0,
+            fontWeight: 700, fontSize: 118, lineHeight: 0.92, margin: 0,
             color: "#faecc6", letterSpacing: "-0.025em",
             textShadow: "0 4px 28px rgba(232,201,144,0.18)",
           }}>
             Monats<span style={{ color: "#e8c990" }}>ranking</span>
           </h1>
-          <div style={{ height: 28 }} />
+          <div style={{ height: 22 }} />
           <div className="gold-line" />
-          <div style={{ height: 32 }} />
+          <div style={{ height: 24 }} />
           <div style={{
-            fontSize: 30, color: "#e8c990",
+            fontSize: 26, color: "#e8c990",
             letterSpacing: "0.5em", textTransform: "uppercase", fontWeight: 400,
           }}>
             {monthLabel}
           </div>
-          <div style={{ height: 16 }} />
-          <div style={{ fontSize: 19, color: "#a89776", fontStyle: "italic", letterSpacing: "0.01em" }}>
+          <div style={{ height: 12 }} />
+          <div style={{ fontSize: 17, color: "#a89776", fontStyle: "italic", letterSpacing: "0.01em" }}>
             Top 3 je Kategorie im aktuellen Monatsstand
           </div>
         </div>
 
         {/* ============ 7 CARDS · 6 in 2-spalt + 1 voll ============ */}
         <div style={{
-          marginTop: 76, paddingLeft: 60, paddingRight: 60,
-          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24,
+          marginTop: 56, paddingLeft: 56, paddingRight: 56,
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20,
         }}>
           <Card emoji="💎" title="Diamanten" entries={diamanten} showValues={false} />
           <Card emoji="⏱"  title="LIVE-Stunden" entries={liveStunden} showValues={true} />
@@ -216,13 +216,13 @@ export default async function MonatsrankingSharePage({ searchParams }: PageProps
 
         {/* ============ FOOTER (minimal · nur Wortmark) ============ */}
         <div style={{
-          position: "absolute", bottom: 70, left: 0, right: 0, textAlign: "center",
+          position: "absolute", bottom: 46, left: 0, right: 0, textAlign: "center",
         }}>
           <div className="gold-line" />
-          <div style={{ height: 26 }} />
+          <div style={{ height: 18 }} />
           <div style={{
             fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontSize: 26, color: "#e8c990", letterSpacing: "0.18em",
+            fontSize: 22, color: "#e8c990", letterSpacing: "0.18em",
           }}>
             Z.O.E. Star Agency
           </div>
@@ -246,14 +246,14 @@ function Card({ emoji, title, entries, showValues, wide }: CardProps) {
       border: "1px solid rgba(232,201,144,0.28)",
       background: "linear-gradient(165deg, rgba(232,201,144,0.06) 0%, rgba(20,12,4,0.55) 100%)",
       boxShadow: "inset 0 1px 0 rgba(232,201,144,0.12), 0 6px 24px rgba(0,0,0,0.45)",
-      padding: wide ? "28px 32px" : "26px 28px",
-      minHeight: wide ? 170 : 235,
+      padding: wide ? "22px 28px" : "22px 24px",
+      minHeight: wide ? 150 : 210,
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 13, marginBottom: 4 }}>
-        <span style={{ fontSize: 30 }}>{emoji}</span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
+        <span style={{ fontSize: 26 }}>{emoji}</span>
         <span style={{
           fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontWeight: 600,
-          fontSize: 34, color: "#faecc6", letterSpacing: "0.005em",
+          fontSize: 30, color: "#faecc6", letterSpacing: "0.005em",
         }}>
           {title}
         </span>
@@ -269,18 +269,18 @@ function Card({ emoji, title, entries, showValues, wide }: CardProps) {
           {entries.map((e) => (
             <li key={e.rank} style={{
               display: "flex", alignItems: "baseline", justifyContent: "space-between",
-              padding: "10px 0", borderBottom: "1px solid rgba(232,201,144,0.10)",
+              padding: "8px 0", borderBottom: "1px solid rgba(232,201,144,0.10)",
             }}>
-              <span style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+              <span style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-                  fontWeight: 600, fontSize: 28, color: "#e8c990", width: 24,
+                  fontWeight: 600, fontSize: 25, color: "#e8c990", width: 22,
                 }}>{e.rank}.</span>
-                <span style={{ fontSize: 23, color: "#f5edd6", fontWeight: 400 }}>{e.name}</span>
+                <span style={{ fontSize: 21, color: "#f5edd6", fontWeight: 400 }}>{e.name}</span>
               </span>
               {showValues && e.value && (
                 <span style={{
-                  fontSize: 21, color: "#e8c990", fontWeight: 500,
+                  fontSize: 19, color: "#e8c990", fontWeight: 500,
                   fontVariantNumeric: "tabular-nums",
                 }}>
                   {e.value}
