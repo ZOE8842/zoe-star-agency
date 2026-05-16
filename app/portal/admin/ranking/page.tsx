@@ -62,7 +62,8 @@ type TabKey =
   | "neue-follower"
   | "schenkende"
   | "wiedergabezeit"
-  | "portalstatus";
+  | "portalstatus"
+  | "daily";
 
 interface TabDef {
   key: TabKey;
@@ -332,6 +333,25 @@ const TABS: TabDef[] = [
       { key: "last", label: "Letzter LIVE", align: "right", render: (r) => fmtDate(r.last_live_date) },
     ],
   },
+
+  // ---------- 9. DAILY RANKING (V8.1) ----------
+  // Screenshot-freundliche Top-3-Uebersicht aus 7 Performance-Kategorien.
+  // Spezial-Render (Card-Grid, kein Tabellen-Layout) — siehe AdminLiveAnalysePage.
+  // Sortier-/Spalten-Felder sind bewusst leer; der Render-Pfad nutzt seine
+  // eigene Logik, die aus rows[] die Top-3 pro Kategorie zieht.
+  {
+    key: "daily",
+    emoji: "🗞️",
+    label: "Daily Ranking",
+    beschreibung: "Top 3 je Kategorie — kompakt, screenshot-freundlich fuer Posts/Gruppen.",
+    legende: [
+      { term: "Diamanten", def: "Nur Reihenfolge (keine internen Umsatzwerte sichtbar)" },
+      { term: "Stand", def: "Letzter Backstage-Sync (siehe Header)" },
+      { term: "Portalstatus", def: "wird in Daily Ranking bewusst NICHT angezeigt" },
+    ],
+    sortKey: () => 0,
+    columns: [],
+  },
 ];
 
 interface PageProps {
@@ -353,9 +373,16 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
   const { data: metrics } = await db
     .from("creator_monthly_metrics")
     .select(
-      "id, profile_id, tiktok_username, tiktok_handle_normalized, valid_live_days, live_minutes_total, live_hours_display, average_viewers, last_live_date, activity_status, diamonds_month, gift_rate, impressions, live_views, followers_gained, ctr, watchtime_avg_seconds, streams_count, gifts_count, gifters_count",
+      "id, profile_id, tiktok_username, tiktok_handle_normalized, valid_live_days, live_minutes_total, live_hours_display, average_viewers, last_live_date, activity_status, diamonds_month, gift_rate, impressions, live_views, followers_gained, ctr, watchtime_avg_seconds, streams_count, gifts_count, gifters_count, synced_at",
     )
     .eq("month", month);
+
+  // Letzter Sync fuer Stand-Anzeige (Daily Ranking + Footer)
+  const lastSyncIso = (metrics ?? [])
+    .map((m) => (m as { synced_at?: string }).synced_at)
+    .filter((s): s is string => !!s)
+    .sort()
+    .pop() ?? null;
 
   // Profile-Lookup ueber Handle (Class A vs Class B)
   const handles = (metrics ?? [])
@@ -482,8 +509,13 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
           </ul>
         </div>
 
+        {/* DAILY RANKING (V8.1) — Spezial-Card-Render statt Tabelle */}
+        {activeTab === "daily" && (
+          <DailyRankingCards rows={rows} lastSyncIso={lastSyncIso} monthLabel={monthLabel} />
+        )}
+
         {/* TABELLE */}
-        {rows.length === 0 ? (
+        {activeTab !== "daily" && (rows.length === 0 ? (
           <div className="border border-champagne/15 p-7 text-center">
             <p className="text-cream/55">
               Noch keine Backstage-Daten fuer {monthLabel}. Sobald der naechste
@@ -594,7 +626,7 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
               </tbody>
             </table>
           </div>
-        )}
+        ))}
 
         <p className="text-cream/35 text-xs mt-6 leading-relaxed max-w-3xl">
           Quelle: Backstage Anchor-Detail-Page pro Creator, aggregiert in
@@ -606,5 +638,170 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
         </p>
       </main>
     </>
+  );
+}
+
+// ============================================================
+// DAILY RANKING CARDS (V8.1)
+// ============================================================
+// Screenshot-freundliche Top-3-Cards aus 7 Performance-Kategorien.
+// Diamanten-Karte zeigt BEWUSST keine Werte (User-Decision: keine
+// internen Umsatz-Zahlen in Posts/Gruppen leaken). Andere Karten
+// zeigen die echte Kennzahl.
+// Portalstatus wird NICHT in Daily-Ranking aufgenommen.
+
+interface DailyCardProps {
+  emoji: string;
+  title: string;
+  subtitle: string;
+  entries: Array<{ rank: number; name: string; value?: string }>;
+  showValues?: boolean;
+}
+
+function DailyCard({ emoji, title, subtitle, entries, showValues }: DailyCardProps) {
+  return (
+    <div className="border border-champagne/20 p-5 md:p-6 bg-ink/40">
+      <div className="flex items-baseline gap-2 mb-1">
+        <span className="text-xl md:text-2xl">{emoji}</span>
+        <h3 className="font-display italic text-cream text-lg md:text-xl leading-tight">
+          {title}
+        </h3>
+      </div>
+      <p className="text-cream/55 text-xs mb-4 leading-relaxed">{subtitle}</p>
+      {entries.length === 0 ? (
+        <p className="text-cream/35 text-xs italic">Noch keine Daten</p>
+      ) : (
+        <ol className="space-y-2">
+          {entries.map((e) => (
+            <li key={e.rank} className="flex items-baseline justify-between gap-3 border-b border-champagne/8 pb-2 last:border-b-0">
+              <span className="text-cream text-sm md:text-base">
+                <span className="text-champagne font-display italic mr-2">{e.rank}.</span>
+                {e.name}
+              </span>
+              {showValues && e.value && (
+                <span className="text-cream/70 text-sm md:text-base font-medium tabular-nums">
+                  {e.value}
+                </span>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+function pickTop3<T>(
+  rows: T[],
+  sortKey: (r: T) => number,
+  renderValue: (r: T) => string,
+  renderName: (r: T) => string,
+): Array<{ rank: number; name: string; value: string }> {
+  const sorted = [...rows]
+    .filter((r) => sortKey(r) > 0) // Nur Creator mit Daten in dieser Kategorie
+    .sort((a, b) => sortKey(b) - sortKey(a))
+    .slice(0, 3);
+  return sorted.map((r, i) => ({
+    rank: i + 1,
+    name: renderName(r),
+    value: renderValue(r),
+  }));
+}
+
+interface DailyRankingCardsProps {
+  rows: Row[];
+  lastSyncIso: string | null;
+  monthLabel: string;
+}
+
+function DailyRankingCards({ rows, lastSyncIso, monthLabel }: DailyRankingCardsProps) {
+  const nameOf = (r: Row) => r.display_name || r.tiktok_username;
+
+  const diamanten     = pickTop3(rows, (r) => r.diamonds_month ?? 0,        () => "", nameOf);
+  const liveStunden   = pickTop3(rows, (r) => r.live_minutes_total,         (r) => fmtHours(r.live_minutes_total, r.live_hours_display), nameOf);
+  const liveTage      = pickTop3(rows, (r) => r.valid_live_days,            (r) => `${r.valid_live_days} Tage`, nameOf);
+  const zuschauer     = pickTop3(rows, (r) => r.approx_total_viewers,       (r) => fmtInt(r.approx_total_viewers), nameOf);
+  const neueFollower  = pickTop3(rows, (r) => r.followers_gained ?? 0,      (r) => fmtInt(r.followers_gained), nameOf);
+  const schenkende    = pickTop3(rows, (r) => r.gifters_count ?? 0,         (r) => fmtInt(r.gifters_count), nameOf);
+  const wiedergabe    = pickTop3(rows, (r) => r.watchtime_avg_seconds ?? 0, (r) => fmtSeconds(r.watchtime_avg_seconds), nameOf);
+
+  const standLabel = lastSyncIso
+    ? new Date(lastSyncIso).toLocaleString("de-DE", {
+        timeZone: "Europe/Berlin",
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+      })
+    : "—";
+
+  return (
+    <section>
+      {/* Headline-Block für Screenshot */}
+      <div className="border border-champagne/30 bg-ink/60 p-5 md:p-7 mb-5">
+        <p className="eyebrow mb-2">ZOE⭐ Daily Ranking</p>
+        <h2 className="font-display italic text-cream text-2xl md:text-3xl leading-tight">
+          {monthLabel}
+        </h2>
+        <p className="text-cream/55 text-xs mt-2">
+          Stand: {standLabel} Berlin
+        </p>
+      </div>
+
+      {/* 7 Cards · 1-spaltig mobile, 2-spaltig md, 3-spaltig lg */}
+      <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <DailyCard
+          emoji="💎"
+          title="Diamanten"
+          subtitle="Wer aktuell die meisten Diamanten gesammelt hat."
+          entries={diamanten}
+          showValues={false}
+        />
+        <DailyCard
+          emoji="⏱"
+          title="LIVE-Stunden"
+          subtitle="Wer am meisten LIVE-Zeit aufgebaut hat."
+          entries={liveStunden}
+          showValues={true}
+        />
+        <DailyCard
+          emoji="🔥"
+          title="LIVE-Tage"
+          subtitle="Wer am regelmaessigsten LIVE war."
+          entries={liveTage}
+          showValues={true}
+        />
+        <DailyCard
+          emoji="👀"
+          title="Zuschauer"
+          subtitle="Wer die meisten Zuschauer erreicht hat."
+          entries={zuschauer}
+          showValues={true}
+        />
+        <DailyCard
+          emoji="📈"
+          title="Neue Follower"
+          subtitle="Wer aktuell am staerksten waechst."
+          entries={neueFollower}
+          showValues={true}
+        />
+        <DailyCard
+          emoji="👤"
+          title="Schenkende"
+          subtitle="Wer die meisten unterschiedlichen Unterstuetzer hatte."
+          entries={schenkende}
+          showValues={true}
+        />
+        <DailyCard
+          emoji="⏳"
+          title="Wiedergabezeit"
+          subtitle="Bei wem Zuschauer am laengsten im LIVE bleiben."
+          entries={wiedergabe}
+          showValues={true}
+        />
+      </div>
+
+      <p className="text-cream/35 text-xs mt-5 leading-relaxed max-w-3xl">
+        Quelle: Backstage Anchor-Detail · Daily-Sync 02/09/14/19 Berlin.
+        Diamanten-Karte zeigt bewusst nur Reihenfolge ohne Werte.
+      </p>
+    </section>
   );
 }
