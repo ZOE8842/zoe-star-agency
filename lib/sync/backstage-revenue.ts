@@ -51,10 +51,16 @@ export interface RevenueSyncResult {
   errors: RevenueSyncError[];
 }
 
-// Aktueller Monat ISO (UTC ist OK, da period_month nur per Datum verglichen wird)
+// Aktueller Monat in Europe/Berlin ISO (Codex-MEDIUM-Fix: stabile TZ).
+// Verhindert dass an Tagesgrenzen Server-UTC vs Workstation-Berlin
+// unterschiedliche current-month-Bestimmung haben.
 function currentMonthIso(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  const berlinFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    year: "numeric", month: "2-digit",
+  });
+  // en-CA gibt "YYYY-MM" zurueck
+  return `${berlinFmt.format(new Date())}-01`;
 }
 
 const MONTH_RE = /^\d{4}-\d{2}-01$/;
@@ -158,11 +164,36 @@ export async function syncBackstageRevenue(
       return Number.isFinite(n) ? Math.max(0, n) : null;
     };
 
-    // total_revenue_usd auto-berechnen wenn nicht uebergeben
-    const a = clipFloat(row.activity_revenue_usd) ?? 0;
-    const t = clipFloat(row.tier_revenue_usd) ?? 0;
-    const i = clipFloat(row.incremental_revenue_usd) ?? 0;
-    const total = clipFloat(row.total_revenue_usd) ?? (a + t + i);
+    // total_revenue_usd auto-berechnen NUR wenn mind. eine Komponente nicht-null ist.
+    // Codex-CRITICAL-Fix: null ?? 0 wuerde fehlgeschlagenen Scrape als verifiziertes 0 speichern.
+    const a = clipFloat(row.activity_revenue_usd);
+    const t = clipFloat(row.tier_revenue_usd);
+    const i = clipFloat(row.incremental_revenue_usd);
+    const totalProvided = clipFloat(row.total_revenue_usd);
+    const hasAnyComponent = a !== null || t !== null || i !== null;
+    const total = totalProvided !== null
+      ? totalProvided
+      : hasAnyComponent
+        ? (a ?? 0) + (t ?? 0) + (i ?? 0)
+        : null;
+
+    // Codex-CRITICAL-Fix + MEDIUM-Skip: Phantom-Skip
+    // Wenn ALLE Pflichtfelder null → kein Push (Daten-Layer-Failure, kein verifiziertes Null-Umsatz)
+    const hasAnyMeaningfulField =
+      hasAnyComponent ||
+      totalProvided !== null ||
+      clipFloat(row.forecast_revenue_usd) !== null ||
+      clipFloat(row.forecast_bonus_usd) !== null ||
+      clipInt(row.forecast_diamonds) !== null ||
+      clipFloat(row.last_period_total_usd) !== null;
+    if (!hasAnyMeaningfulField) {
+      result.errors.push({
+        handle: rawHandle, period,
+        reason: "phantom_skip: all parsed fields null",
+      });
+      result.skipped++;
+      continue;
+    }
 
     const { data: existing } = await sb
       .from("creator_revenue_metrics")

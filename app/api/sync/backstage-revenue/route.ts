@@ -1,6 +1,11 @@
 // POST /api/sync/backstage-revenue
 // Push-Senke fuer Backstage-Anreize (Activity · Tier · Incremental · Forecast · Missing).
 // Auth: Bearer <BACKSTAGE_SYNC_BEARER>. Admin-only Data.
+//
+// V12.3-Codex-Hardening (2026-05-16):
+//   - Alle Revenue-/Diamonds-Felder .nonnegative() (kein negativer Bonus erlaubt)
+//   - generischer 500-Error (kein Leak von Stack/Env in Response)
+//   - Body-Size-Check via Header + Streaming-Cap im Read (Chunked-Schutz)
 
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
@@ -17,15 +22,17 @@ const MAX_BODY_BYTES = 500_000;
 const RevenueRowSchema = z.object({
   tiktok_username: z.string().min(1),
   period_month: z.string().regex(/^\d{4}-\d{2}-01$/, "period_month must be ISO YYYY-MM-01"),
-  activity_revenue_usd:    z.number().finite().nullable().optional(),
-  tier_revenue_usd:        z.number().finite().nullable().optional(),
-  incremental_revenue_usd: z.number().finite().nullable().optional(),
-  total_revenue_usd:       z.number().finite().nullable().optional(),
-  last_period_total_usd:   z.number().finite().nullable().optional(),
-  forecast_revenue_usd:    z.number().finite().nullable().optional(),
+  // Alle Revenue-/Diamonds-/Forecast-Felder sind nicht-negativ.
+  // Backstage liefert nie negative Bonuses oder Diamanten.
+  activity_revenue_usd:    z.number().finite().nonnegative().nullable().optional(),
+  tier_revenue_usd:        z.number().finite().nonnegative().nullable().optional(),
+  incremental_revenue_usd: z.number().finite().nonnegative().nullable().optional(),
+  total_revenue_usd:       z.number().finite().nonnegative().nullable().optional(),
+  last_period_total_usd:   z.number().finite().nonnegative().nullable().optional(),
+  forecast_revenue_usd:    z.number().finite().nonnegative().nullable().optional(),
   forecast_diamonds:       z.number().finite().nonnegative().nullable().optional(),
-  forecast_bonus_usd:      z.number().finite().nullable().optional(),
-  missing_revenue_usd:     z.number().finite().nullable().optional(),
+  forecast_bonus_usd:      z.number().finite().nonnegative().nullable().optional(),
+  missing_revenue_usd:     z.number().finite().nonnegative().nullable().optional(),
   missing_diamonds:        z.number().finite().nonnegative().nullable().optional(),
   missing_next_tier_label: z.string().nullable().optional(),
   missing_status:          z.enum(["near","critical","reached","none"]).nullable().optional(),
@@ -39,10 +46,39 @@ const BodySchema = z.object({
   force: z.boolean().optional(),
 });
 
+async function readBodyWithCap(request: NextRequest): Promise<unknown> {
+  // Codex-MEDIUM-Fix: Body via Stream lesen + harte Byte-Cap. Schuetzt vor
+  // Chunked-Transfer der Content-Length-Pre-Check umgeht.
+  const reader = request.body?.getReader();
+  if (!reader) {
+    // Kein Body-Stream → trotzdem versuchen via .json()
+    return await request.json();
+  }
+  let total = 0;
+  const chunks: Uint8Array[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      total += value.length;
+      if (total > MAX_BODY_BYTES) {
+        throw new Error("body_too_large");
+      }
+      chunks.push(value);
+    }
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) { bytes.set(c, offset); offset += c.length; }
+  const text = new TextDecoder("utf-8").decode(bytes);
+  return JSON.parse(text);
+}
+
 export async function POST(request: NextRequest) {
   const authResp = checkSyncAuth(request);
   if (authResp) return authResp;
 
+  // Header-Pre-Check (best-effort)
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > MAX_BODY_BYTES) {
     return NextResponse.json({ error: `body too large (max ${MAX_BODY_BYTES} bytes)` }, { status: 413 });
@@ -50,8 +86,12 @@ export async function POST(request: NextRequest) {
 
   let raw: unknown;
   try {
-    raw = await request.json();
-  } catch {
+    raw = await readBodyWithCap(request);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "invalid body";
+    if (msg === "body_too_large") {
+      return NextResponse.json({ error: `body too large (max ${MAX_BODY_BYTES} bytes)` }, { status: 413 });
+    }
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
 
@@ -70,9 +110,10 @@ export async function POST(request: NextRequest) {
     );
     return NextResponse.json(result);
   } catch (e) {
+    // Codex-MEDIUM-Fix: generischer Error · keine Internals leaken
     const msg = e instanceof Error ? e.message : "unknown error";
     Sentry.captureException(e);
     console.error("[sync/backstage-revenue] crash:", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "internal_server_error" }, { status: 500 });
   }
 }
