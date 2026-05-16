@@ -2,12 +2,18 @@
 // Wird vom POST /api/sync/backstage-metrics aufgerufen.
 //
 // Quelle: TikTok LIVE Backstage (extern via Workstation-Playwright-Push).
-// Ziel: Tabelle creator_monthly_metrics (1 Row pro profile_id + month).
-// Idempotenz: ON CONFLICT (profile_id, month) DO UPDATE.
+// Ziel:   Tabelle creator_monthly_metrics (handle-keyed seit Migration 0046).
+// Idempotenz: ON CONFLICT (tiktok_handle_normalized, month) DO UPDATE.
 //
-// Match-Strategie: profiles.tiktok_handle_normalized (Migration 0042) gegen
-// normalisiertes handle aus dem Sync-Payload. Mehrdeutige oder fehlende
-// Treffer landen NICHT im Insert, sondern in result.errors + Audit-Log.
+// V6 (2026-05-16, Migration 0046):
+//   - Tabelle ist jetzt handle-keyed, profile_id NULLABLE.
+//   - Push akzeptiert auch Handles ohne Portal-Profile (Class B / Backstage-Only).
+//     Trigger cmm_auto_link_profile setzt profile_id automatisch, falls ein
+//     Profile mit gleichem handle existiert. Sonst bleibt profile_id NULL.
+//   - Wenn der Creator sich spaeter onboarded (handle in profiles gesetzt),
+//     greift Trigger profiles_link_existing_cmm und uebernimmt die Historie.
+//   - Ambiguous-Match (mehrere Profiles mit gleichem handle) bleibt Skip-Fall
+//     (Datenintegritaets-Problem, sollte nicht passieren).
 
 import { createClient as createSrClient } from "@supabase/supabase-js";
 import { writeAudit } from "@/lib/audit/log";
@@ -45,12 +51,15 @@ export interface SyncResult {
   total: number;
   inserted: number;
   updated: number;
+  pool_only: number;   // V6: Class-B-Rows (handle-only, kein profile_id)
   skipped: number;
   errors: SyncError[];
 }
 
 const ALLOWED_STATUS = new Set(["aktiv", "unregelmaessig", "inaktiv"]);
 const MONTH_RE = /^\d{4}-\d{2}-01$/;
+
+const EXCLUDED_HANDLES = new Set<string>(["ray_star_agency"]);
 
 function srClient() {
   return createSrClient(
@@ -60,9 +69,9 @@ function srClient() {
   );
 }
 
-// Normalisierungs-Pipeline (Reihenfolge bewusst, deckt sich 1:1 mit der
-// generierten Spalte profiles.tiktok_handle_normalized aus Migration 0042):
-//   1) ALLEN whitespace strippen (auch Tabs, Newlines, innenliegende Spaces)
+// Normalisierungs-Pipeline (deckt sich 1:1 mit profiles.tiktok_handle_normalized
+// und der neuen creator_monthly_metrics.tiktok_handle_normalized):
+//   1) ALLEN whitespace strippen
 //   2) lower()
 //   3) fuehrendes @ entfernen
 export function normalizeHandle(raw: string | null | undefined): string {
@@ -70,9 +79,6 @@ export function normalizeHandle(raw: string | null | undefined): string {
   return raw.replace(/\s+/g, "").toLowerCase().replace(/^@/, "");
 }
 
-// Fallback wenn Backstage activity_status nicht liefert.
-// Schwellen orientieren sich an gaengiger Backstage-Logik:
-//   >= 5 gueltige Tage = aktiv, 1-4 = unregelmaessig, 0 = inaktiv.
 function deriveActivityStatus(
   validLiveDays: number,
 ): "aktiv" | "unregelmaessig" | "inaktiv" {
@@ -89,20 +95,19 @@ export async function syncBackstageMetrics(
     total: rows.length,
     inserted: 0,
     updated: 0,
+    pool_only: 0,
     skipped: 0,
     errors: [],
   };
 
-  // Pre-Flight: Migration 0042 muss in Production applied sein, sonst stiller Skip.
-  // Ein .limit(0)-Select gibt error wenn die Spalte fehlt — wir crashen explizit
-  // statt 0 Matches zu produzieren (Codex-P3-Hint).
+  // Pre-Flight: Migration 0046 muss applied sein (handle-Spalte auf cmm).
   const { error: preflightErr } = await sb
-    .from("profiles")
+    .from("creator_monthly_metrics")
     .select("tiktok_handle_normalized")
     .limit(0);
   if (preflightErr) {
     throw new Error(
-      `preflight failed: profiles.tiktok_handle_normalized missing? (${preflightErr.message})`,
+      `preflight failed: creator_monthly_metrics.tiktok_handle_normalized missing? (${preflightErr.message})`,
     );
   }
 
@@ -110,7 +115,7 @@ export async function syncBackstageMetrics(
     const rawHandle = row?.tiktok_username ?? "";
     const month = row?.month ?? null;
 
-    // Validation: Pflichtfelder
+    // Pflichtfelder
     if (!rawHandle || !month) {
       result.errors.push({
         handle: rawHandle,
@@ -141,40 +146,52 @@ export async function syncBackstageMetrics(
       continue;
     }
 
-    // Resolve profile_id via normalized-handle Index (Migration 0042)
-    const { data: profiles, error: profErr } = await sb
-      .from("profiles")
-      .select("id")
-      .eq("tiktok_handle_normalized", normalized);
+    // RAY-Exclusion (hardcoded, identisch zu /api/sync/backstage-creators)
+    if (EXCLUDED_HANDLES.has(normalized)) {
+      result.errors.push({
+        handle: rawHandle,
+        month,
+        reason: "handle excluded from sync (EXCLUDED_HANDLES)",
+      });
+      result.skipped++;
+      continue;
+    }
 
-    if (profErr) {
-      result.errors.push({
-        handle: rawHandle,
-        month,
-        reason: `profile lookup failed: ${profErr.message}`,
-      });
-      result.skipped++;
-      continue;
+    // Profile-Lookup (optional — kein Hard-Skip mehr)
+    //   - 0 Matches  → Class-B-Eintrag (profile_id bleibt NULL)
+    //   - 1 Match    → Class-A-Eintrag (profile_id wird gesetzt)
+    //   - >1 Matches → Skip (Datenproblem, sollte nicht passieren)
+    let resolvedProfileId: string | null = null;
+    {
+      const { data: profiles, error: profErr } = await sb
+        .from("profiles")
+        .select("id")
+        .eq("tiktok_handle_normalized", normalized);
+      if (profErr) {
+        result.errors.push({
+          handle: rawHandle,
+          month,
+          reason: `profile lookup failed: ${profErr.message}`,
+        });
+        result.skipped++;
+        continue;
+      }
+      if (profiles && profiles.length > 1) {
+        result.errors.push({
+          handle: rawHandle,
+          month,
+          reason: `ambiguous match (${profiles.length} profiles): ${profiles
+            .map((p) => p.id)
+            .join(",")}`,
+        });
+        result.skipped++;
+        continue;
+      }
+      if (profiles && profiles.length === 1) {
+        resolvedProfileId = profiles[0].id as string;
+      }
+      // else: profiles=0 → Class B, profile_id bleibt NULL
     }
-    if (!profiles || profiles.length === 0) {
-      result.errors.push({
-        handle: rawHandle,
-        month,
-        reason: `no profile match for handle "${normalized}"`,
-      });
-      result.skipped++;
-      continue;
-    }
-    if (profiles.length > 1) {
-      result.errors.push({
-        handle: rawHandle,
-        month,
-        reason: `ambiguous match (${profiles.length} profiles): ${profiles.map((p) => p.id).join(",")}`,
-      });
-      result.skipped++;
-      continue;
-    }
-    const profileId = profiles[0].id as string;
 
     // Sanity-clip + status-Fallback
     const validLiveDays = Math.max(0, Math.floor(Number(row.valid_live_days) || 0));
@@ -189,15 +206,15 @@ export async function syncBackstageMetrics(
         ? Number(row.live_hours_display)
         : Number((liveMinutes / 60).toFixed(1));
 
-    // Insert vs Update unterscheiden (fuer Counter im Result)
+    // Insert vs Update unterscheiden (handle-keyed)
     const { data: existing } = await sb
       .from("creator_monthly_metrics")
       .select("id")
-      .eq("profile_id", profileId)
+      .eq("tiktok_handle_normalized", normalized)
       .eq("month", month)
       .maybeSingle();
 
-    // Phase-5-KPI defensive parsing (alle optional, clip auf >= 0, NULL bei undefined)
+    // Phase-5-KPI defensive parsing
     const clipInt = (v: unknown): number | null => {
       if (v === null || v === undefined || v === "") return null;
       const n = Math.floor(Number(v));
@@ -213,8 +230,9 @@ export async function syncBackstageMetrics(
       .from("creator_monthly_metrics")
       .upsert(
         {
-          profile_id: profileId,
+          profile_id: resolvedProfileId,
           tiktok_username: rawHandle,
+          tiktok_handle_normalized: normalized,
           month,
           valid_live_days: validLiveDays,
           live_minutes_total: liveMinutes,
@@ -222,7 +240,6 @@ export async function syncBackstageMetrics(
           average_viewers: avgViewers,
           last_live_date: row.last_live_date ?? null,
           activity_status: status,
-          // Phase-5-KPIs (Migration 0044)
           diamonds_month:        clipInt(row.diamonds_month) ?? 0,
           gift_rate:             clipFloat(row.gift_rate),
           impressions:           clipInt(row.impressions),
@@ -238,7 +255,7 @@ export async function syncBackstageMetrics(
           synced_at: new Date().toISOString(),
           error_message: null,
         },
-        { onConflict: "profile_id,month" },
+        { onConflict: "tiktok_handle_normalized,month" },
       );
 
     if (upsertErr) {
@@ -253,9 +270,9 @@ export async function syncBackstageMetrics(
 
     if (existing) result.updated++;
     else result.inserted++;
+    if (resolvedProfileId === null) result.pool_only++;
   }
 
-  // Audit-Log fire-and-forget (Cap auf 50 errors im payload, sonst Bloat)
   await writeAudit({
     actorId: null,
     actorRole: "system",
@@ -266,6 +283,7 @@ export async function syncBackstageMetrics(
       total: result.total,
       inserted: result.inserted,
       updated: result.updated,
+      pool_only: result.pool_only,
       skipped: result.skipped,
       error_count: result.errors.length,
       errors: result.errors.slice(0, 50),

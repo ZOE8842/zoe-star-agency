@@ -4,27 +4,20 @@ import { PortalNav } from "@/components/PortalNav";
 
 export const dynamic = "force-dynamic";
 
-// /portal/admin/ranking — V5 (2026-05-16)
+// /portal/admin/ranking — V6 (Migration 0046 · Backstage-Pool als Primary Source)
 //
-// REGEL (User-Decision):
-//   Zeige ALLE Creator-Profile mit gueltigem TikTok-Handle, egal ob
-//   Onboarding abgeschlossen ist oder nicht — Backstage-Daten werden
-//   ohnehin gescraped (siehe /api/sync/backstage-creators).
-//   Ranking ist die Admin-Sicht auf den vollstaendigen Creator-Pool.
+// REGEL:
+//   Zeige ALLE creator_monthly_metrics-Rows fuer den aktuellen Monat.
+//   Diese Tabelle ist seit Migration 0046 handle-keyed:
+//     Class A: profile_id != NULL → Creator hat Portal-Profile
+//     Class B: profile_id  = NULL → Backstage-only, noch nicht registriert
 //
-//   Ausschluss-Set: 'ray_star_agency' (dauerhaft excluded).
-//   Status = 'deleted' wird ausgeblendet.
+//   LEFT JOIN auf profiles via tiktok_handle_normalized:
+//     - Class A liefert Portal-Status + Onboarding-Status
+//     - Class B zeigt "Nicht im Portal" + "—"
 //
-// Anzeige pro Zeile:
-//   Creator-Name + TikTok-Handle
-//   Portal-Status   (active / inactive)
-//   Onboarding      (onboarded / not_onboarded)
-//   Backstage       (synced / missing_backstage)
-//   LIVE-Tage, LIVE-Stunden, Ø Zuschauer, Diamanten, Geschenkrate,
-//   Letzter LIVE, Activity-Status
-//
-// Sortierung: erst nach Sortier-Key (default Diamanten desc), Creator ohne
-// Daten landen am Ende (sortKey-Wert = 0 / null).
+// Ranking ist die Admin-Sicht auf den vollstaendigen Backstage-Pool.
+// RAY bleibt durch EXCLUDED_HANDLES im Sync-Endpoint draussen.
 
 const SORT_OPTIONS = [
   { key: "diamonds_month",      label: "Diamanten" },
@@ -37,15 +30,16 @@ const SORT_OPTIONS = [
 type SortKey = (typeof SORT_OPTIONS)[number]["key"];
 
 interface Row {
-  profile_id: string;
+  metric_id: string;
   tiktok_username: string;
   tiktok_handle_normalized: string;
+  // Profile-Side (kann NULL sein → Class B / nicht registriert)
+  profile_id: string | null;
   display_name: string | null;
   avatar_url: string | null;
-  status: string;
-  onboarding_completed: boolean;
-  has_backstage: boolean;
-  // Mai-Metrics — null wenn missing_backstage
+  portal_status: string | null;
+  onboarding_completed: boolean | null;
+  // KPIs
   valid_live_days: number;
   live_minutes_total: number;
   live_hours_display: number | null;
@@ -55,8 +49,6 @@ interface Row {
   diamonds_month: number | null;
   gift_rate: number | null;
 }
-
-const EXCLUDED_HANDLES = new Set<string>(["ray_star_agency"]);
 
 function sr() {
   return createClient(
@@ -82,22 +74,25 @@ function formatDate(s: string | null): string {
   return new Date(s).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
 }
 
-function statusBadge(s: Row["activity_status"], hasBackstage: boolean):
-  { label: string; cls: string } {
-  if (!hasBackstage) return { label: "kein Sync", cls: "border border-cream/15 text-cream/35" };
+function activityBadge(s: Row["activity_status"]): { label: string; cls: string } {
   if (s === "aktiv") return { label: "aktiv", cls: "bg-champagne/15 text-champagne border border-champagne/40" };
   if (s === "unregelmaessig") return { label: "unregelmäßig", cls: "border border-champagne/30 text-champagne/80" };
   if (s === "inaktiv") return { label: "inaktiv", cls: "border border-cream/20 text-cream/45" };
   return { label: "—", cls: "border border-cream/15 text-cream/35" };
 }
 
-function portalBadge(s: string): { label: string; cls: string } {
-  if (s === "active") return { label: "Portal aktiv", cls: "border border-champagne/30 text-champagne/80" };
-  if (s === "inactive") return { label: "Portal inaktiv", cls: "border border-cream/20 text-cream/45" };
-  return { label: s, cls: "border border-cream/15 text-cream/35" };
+function portalBadge(profileId: string | null, status: string | null):
+  { label: string; cls: string } {
+  if (!profileId) return { label: "kein Profil", cls: "border border-cream/15 text-cream/45" };
+  if (status === "active") return { label: "aktiv", cls: "border border-champagne/30 text-champagne/80" };
+  if (status === "inactive") return { label: "inaktiv", cls: "border border-cream/20 text-cream/45" };
+  if (status === "pending") return { label: "pending", cls: "border border-yellow-400/40 text-yellow-300/85" };
+  return { label: status ?? "—", cls: "border border-cream/15 text-cream/35" };
 }
 
-function onboardingBadge(done: boolean): { label: string; cls: string } {
+function onboardingBadge(profileId: string | null, done: boolean | null):
+  { label: string; cls: string } {
+  if (!profileId) return { label: "—", cls: "border border-cream/15 text-cream/35" };
   return done
     ? { label: "onboarded", cls: "border border-champagne/30 text-champagne/80" }
     : { label: "pending", cls: "border border-yellow-400/40 text-yellow-300/85" };
@@ -117,56 +112,61 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
   const db = sr();
   const month = currentMonthIso();
 
-  // 1) Alle Creator-Profile mit gueltigem Handle (nicht excluded).
-  //    user_status ENUM = {active, inactive, pending} — kein 'deleted'.
-  //    Daher kein status-Filter; alle Werte sind gueltig.
-  const { data: profiles } = await db
-    .from("profiles")
-    .select("id, tiktok_username, tiktok_handle_normalized, display_name, avatar_url, status, onboarding_completed")
-    .eq("role", "creator")
-    .not("tiktok_handle_normalized", "is", null);
-
-  const eligible = (profiles ?? []).filter(
-    (p) => !EXCLUDED_HANDLES.has((p.tiktok_handle_normalized ?? "").toLowerCase()),
-  );
-  const eligibleIds = eligible.map((p) => p.id);
-
-  // 2) Alle Mai-Metrics fuer diese Profile
+  // 1) Alle Mai-Metrics (handle-keyed)
   const { data: metrics } = await db
     .from("creator_monthly_metrics")
     .select(
-      "profile_id, valid_live_days, live_minutes_total, live_hours_display, average_viewers, last_live_date, activity_status, diamonds_month, gift_rate",
+      "id, profile_id, tiktok_username, tiktok_handle_normalized, valid_live_days, live_minutes_total, live_hours_display, average_viewers, last_live_date, activity_status, diamonds_month, gift_rate",
     )
-    .eq("month", month)
-    .in("profile_id", eligibleIds.length > 0 ? eligibleIds : [""]);
+    .eq("month", month);
 
-  const metricsMap = new Map((metrics ?? []).map((m) => [m.profile_id, m]));
+  // 2) Profile-Lookup via Handle (Class-A → Portal-Status)
+  const handles = (metrics ?? [])
+    .map((m) => m.tiktok_handle_normalized as string | null)
+    .filter((h): h is string => !!h);
 
-  const rows: Row[] = eligible.map((p) => {
-    const m = metricsMap.get(p.id);
+  const { data: profiles } = handles.length > 0
+    ? await db
+        .from("profiles")
+        .select("id, tiktok_handle_normalized, display_name, avatar_url, status, onboarding_completed")
+        .in("tiktok_handle_normalized", handles)
+    : { data: [] as Array<{
+        id: string;
+        tiktok_handle_normalized: string;
+        display_name: string | null;
+        avatar_url: string | null;
+        status: string;
+        onboarding_completed: boolean;
+      }> };
+
+  const profileByHandle = new Map(
+    (profiles ?? []).map((p) => [p.tiktok_handle_normalized, p]),
+  );
+
+  const rows: Row[] = (metrics ?? []).map((m) => {
+    const p = profileByHandle.get(m.tiktok_handle_normalized);
     return {
-      profile_id: p.id,
-      tiktok_username: p.tiktok_username ?? "",
-      tiktok_handle_normalized: p.tiktok_handle_normalized ?? "",
-      display_name: p.display_name ?? null,
-      avatar_url: p.avatar_url ?? null,
-      status: p.status ?? "active",
-      onboarding_completed: !!p.onboarding_completed,
-      has_backstage: !!m,
-      valid_live_days: m?.valid_live_days ?? 0,
-      live_minutes_total: m?.live_minutes_total ?? 0,
-      live_hours_display: m?.live_hours_display ?? null,
-      average_viewers: m?.average_viewers ?? 0,
-      last_live_date: m?.last_live_date ?? null,
-      activity_status: (m?.activity_status as Row["activity_status"]) ?? null,
-      diamonds_month: m?.diamonds_month ?? null,
-      gift_rate: m?.gift_rate ?? null,
+      metric_id: m.id,
+      tiktok_username: m.tiktok_username ?? "",
+      tiktok_handle_normalized: m.tiktok_handle_normalized ?? "",
+      profile_id: p?.id ?? null,
+      display_name: p?.display_name ?? null,
+      avatar_url: p?.avatar_url ?? null,
+      portal_status: p?.status ?? null,
+      onboarding_completed: p?.onboarding_completed ?? null,
+      valid_live_days: m.valid_live_days,
+      live_minutes_total: m.live_minutes_total,
+      live_hours_display: m.live_hours_display,
+      average_viewers: m.average_viewers,
+      last_live_date: m.last_live_date,
+      activity_status: m.activity_status,
+      diamonds_month: m.diamonds_month,
+      gift_rate: m.gift_rate,
     };
   });
 
-  // Sortierung: Creator MIT Backstage-Daten oben, dann nach Key
+  // Sortierung nach Sort-Key
   rows.sort((a, b) => {
-    if (a.has_backstage !== b.has_backstage) return a.has_backstage ? -1 : 1;
     const av = (a[sortKey] ?? 0) as number;
     const bv = (b[sortKey] ?? 0) as number;
     return sortDir === "asc" ? av - bv : bv - av;
@@ -178,9 +178,8 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
   });
 
   const totalRows = rows.length;
-  const withData = rows.filter((r) => r.has_backstage).length;
-  const onboardedCount = rows.filter((r) => r.onboarding_completed).length;
-  const pendingOnboarding = totalRows - onboardedCount;
+  const inPortal = rows.filter((r) => r.profile_id != null).length;
+  const poolOnly = totalRows - inPortal;
 
   return (
     <>
@@ -200,7 +199,7 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
               Creator-Ranking · {monthLabel}
             </h1>
             <p className="text-cream/50 text-sm mt-2">
-              {totalRows} Creator · {withData} mit Backstage-Daten · {pendingOnboarding} ohne Onboarding · sortiert nach{" "}
+              {totalRows} Creator · {inPortal} im Portal · {poolOnly} nur Backstage · sortiert nach{" "}
               <span className="text-champagne">
                 {SORT_OPTIONS.find((o) => o.key === sortKey)?.label}
               </span>{" "}
@@ -234,7 +233,8 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
         {rows.length === 0 ? (
           <div className="border border-champagne/15 p-7 text-center">
             <p className="text-cream/55">
-              Keine Creator gefunden.
+              Noch keine Backstage-Daten für {monthLabel}. Sobald der Daily-Run
+              (08:45 Berlin) gelaufen ist, erscheint hier die Rangliste.
             </p>
           </div>
         ) : (
@@ -257,19 +257,19 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
               </thead>
               <tbody>
                 {rows.map((r, i) => {
-                  const b = statusBadge(r.activity_status, r.has_backstage);
-                  const pb = portalBadge(r.status);
-                  const ob = onboardingBadge(r.onboarding_completed);
-                  const muted = !r.has_backstage;
+                  const ab = activityBadge(r.activity_status);
+                  const pb = portalBadge(r.profile_id, r.portal_status);
+                  const ob = onboardingBadge(r.profile_id, r.onboarding_completed);
+                  const poolOnly = r.profile_id === null;
                   return (
                     <tr
-                      key={r.profile_id}
+                      key={r.metric_id}
                       className={`border-t border-champagne/10 hover:bg-champagne/[0.03] ${
-                        muted ? "opacity-60" : ""
+                        poolOnly ? "opacity-75" : ""
                       }`}
                     >
                       <td className="px-3 py-3 text-cream/40 font-display italic text-base">
-                        {r.has_backstage ? i + 1 : "—"}
+                        {i + 1}
                       </td>
                       <td className="px-3 py-3">
                         <div className="text-cream font-medium">
@@ -290,15 +290,13 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
                         </span>
                       </td>
                       <td className="px-3 py-3 text-right text-cream/80">
-                        {r.has_backstage ? r.valid_live_days : "—"}
+                        {r.valid_live_days}
                       </td>
                       <td className="px-3 py-3 text-right text-cream/80">
-                        {r.has_backstage
-                          ? formatHours(r.live_minutes_total, r.live_hours_display)
-                          : "—"}
+                        {formatHours(r.live_minutes_total, r.live_hours_display)}
                       </td>
                       <td className="px-3 py-3 text-right text-cream/80">
-                        {r.has_backstage ? r.average_viewers.toLocaleString("de-DE") : "—"}
+                        {r.average_viewers.toLocaleString("de-DE")}
                       </td>
                       <td className="px-3 py-3 text-right text-champagne">
                         {r.diamonds_month != null
@@ -314,10 +312,8 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
                         {formatDate(r.last_live_date)}
                       </td>
                       <td className="px-3 py-3 text-center">
-                        <span
-                          className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${b.cls}`}
-                        >
-                          {b.label}
+                        <span className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${ab.cls}`}>
+                          {ab.label}
                         </span>
                       </td>
                     </tr>
@@ -329,10 +325,11 @@ export default async function AdminRankingPage({ searchParams }: PageProps) {
         )}
 
         <p className="text-cream/35 text-xs mt-6 leading-relaxed max-w-3xl">
-          Zeile = Creator mit gueltigem TikTok-Handle.
-          „Portal" = ob das Konto aktiv im Portal ist.
-          „Onboarding" = ob der Creator den Onboarding-Flow durchlaufen hat.
-          „kein Sync" = noch keine Backstage-Daten in diesem Monat (z.B. neu, noch nicht gescraped, oder kein Match in Backstage gefunden).
+          Quelle: creator_monthly_metrics (handle-keyed seit Migration 0046).
+          „Portal kein Profil" = Backstage-only Creator, nicht im Portal registriert.
+          Sobald sich ein solcher Creator spaeter registriert + handle eintraegt,
+          werden seine vorhandenen Backstage-Daten automatisch via Trigger
+          zugeordnet (keine History-Luecke).
           Aktualisierung: taeglich ca. 08:45 Berlin via Backstage-Autopilot.
         </p>
       </main>
