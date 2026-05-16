@@ -334,20 +334,21 @@ const TABS: TabDef[] = [
     ],
   },
 
-  // ---------- 9. DAILY RANKING (V8.1) ----------
+  // ---------- 9. MONATSRANKING (V8.2 · vorher "Daily Ranking" benannt) ----------
+  // User-Korrektur 2026-05-16: Daten sind Monatswerte, nicht Tageswerte.
+  // Tab-Label, Headline + Footer auf "Monatsranking" / "Monatsstand" geaendert.
+  // TabKey bleibt "daily" (interner Bezeichner, URL-Backwards-Compat).
   // Screenshot-freundliche Top-3-Uebersicht aus 7 Performance-Kategorien.
   // Spezial-Render (Card-Grid, kein Tabellen-Layout) — siehe AdminLiveAnalysePage.
-  // Sortier-/Spalten-Felder sind bewusst leer; der Render-Pfad nutzt seine
-  // eigene Logik, die aus rows[] die Top-3 pro Kategorie zieht.
   {
     key: "daily",
-    emoji: "🗞️",
-    label: "Daily Ranking",
-    beschreibung: "Top 3 je Kategorie — kompakt, screenshot-freundlich fuer Posts/Gruppen.",
+    emoji: "🏆",
+    label: "Monatsranking",
+    beschreibung: "Top 3 je Kategorie im aktuellen Monatsstand — kompakt, screenshot-freundlich fuer Posts/Gruppen.",
     legende: [
       { term: "Diamanten", def: "Nur Reihenfolge (keine internen Umsatzwerte sichtbar)" },
       { term: "Stand", def: "Letzter Backstage-Sync (siehe Header)" },
-      { term: "Portalstatus", def: "wird in Daily Ranking bewusst NICHT angezeigt" },
+      { term: "Portalstatus", def: "wird im Monatsranking bewusst NICHT angezeigt" },
     ],
     sortKey: () => 0,
     columns: [],
@@ -509,9 +510,9 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
           </ul>
         </div>
 
-        {/* DAILY RANKING (V8.1) — Spezial-Card-Render statt Tabelle */}
+        {/* MONATSRANKING (V8.2, intern key=daily) — Spezial-Card-Render statt Tabelle */}
         {activeTab === "daily" && (
-          <DailyRankingCards rows={rows} lastSyncIso={lastSyncIso} monthLabel={monthLabel} />
+          <MonatsrankingCards rows={rows} lastSyncIso={lastSyncIso} monthLabel={monthLabel} />
         )}
 
         {/* TABELLE */}
@@ -642,15 +643,15 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
 }
 
 // ============================================================
-// DAILY RANKING CARDS (V8.1)
+// MONATSRANKING CARDS (V8.2 · vorher DailyRankingCards)
 // ============================================================
 // Screenshot-freundliche Top-3-Cards aus 7 Performance-Kategorien.
 // Diamanten-Karte zeigt BEWUSST keine Werte (User-Decision: keine
 // internen Umsatz-Zahlen in Posts/Gruppen leaken). Andere Karten
 // zeigen die echte Kennzahl.
-// Portalstatus wird NICHT in Daily-Ranking aufgenommen.
+// Portalstatus wird NICHT im Monatsranking aufgenommen.
 
-interface DailyCardProps {
+interface MonatsrankingCardProps {
   emoji: string;
   title: string;
   subtitle: string;
@@ -658,7 +659,7 @@ interface DailyCardProps {
   showValues?: boolean;
 }
 
-function DailyCard({ emoji, title, subtitle, entries, showValues }: DailyCardProps) {
+function MonatsrankingCard({ emoji, title, subtitle, entries, showValues }: MonatsrankingCardProps) {
   return (
     <div className="border border-champagne/20 p-5 md:p-6 bg-ink/40">
       <div className="flex items-baseline gap-2 mb-1">
@@ -708,13 +709,13 @@ function pickTop3<T>(
   }));
 }
 
-interface DailyRankingCardsProps {
+interface MonatsrankingCardsProps {
   rows: Row[];
   lastSyncIso: string | null;
   monthLabel: string;
 }
 
-function DailyRankingCards({ rows, lastSyncIso, monthLabel }: DailyRankingCardsProps) {
+function MonatsrankingCards({ rows, lastSyncIso, monthLabel }: MonatsrankingCardsProps) {
   const nameOf = (r: Row) => r.display_name || r.tiktok_username;
 
   const diamanten     = pickTop3(rows, (r) => r.diamonds_month ?? 0,        () => "", nameOf);
@@ -736,60 +737,60 @@ function DailyRankingCards({ rows, lastSyncIso, monthLabel }: DailyRankingCardsP
     <section>
       {/* Headline-Block für Screenshot */}
       <div className="border border-champagne/30 bg-ink/60 p-5 md:p-7 mb-5">
-        <p className="eyebrow mb-2">ZOE⭐ Daily Ranking</p>
+        <p className="eyebrow mb-2">ZOE⭐ Monatsranking</p>
         <h2 className="font-display italic text-cream text-2xl md:text-3xl leading-tight">
           {monthLabel}
         </h2>
         <p className="text-cream/55 text-xs mt-2">
-          Stand: {standLabel} Berlin
+          Aktueller Monatsstand · Stand: {standLabel} Berlin
         </p>
       </div>
 
       {/* 7 Cards · 1-spaltig mobile, 2-spaltig md, 3-spaltig lg */}
       <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <DailyCard
+        <MonatsrankingCard
           emoji="💎"
           title="Diamanten"
           subtitle="Wer aktuell die meisten Diamanten gesammelt hat."
           entries={diamanten}
           showValues={false}
         />
-        <DailyCard
+        <MonatsrankingCard
           emoji="⏱"
           title="LIVE-Stunden"
           subtitle="Wer am meisten LIVE-Zeit aufgebaut hat."
           entries={liveStunden}
           showValues={true}
         />
-        <DailyCard
+        <MonatsrankingCard
           emoji="🔥"
           title="LIVE-Tage"
           subtitle="Wer am regelmaessigsten LIVE war."
           entries={liveTage}
           showValues={true}
         />
-        <DailyCard
+        <MonatsrankingCard
           emoji="👀"
           title="Zuschauer"
           subtitle="Wer die meisten Zuschauer erreicht hat."
           entries={zuschauer}
           showValues={true}
         />
-        <DailyCard
+        <MonatsrankingCard
           emoji="📈"
           title="Neue Follower"
           subtitle="Wer aktuell am staerksten waechst."
           entries={neueFollower}
           showValues={true}
         />
-        <DailyCard
+        <MonatsrankingCard
           emoji="👤"
           title="Schenkende"
           subtitle="Wer die meisten unterschiedlichen Unterstuetzer hatte."
           entries={schenkende}
           showValues={true}
         />
-        <DailyCard
+        <MonatsrankingCard
           emoji="⏳"
           title="Wiedergabezeit"
           subtitle="Bei wem Zuschauer am laengsten im LIVE bleiben."
