@@ -11,10 +11,10 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
 // V4 Nav-Refactor: Admin/Manager bekommen "MASTER" → /portal/admin
 // statt parallelem "Dashboard" + "Admin"-Extralink.
 function buildNavItems(isStaff: boolean) {
-  return [
+  const items: Array<{ href: string; label: string; indicator?: true }> = [
     isStaff
-      ? { href: "/portal/admin", label: "Master" as string }
-      : { href: "/portal", label: "Dashboard" as string },
+      ? { href: "/portal/admin", label: "Master" }
+      : { href: "/portal", label: "Dashboard" },
     { href: "/portal/inbox", label: "Inbox", indicator: true as const },
     { href: "/portal/analyse", label: "Analyse" },
     { href: "/portal/events", label: "Events" },
@@ -23,6 +23,13 @@ function buildNavItems(isStaff: boolean) {
     { href: "/portal/info", label: "Info" },
     { href: "/portal/profile", label: "Profile" },
   ];
+  // V5: Admin/Manager bekommen "Ranking" als eigenen sichtbaren Reiter
+  // direkt nach "Master". Ziel: Creator-Ranking ohne URL-Wissen
+  // erreichbar. Manager darf rein (requireManagerOrAdmin auf der Seite).
+  if (isStaff) {
+    items.splice(1, 0, { href: "/portal/admin/ranking", label: "Ranking" });
+  }
+  return items;
 }
 
 interface Props {
