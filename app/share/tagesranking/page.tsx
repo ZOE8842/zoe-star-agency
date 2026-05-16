@@ -135,59 +135,63 @@ export default async function TagesrankingSharePage({ searchParams }: PageProps)
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
-        html, body { margin: 0; padding: 0; background: #f4e9d2; }
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
+        html, body { margin: 0; padding: 0; background: #f4ead2; }
         body { font-family: 'Inter', system-ui, sans-serif; }
         .story {
           width: 1080px; height: 1920px; position: relative; overflow: hidden;
           background:
-            radial-gradient(ellipse at top, rgba(190,140,70,0.10), transparent 50%),
-            radial-gradient(ellipse at bottom left, rgba(190,140,70,0.06), transparent 60%),
-            linear-gradient(180deg, #f6ecd5 0%, #f0e2c4 50%, #ead7b3 100%);
+            radial-gradient(ellipse 800px 600px at center top, rgba(192,143,72,0.12), transparent 60%),
+            radial-gradient(ellipse at bottom left, rgba(192,143,72,0.05), transparent 65%),
+            linear-gradient(180deg, #faf0d7 0%, #f4e6c7 45%, #ecdbb5 100%);
           color: #2a1d0a;
         }
-        .grain { position:absolute; inset:0; pointer-events:none; opacity:0.05;
+        .grain { position:absolute; inset:0; pointer-events:none; opacity:0.06;
                  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-        .gold-line { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, #b58a3a, transparent); margin: 0 auto; }
+        .vignette { position:absolute; inset:0; pointer-events:none;
+                    box-shadow: inset 0 0 200px 30px rgba(176,128,60,0.15); }
+        .gold-line { width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #b58a3a, transparent); margin: 0 auto; }
       `}</style>
       <div className="story">
         <div className="grain" />
+        <div className="vignette" />
 
         {/* ============ HEADER ============ */}
-        <div style={{ paddingTop: 90, paddingLeft: 80, paddingRight: 80, textAlign: "center" }}>
+        <div style={{ paddingTop: 100, paddingLeft: 80, paddingRight: 80, textAlign: "center" }}>
           <div style={{
-            fontSize: 22, letterSpacing: "0.6em", color: "#b58a3a",
+            fontSize: 24, letterSpacing: "0.65em", color: "#b58a3a",
             fontWeight: 500, textTransform: "uppercase",
           }}>
             ZOE ⭐
           </div>
-          <div style={{ height: 38 }} />
+          <div style={{ height: 46 }} />
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontWeight: 700, fontSize: 96, lineHeight: 0.95, margin: 0,
-            color: "#2a1d0a", letterSpacing: "-0.02em",
+            fontWeight: 700, fontSize: 132, lineHeight: 0.92, margin: 0,
+            color: "#231706", letterSpacing: "-0.025em",
+            textShadow: "0 2px 14px rgba(176,128,60,0.18)",
           }}>
             Tages<span style={{ color: "#b58a3a" }}>ranking</span>
           </h1>
-          <div style={{ height: 22 }} />
+          <div style={{ height: 28 }} />
           <div className="gold-line" />
-          <div style={{ height: 26 }} />
+          <div style={{ height: 32 }} />
           <div style={{
-            fontSize: 28, color: "#b58a3a",
-            letterSpacing: "0.4em", textTransform: "uppercase", fontWeight: 400,
+            fontSize: 30, color: "#b58a3a",
+            letterSpacing: "0.5em", textTransform: "uppercase", fontWeight: 400,
           }}>
             {targetLong}
           </div>
-          <div style={{ height: 14 }} />
-          <div style={{ fontSize: 18, color: "#7a5b2a", fontStyle: "italic" }}>
+          <div style={{ height: 16 }} />
+          <div style={{ fontSize: 19, color: "#7a5b2a", fontStyle: "italic", letterSpacing: "0.01em" }}>
             Top 3 je Kategorie im aktuellen Tagesstand
           </div>
         </div>
 
         {/* ============ 7 CARDS ============ */}
         <div style={{
-          marginTop: 70, paddingLeft: 60, paddingRight: 60,
-          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22,
+          marginTop: 76, paddingLeft: 60, paddingRight: 60,
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24,
         }}>
           <Card emoji="💎" title="Diamanten"      entries={diamanten}   showValues={false} />
           <Card emoji="⏱"  title="LIVE-Zeit"      entries={liveZeit}    showValues={true} />
@@ -202,15 +206,15 @@ export default async function TagesrankingSharePage({ searchParams }: PageProps)
 
         {/* ============ FOOTER ============ */}
         <div style={{
-          position: "absolute", bottom: 60, left: 0, right: 0, textAlign: "center",
+          position: "absolute", bottom: 70, left: 0, right: 0, textAlign: "center",
         }}>
           <div className="gold-line" />
-          <div style={{ height: 24 }} />
+          <div style={{ height: 26 }} />
           <div style={{
             fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontSize: 24, color: "#b58a3a", letterSpacing: "0.15em",
+            fontSize: 26, color: "#b58a3a", letterSpacing: "0.18em",
           }}>
-            ZOE Star Agency
+            Z.O.E. Star Agency
           </div>
         </div>
       </div>
@@ -229,43 +233,44 @@ interface CardProps {
 function Card({ emoji, title, entries, showValues, wide }: CardProps) {
   return (
     <div style={{
-      border: "1px solid rgba(181,138,58,0.30)",
-      background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(244,233,210,0.2) 100%)",
-      padding: wide ? "26px 30px" : "24px 26px",
-      minHeight: wide ? 165 : 230,
+      border: "1px solid rgba(181,138,58,0.36)",
+      background: "linear-gradient(165deg, rgba(255,250,236,0.55) 0%, rgba(238,222,180,0.20) 100%)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 16px rgba(140,100,40,0.12)",
+      padding: wide ? "28px 32px" : "26px 28px",
+      minHeight: wide ? 170 : 235,
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
-        <span style={{ fontSize: 28 }}>{emoji}</span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 13, marginBottom: 4 }}>
+        <span style={{ fontSize: 30 }}>{emoji}</span>
         <span style={{
           fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontWeight: 600,
-          fontSize: 32, color: "#2a1d0a", letterSpacing: "0.01em",
+          fontSize: 34, color: "#231706", letterSpacing: "0.005em",
         }}>
           {title}
         </span>
       </div>
       <div style={{
-        height: 1, background: "linear-gradient(90deg, #b58a3a, transparent)",
-        marginTop: 8, marginBottom: 14, opacity: 0.45,
+        height: 1, background: "linear-gradient(90deg, #b58a3a 0%, rgba(181,138,58,0.4) 40%, transparent 100%)",
+        marginTop: 10, marginBottom: 14, opacity: 0.6,
       }} />
       {entries.length === 0 ? (
-        <div style={{ fontSize: 16, color: "#7a5b2a", fontStyle: "italic" }}>noch keine Daten</div>
+        <div style={{ fontSize: 17, color: "#7a5b2a", fontStyle: "italic" }}>noch keine Daten</div>
       ) : (
         <ol style={{ margin: 0, padding: 0, listStyle: "none" }}>
           {entries.map((e) => (
             <li key={e.rank} style={{
               display: "flex", alignItems: "baseline", justifyContent: "space-between",
-              padding: "9px 0", borderBottom: "1px solid rgba(181,138,58,0.12)",
+              padding: "10px 0", borderBottom: "1px solid rgba(181,138,58,0.16)",
             }}>
-              <span style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+              <span style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-                  fontWeight: 600, fontSize: 26, color: "#b58a3a", width: 22,
+                  fontWeight: 600, fontSize: 28, color: "#b58a3a", width: 24,
                 }}>{e.rank}.</span>
-                <span style={{ fontSize: 22, color: "#2a1d0a", fontWeight: 400 }}>{e.name}</span>
+                <span style={{ fontSize: 23, color: "#231706", fontWeight: 400 }}>{e.name}</span>
               </span>
               {showValues && e.value && (
                 <span style={{
-                  fontSize: 20, color: "#7a5b2a", fontWeight: 500,
+                  fontSize: 21, color: "#6f5024", fontWeight: 500,
                   fontVariantNumeric: "tabular-nums",
                 }}>
                   {e.value}

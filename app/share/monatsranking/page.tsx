@@ -143,60 +143,64 @@ export default async function MonatsrankingSharePage({ searchParams }: PageProps
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
-        html, body { margin: 0; padding: 0; background: #0a0805; }
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
+        html, body { margin: 0; padding: 0; background: #07050a; }
         body { font-family: 'Inter', system-ui, sans-serif; }
         .story {
           width: 1080px; height: 1920px; position: relative; overflow: hidden;
           background:
-            radial-gradient(ellipse at top, rgba(212,175,116,0.10), transparent 50%),
-            radial-gradient(ellipse at bottom right, rgba(212,175,116,0.06), transparent 60%),
-            linear-gradient(180deg, #0a0805 0%, #0e0a06 50%, #080604 100%);
-          color: #f4ecd8;
+            radial-gradient(ellipse 800px 600px at center top, rgba(232,201,144,0.14), transparent 60%),
+            radial-gradient(ellipse at bottom right, rgba(232,201,144,0.05), transparent 65%),
+            linear-gradient(180deg, #0c0804 0%, #100b06 45%, #08060b 100%);
+          color: #f5edd6;
         }
-        .grain { position:absolute; inset:0; pointer-events:none; opacity:0.04;
+        .grain { position:absolute; inset:0; pointer-events:none; opacity:0.05;
                  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-        .gold-line { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, #d4af74, transparent); margin: 0 auto; }
-        .gold-line-left { width: 60px; height: 1px; background: linear-gradient(90deg, #d4af74, transparent); }
+        .vignette { position:absolute; inset:0; pointer-events:none;
+                    box-shadow: inset 0 0 220px 40px rgba(0,0,0,0.7); }
+        .gold-line { width: 100px; height: 1px; background: linear-gradient(90deg, transparent, #e8c990, transparent); margin: 0 auto; }
       `}</style>
       <div className="story">
         <div className="grain" />
+        <div className="vignette" />
 
         {/* ============ HEADER ============ */}
-        <div style={{ paddingTop: 90, paddingLeft: 80, paddingRight: 80, textAlign: "center" }}>
+        <div style={{ paddingTop: 100, paddingLeft: 80, paddingRight: 80, textAlign: "center" }}>
           <div style={{
-            fontSize: 22, letterSpacing: "0.6em", color: "#d4af74",
+            fontSize: 24, letterSpacing: "0.65em", color: "#e8c990",
             fontWeight: 500, textTransform: "uppercase",
+            textShadow: "0 0 25px rgba(232,201,144,0.25)",
           }}>
             ZOE ⭐
           </div>
-          <div style={{ height: 38 }} />
+          <div style={{ height: 46 }} />
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontWeight: 700, fontSize: 96, lineHeight: 0.95, margin: 0,
-            color: "#f7e9c7", letterSpacing: "-0.02em",
+            fontWeight: 700, fontSize: 132, lineHeight: 0.92, margin: 0,
+            color: "#faecc6", letterSpacing: "-0.025em",
+            textShadow: "0 4px 28px rgba(232,201,144,0.18)",
           }}>
-            Monats<span style={{ color: "#d4af74" }}>ranking</span>
+            Monats<span style={{ color: "#e8c990" }}>ranking</span>
           </h1>
-          <div style={{ height: 22 }} />
+          <div style={{ height: 28 }} />
           <div className="gold-line" />
-          <div style={{ height: 26 }} />
+          <div style={{ height: 32 }} />
           <div style={{
-            fontSize: 28, color: "#d4af74",
-            letterSpacing: "0.4em", textTransform: "uppercase", fontWeight: 400,
+            fontSize: 30, color: "#e8c990",
+            letterSpacing: "0.5em", textTransform: "uppercase", fontWeight: 400,
           }}>
             {monthLabel}
           </div>
-          <div style={{ height: 14 }} />
-          <div style={{ fontSize: 18, color: "#a89776", fontStyle: "italic" }}>
+          <div style={{ height: 16 }} />
+          <div style={{ fontSize: 19, color: "#a89776", fontStyle: "italic", letterSpacing: "0.01em" }}>
             Top 3 je Kategorie im aktuellen Monatsstand
           </div>
         </div>
 
         {/* ============ 7 CARDS · 6 in 2-spalt + 1 voll ============ */}
         <div style={{
-          marginTop: 70, paddingLeft: 60, paddingRight: 60,
-          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22,
+          marginTop: 76, paddingLeft: 60, paddingRight: 60,
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24,
         }}>
           <Card emoji="💎" title="Diamanten" entries={diamanten} showValues={false} />
           <Card emoji="⏱"  title="LIVE-Stunden" entries={liveStunden} showValues={true} />
@@ -212,15 +216,15 @@ export default async function MonatsrankingSharePage({ searchParams }: PageProps
 
         {/* ============ FOOTER (minimal · nur Wortmark) ============ */}
         <div style={{
-          position: "absolute", bottom: 60, left: 0, right: 0, textAlign: "center",
+          position: "absolute", bottom: 70, left: 0, right: 0, textAlign: "center",
         }}>
           <div className="gold-line" />
-          <div style={{ height: 24 }} />
+          <div style={{ height: 26 }} />
           <div style={{
             fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontSize: 24, color: "#d4af74", letterSpacing: "0.15em",
+            fontSize: 26, color: "#e8c990", letterSpacing: "0.18em",
           }}>
-            ZOE Star Agency
+            Z.O.E. Star Agency
           </div>
         </div>
       </div>
@@ -239,43 +243,44 @@ interface CardProps {
 function Card({ emoji, title, entries, showValues, wide }: CardProps) {
   return (
     <div style={{
-      border: "1px solid rgba(212,175,116,0.22)",
-      background: "linear-gradient(180deg, rgba(212,175,116,0.04) 0%, rgba(0,0,0,0.3) 100%)",
-      padding: wide ? "26px 30px" : "24px 26px",
-      minHeight: wide ? 165 : 230,
+      border: "1px solid rgba(232,201,144,0.28)",
+      background: "linear-gradient(165deg, rgba(232,201,144,0.06) 0%, rgba(20,12,4,0.55) 100%)",
+      boxShadow: "inset 0 1px 0 rgba(232,201,144,0.12), 0 6px 24px rgba(0,0,0,0.45)",
+      padding: wide ? "28px 32px" : "26px 28px",
+      minHeight: wide ? 170 : 235,
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
-        <span style={{ fontSize: 28 }}>{emoji}</span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 13, marginBottom: 4 }}>
+        <span style={{ fontSize: 30 }}>{emoji}</span>
         <span style={{
           fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontWeight: 600,
-          fontSize: 32, color: "#f7e9c7", letterSpacing: "0.01em",
+          fontSize: 34, color: "#faecc6", letterSpacing: "0.005em",
         }}>
           {title}
         </span>
       </div>
       <div style={{
-        height: 1, background: "linear-gradient(90deg, #d4af74, transparent)",
-        marginTop: 8, marginBottom: 14, opacity: 0.5,
+        height: 1, background: "linear-gradient(90deg, #e8c990 0%, rgba(232,201,144,0.4) 40%, transparent 100%)",
+        marginTop: 10, marginBottom: 14, opacity: 0.7,
       }} />
       {entries.length === 0 ? (
-        <div style={{ fontSize: 16, color: "#8a7a5a", fontStyle: "italic" }}>noch keine Daten</div>
+        <div style={{ fontSize: 17, color: "#8a7a5a", fontStyle: "italic" }}>noch keine Daten</div>
       ) : (
         <ol style={{ margin: 0, padding: 0, listStyle: "none" }}>
           {entries.map((e) => (
             <li key={e.rank} style={{
               display: "flex", alignItems: "baseline", justifyContent: "space-between",
-              padding: "9px 0", borderBottom: "1px solid rgba(212,175,116,0.10)",
+              padding: "10px 0", borderBottom: "1px solid rgba(232,201,144,0.10)",
             }}>
-              <span style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+              <span style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-                  fontWeight: 600, fontSize: 26, color: "#d4af74", width: 22,
+                  fontWeight: 600, fontSize: 28, color: "#e8c990", width: 24,
                 }}>{e.rank}.</span>
-                <span style={{ fontSize: 22, color: "#f4ecd8", fontWeight: 400 }}>{e.name}</span>
+                <span style={{ fontSize: 23, color: "#f5edd6", fontWeight: 400 }}>{e.name}</span>
               </span>
               {showValues && e.value && (
                 <span style={{
-                  fontSize: 20, color: "#d4af74", fontWeight: 500,
+                  fontSize: 21, color: "#e8c990", fontWeight: 500,
                   fontVariantNumeric: "tabular-nums",
                 }}>
                   {e.value}
