@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PortalNav } from "@/components/PortalNav";
 import { NewsFeed } from "@/components/dashboard/NewsFeed";
+import { PortalActivityBlock } from "@/components/dashboard/PortalActivityBlock";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -366,6 +367,31 @@ export default async function AdminPage() {
             <Stat label="Tickets offen" value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
           )}
         </section>
+
+        {/* PORTAL-AKTIVITAET — admin-only Tracking-Block */}
+        <PortalActivityBlock isAdmin={isAdmin} />
+
+        {/* CREATOR-ANFRAGEN — admin-only Link */}
+        {isAdmin && (
+          <section className="mb-12">
+            <Link
+              href="/portal/admin/applications"
+              className="block border border-champagne/15 hover:border-champagne/40 px-5 py-4 transition-colors"
+            >
+              <div className="flex items-baseline justify-between gap-4">
+                <div>
+                  <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em] mb-1">Creator Anfragen</p>
+                  <p className="text-cream font-display italic text-xl">
+                    Eingehende Anfragen ueber /join
+                  </p>
+                </div>
+                <span className="text-champagne text-[11px] uppercase tracking-[0.2em] hover:text-champagne-300">
+                  Oeffnen →
+                </span>
+              </div>
+            </Link>
+          </section>
+        )}
 
         {/* OPERATIONS-COCKPIT — alle offenen Anfragen auf einen Blick */}
         {isAdmin && (

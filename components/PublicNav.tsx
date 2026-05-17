@@ -133,14 +133,13 @@ export function PublicNav() {
               animation: open ? "hero-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both" : "none",
             }}
           >
-            <a
-              href="https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/join"
+              onClick={() => setOpen(false)}
               className="btn-primary w-full justify-center"
             >
-              Als Creator bewerben
-            </a>
+              Creator werden
+            </Link>
             <Link
               href="/portal/login"
               onClick={() => setOpen(false)}

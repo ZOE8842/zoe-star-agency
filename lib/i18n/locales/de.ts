@@ -6,7 +6,7 @@ export const de = {
     login: "Login",
     logout: "Logout",
     contact: "Kontakt",
-    apply: "Als Creator bewerben",
+    apply: "Creator werden",
     aendern: "Ändern",
     speichern: "Speichern",
     abbrechen: "Abbrechen",

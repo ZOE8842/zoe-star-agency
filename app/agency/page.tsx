@@ -6,8 +6,7 @@ import { MotionReveal } from "@/components/MotionReveal";
 import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
 
-const APPLY_URL =
-  "https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756";
+const APPLY_URL = "/join";
 
 export const metadata: Metadata = {
   title: "Creator",
@@ -57,10 +56,10 @@ export default function AgencyPage() {
             </MotionReveal>
             <MotionReveal delay={0.28}>
               <div className="flex flex-col sm:flex-row gap-4 mt-10 md:mt-12">
-                <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" className="btn-cta btn-shimmer">
-                  Bewerbung starten
+                <Link href={APPLY_URL} className="btn-cta btn-shimmer">
+                  Creator werden
                   <span className="btn-cta-arrow" aria-hidden>→</span>
-                </a>
+                </Link>
                 <Link href="/contact" className="btn-cta-secondary">
                   Fragen? Kontakt
                 </Link>
@@ -136,10 +135,10 @@ export default function AgencyPage() {
             <div className="md:col-span-5 flex md:justify-end items-end">
               <MotionReveal delay={0.25}>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" className="btn-cta btn-shimmer">
-                    Bewerbung starten
+                  <Link href={APPLY_URL} className="btn-cta btn-shimmer">
+                    Creator werden
                     <span className="btn-cta-arrow" aria-hidden>→</span>
-                  </a>
+                  </Link>
                 </div>
               </MotionReveal>
             </div>

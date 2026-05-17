@@ -50,6 +50,19 @@ function LoginForm() {
       return;
     }
 
+    // Login-Tracking (fire-and-forget, blockt Redirect nicht)
+    try {
+      const sid = (typeof document !== "undefined")
+        ? (document.cookie.match(/(?:^|;\s*)zoe_session_id=([^;]+)/)?.[1] ?? null)
+        : null;
+      fetch("/api/analytics/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event_type: "login_success", path: "/portal/login", session_id: sid }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch { /* silent */ }
+
     router.push(redirect);
     router.refresh();
   }

@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
-
-const APPLY_URL =
-  "https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756";
+import { CreatorApplicationForm } from "@/components/forms/CreatorApplicationForm";
 
 export const metadata: Metadata = {
   title: "Creator werden",
@@ -64,7 +61,7 @@ export default function JoinPage() {
           </MotionReveal>
           <div className="grid md:grid-cols-3 gap-5 mb-16">
             {[
-              { num: "01", title: "Bewerbung", desc: "Über den offiziellen TikTok-Agency-Link. Kurz, schnell, unkompliziert." },
+              { num: "01", title: "Anfrage", desc: "Kurzes Formular ausfüllen — TikTok-Username, Sprache, kurzer Pitch. 2 Minuten." },
               { num: "02", title: "Audit-Call", desc: "Wir schauen uns dein Profil an und sprechen 15-30 Min mit dir." },
               { num: "03", title: "Onboarding", desc: "Bei Match: Vertrag, Portal-Zugang und persönlicher Manager." },
             ].map((c, i) => (
@@ -81,21 +78,15 @@ export default function JoinPage() {
           </div>
 
           <MotionReveal>
-            <div className="border border-champagne/30 bg-champagne/5 p-8 md:p-12 text-center max-w-3xl mx-auto">
-              <h2 className="heading-display text-2xl md:text-4xl text-cream mb-5 leading-tight">
-                Bereit zu <span className="text-champagne">starten</span>?
-              </h2>
-              <p className="text-cream/70 text-sm md:text-base mb-8 max-w-xl mx-auto">
-                Bewerbung läuft direkt über den offiziellen TikTok-Agency-Link.
-                Wir melden uns innerhalb von 1–3 Werktagen.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" className="btn-primary">
-                  Jetzt bewerben
-                </a>
-                <Link href="/contact" className="btn-outline">Lieber persönlich? Kontakt</Link>
-              </div>
-            </div>
+            <h2 className="heading-display text-2xl md:text-4xl text-cream mb-3 leading-tight text-center">
+              Bereit zu <span className="text-champagne">starten</span>?
+            </h2>
+            <p className="text-cream/70 text-sm md:text-base mb-10 max-w-xl mx-auto text-center">
+              Fülle das Formular aus — wir prüfen dein Profil und melden uns innerhalb 1–3 Werktagen über TikTok oder Telegram.
+            </p>
+          </MotionReveal>
+          <MotionReveal delay={0.1}>
+            <CreatorApplicationForm />
           </MotionReveal>
         </section>
       </main>

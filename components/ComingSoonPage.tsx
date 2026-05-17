@@ -30,14 +30,9 @@ export function ComingSoonPage({ eyebrow, title, subtitle, applyCta = false }: P
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {applyCta && (
-              <a
-                href="https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary"
-              >
-                Als Creator bewerben
-              </a>
+              <Link href="/join" className="btn-primary">
+                Creator werden
+              </Link>
             )}
             <Link href="/contact" className="btn-outline">
               Kontakt aufnehmen

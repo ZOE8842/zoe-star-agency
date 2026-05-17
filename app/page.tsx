@@ -50,8 +50,7 @@ const SOCIAL = {
   email: "info@zoe-star.de",
 };
 
-const APPLY_URL =
-  "https://web16-normal-useastred.tiktokw.eu/tcn/scout_creators?use_spark=1&agency_scout_source=qr_code_leads&ShareLinkID=7554019883420319756";
+const APPLY_URL = "/join";
 
 export default async function HomePage() {
   const all = await fetchHomepageCreators();
@@ -146,15 +145,10 @@ export default async function HomePage() {
               className="flex flex-col sm:flex-row gap-4 mt-8 md:mt-12 hero-rise"
               style={{ animationDelay: "0.7s" }}
             >
-              <a
-                href={APPLY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-cta btn-shimmer"
-              >
+              <Link href={APPLY_URL} className="btn-cta btn-shimmer">
                 Creator werden
                 <span className="btn-cta-arrow" aria-hidden>→</span>
-              </a>
+              </Link>
               <Link href="/kooperationen" className="btn-cta-secondary">
                 Kooperationen
               </Link>
@@ -248,15 +242,10 @@ export default async function HomePage() {
                 <p className="text-cream/45 text-sm leading-relaxed max-w-xl mb-8">
                   Du bist Creator und willst dabei sein? Bewirb dich direkt — wir schauen uns jede Bewerbung persönlich an.
                 </p>
-                <a
-                  href={APPLY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-cta btn-shimmer"
-                >
-                  Bewerben
+                <Link href={APPLY_URL} className="btn-cta btn-shimmer">
+                  Creator werden
                   <span className="btn-cta-arrow" aria-hidden>→</span>
-                </a>
+                </Link>
               </div>
               <div className="md:col-span-5 md:max-w-[280px] md:ml-auto w-full">
                 <CreatorShowcaseCard {...featured[0]} visual="champagne" />
@@ -563,10 +552,10 @@ export default async function HomePage() {
               </MotionReveal>
               <MotionReveal delay={0.25}>
                 <div className="flex flex-col sm:flex-row gap-4 mt-8 md:mt-10">
-                  <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" className="btn-cta btn-shimmer">
-                    Jetzt bewerben
+                  <Link href={APPLY_URL} className="btn-cta btn-shimmer">
+                    Creator werden
                     <span className="btn-cta-arrow" aria-hidden>→</span>
-                  </a>
+                  </Link>
                   <Link href="/contact" className="btn-cta-secondary">
                     Lieber persönlich? Kontakt
                   </Link>
@@ -592,15 +581,10 @@ export default async function HomePage() {
 
       {/* STICKY MOBILE-CTA — Apply-Bar nur Mobile */}
       <div className="sticky-cta-bar">
-        <a
-          href={APPLY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-cta btn-shimmer w-full"
-        >
+        <Link href={APPLY_URL} className="btn-cta btn-shimmer w-full">
           Creator werden
           <span className="btn-cta-arrow" aria-hidden>→</span>
-        </a>
+        </Link>
       </div>
     </>
   );
