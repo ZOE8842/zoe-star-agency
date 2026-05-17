@@ -98,23 +98,29 @@ export const loadLocale = cache(async (): Promise<{
 });
 
 // Public-Locale-Reader fuer NICHT-eingeloggte Besucher.
-// Fallback-Kaskade:
-//   1) Cookie zoe_public_lang (manuell gesetzt via Language-Switch)
-//   2) Accept-Language Header (vom Browser)
-//   3) DEFAULT_LOCALE ("de")
+// Phase-10-Refactor: liest x-zoe-locale Header (von middleware.ts gesetzt).
+// Middleware erledigt Cookie- + Accept-Language-Erkennung einmal pro Request,
+// nachfolgende Server-Components / Footer / Pages lesen nur den fertigen
+// Header. Vorteil: kein direkter cookies()-Zugriff im Render-Path mehr,
+// damit potenzielle ISR-Caching-Strategien (unstable_cache mit eigenem
+// Cache-Key inkl. locale) leichter umsetzbar sind.
 //
+// Fallback wenn Header fehlt (z.B. middleware nicht aktiv): cookies/AL direkt.
 // React.cache() dedupliziert pro Request.
 export const getPublicLocale = cache(async (): Promise<Locale> => {
   try {
+    const hdrs = await headers();
+    const headerVal = hdrs.get("x-zoe-locale");
+    if (headerVal && (LOCALES as readonly string[]).includes(headerVal)) {
+      return headerVal as Locale;
+    }
+    // Fallback-Kaskade (sollte selten gebraucht werden, falls Middleware
+    // den Request bedient hat).
     const cookieStore = await cookies();
     const cookieVal = cookieStore.get(PUBLIC_LOCALE_COOKIE)?.value;
     if (cookieVal && (LOCALES as readonly string[]).includes(cookieVal)) {
       return cookieVal as Locale;
     }
-    // Accept-Language parsing: iteriere alle Praeferenzen in Order und nimm
-    // die erste supported Locale (Codex-P3-Fix). Beispiel:
-    //   "es-ES,fr;q=0.9,en;q=0.8" → "fr" (nicht "de")
-    const hdrs = await headers();
     const al = hdrs.get("accept-language");
     if (al) {
       const prefs = al.split(",")

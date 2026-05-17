@@ -146,8 +146,18 @@ async function fetchApprovedConfirmed(
     });
 }
 
+import { unstable_cache } from "next/cache";
+
+// Phase-10-Performance: trotz dynamic-Render (loadPublicLocale-Header-Reads)
+// bleibt die Supabase-Query 1h gecached. Cache-Key ist tag-basiert.
+const cachedHomepageCreators = unstable_cache(
+  async () => fetchApprovedConfirmed("featured"),
+  ["homepage-creators-v1"],
+  { revalidate: 3600, tags: ["showcase-homepage"] },
+);
+
 export async function fetchHomepageCreators(): Promise<PublicCreator[]> {
-  return fetchApprovedConfirmed("featured");
+  return cachedHomepageCreators();
 }
 
 export async function fetchCooperationCreators(): Promise<PublicCreator[]> {
