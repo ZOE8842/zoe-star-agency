@@ -18,20 +18,28 @@ export default async function JoinPage() {
     <>
       <Header />
       <main className="bg-ink">
-        <section className="container-luxe pt-32 md:pt-40 pb-20">
+        <section className="container-luxe pt-24 md:pt-36 pb-14 md:pb-20">
           <MotionReveal>
             <p className="eyebrow mb-5">{t("join_page.eyebrow_creator_werden")}</p>
           </MotionReveal>
           <MotionReveal delay={0.1}>
-            <h1 className="heading-display text-4xl md:text-7xl text-cream mb-6 leading-[0.95] max-w-4xl">
+            <h1 className="heading-display text-4xl md:text-7xl text-cream mb-5 leading-[0.95] max-w-4xl">
               Werde Teil von <span className="text-champagne">ZOE</span>.
             </h1>
           </MotionReveal>
           <MotionReveal delay={0.2}>
-            <p className="text-cream/70 text-lg md:text-2xl leading-relaxed max-w-3xl">
+            <p className="text-cream/70 text-base md:text-2xl leading-relaxed max-w-3xl mb-6">
               Wir suchen Creator mit Vision, Eigensinn und Lust auf Wachstum.
               Wenn du den nächsten Schritt gehen willst — wir hören zu.
             </p>
+          </MotionReveal>
+          <MotionReveal delay={0.25}>
+            <p className="text-champagne/80 text-[11px] md:text-xs uppercase tracking-[0.25em] mb-7">
+              Offizielle TikTok Elite-Agentur · Aktive Creator-Community
+            </p>
+          </MotionReveal>
+          <MotionReveal delay={0.3}>
+            <a href="#apply" className="btn-primary">Jetzt bewerben</a>
           </MotionReveal>
         </section>
 
@@ -57,7 +65,7 @@ export default async function JoinPage() {
           </div>
         </section>
 
-        <section className="container-luxe pb-20">
+        <section id="apply" className="container-luxe pb-20 scroll-mt-24">
           <MotionReveal>
             <p className="eyebrow mb-10">{t("join_page.eyebrow_so_laeuft")}</p>
           </MotionReveal>

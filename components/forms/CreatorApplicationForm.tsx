@@ -194,7 +194,7 @@ export function CreatorApplicationForm() {
           className="mt-1 accent-champagne shrink-0" />
         <span>
           Ich stimme zu, dass ZOE Star Agency meine Angaben zur Prüfung meiner Anfrage speichert.
-          Keine Weitergabe an Dritte. <a href="/legal/privacy" className="text-champagne underline">Datenschutz</a>.
+          Keine Weitergabe an Dritte. <a href="/legal/datenschutz" className="text-champagne underline">Datenschutz</a>.
         </span>
       </label>
 
