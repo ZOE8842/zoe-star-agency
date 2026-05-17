@@ -81,7 +81,7 @@ export async function Footer() {
             © {new Date().getFullYear()} ZOE⭐ Star Agency
           </p>
           <p className="text-cream/30 text-[10px] uppercase tracking-[0.28em]">
-            TikTok LIVE Creator Management
+            {t("footer.copyright_sub")}
           </p>
         </div>
       </div>
