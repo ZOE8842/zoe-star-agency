@@ -72,7 +72,7 @@ export default function ImpressumPage() {
         </p>
       </Section>
 
-      <p className="text-cream/40 text-xs mt-12">Stand: 6. Mai 2026</p>
+      <p className="text-cream/40 text-xs mt-12">Stand: 17. Mai 2026</p>
     </article>
   );
 }
