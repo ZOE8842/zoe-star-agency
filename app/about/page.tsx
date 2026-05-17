@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
 import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
+import { loadPublicLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Über uns",
@@ -13,7 +14,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { t } = await loadPublicLocale();
   return (
     <>
       <Header />
@@ -58,7 +60,7 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-12 md:mb-16 items-end">
               <div className="md:col-span-7">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">Was uns ausmacht</p>
+                  <p className="eyebrow mb-5">{t("about.eyebrow_was_uns_ausmacht")}</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -108,7 +110,7 @@ export default function AboutPage() {
         <section className="relative bg-ink-mesh py-16 md:py-24 overflow-hidden border-b border-champagne/10">
           <div className="container-luxe">
             <MotionReveal>
-              <p className="eyebrow mb-8 md:mb-10">Aktivität · April 2026</p>
+              <p className="eyebrow mb-8 md:mb-10">{t("about.eyebrow_aktivitaet")}</p>
             </MotionReveal>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15">
               {[
@@ -133,7 +135,7 @@ export default function AboutPage() {
           <MotionReveal>
             <div className="grid md:grid-cols-12 gap-10">
               <div className="md:col-span-7">
-                <p className="eyebrow mb-5">Wir wählen bewusst</p>
+                <p className="eyebrow mb-5">{t("about.eyebrow_wir_waehlen")}</p>
                 <h2 className="leading-[0.95] tracking-[-0.02em] mb-6">
                   <span className="block mixed-type-line-1 text-cream/90 text-[36px] sm:text-[52px] md:text-[68px]">Kein Massen-Roster.</span>
                   <span className="block mixed-type-line-2 text-champagne -mt-1 text-[44px] sm:text-[60px] md:text-[80px]">Keine anonyme Betreuung.</span>

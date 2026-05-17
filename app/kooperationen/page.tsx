@@ -13,6 +13,7 @@ import {
   type FilterOption,
 } from "@/components/KooperationenCreatorGrid";
 import { fetchCooperationCreators } from "@/lib/showcase/public";
+import { loadPublicLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Kooperationen — TikTok LIVE Reichweite",
@@ -78,6 +79,7 @@ interface SearchProps {
 }
 
 export default async function KooperationenPage({ searchParams }: SearchProps) {
+  const { t } = await loadPublicLocale();
   const sp = await searchParams;
   const initialCreator = (sp.creator ?? "").trim();
 
@@ -183,7 +185,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
             <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-14 md:mb-20 items-end">
               <div className="md:col-span-7">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">Zahlen · April 2026</p>
+                  <p className="eyebrow mb-5">{t("koop.eyebrow_zahlen")}</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -240,7 +242,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
             <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-12 md:mb-16 items-end">
               <div className="md:col-span-7">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">Was wir machen</p>
+                  <p className="eyebrow mb-5">{t("koop.eyebrow_was_wir_machen")}</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -331,7 +333,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
             <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-10 md:mb-14 items-end">
               <div className="md:col-span-7">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">Creator-Auswahl</p>
+                  <p className="eyebrow mb-5">{t("koop.eyebrow_creator_auswahl")}</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -371,7 +373,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
             <div className="grid lg:grid-cols-12 gap-10 lg:gap-14">
               <div className="lg:col-span-5">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">Kooperation anfragen</p>
+                  <p className="eyebrow mb-5">{t("koop.eyebrow_kooperation_anfragen")}</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -386,7 +388,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
                 </MotionReveal>
                 <MotionReveal delay={0.28}>
                   <div className="mt-10 border-l border-champagne/30 pl-5">
-                    <p className="eyebrow mb-3">Direkt</p>
+                    <p className="eyebrow mb-3">{t("koop.eyebrow_direkt")}</p>
                     <a
                       href="mailto:info@zoe-star.de"
                       className="inline-flex items-center gap-2 text-champagne text-sm hover:text-champagne-300 transition-colors"
