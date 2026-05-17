@@ -90,18 +90,42 @@ export default async function TagesrankingSharePage({ searchParams }: PageProps)
   }
 
   const auto = targetDateBerlin();
-  const targetIso = sp.date && /^\d{4}-\d{2}-\d{2}$/.test(sp.date) ? sp.date : auto.iso;
-  const targetLong = sp.date
-    ? new Date(targetIso).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" })
-    : auto.long;
+  const requestedIso = sp.date && /^\d{4}-\d{2}-\d{2}$/.test(sp.date) ? sp.date : auto.iso;
 
   const db = srClient();
-  const { data: metrics } = await db
+  const DAILY_SELECT = "tiktok_username, tiktok_handle_normalized, diamonds, live_minutes, viewers, new_followers, gifters, gifts, watchtime_avg_seconds";
+
+  // Defensive Fallback: wenn Race-Condition (Stories triggern bevor Autopilot
+  // den Tag in die DB geschoben hat) den requested Tag leer macht, nimm den
+  // juengsten verfuegbaren Tag <= requestedIso. Header zeigt das tatsaechlich
+  // verwendete Datum + verzoegert-Hint.
+  let { data: metrics } = await db
     .from("creator_daily_metrics")
-    .select(
-      "tiktok_username, tiktok_handle_normalized, diamonds, live_minutes, viewers, new_followers, gifters, gifts, watchtime_avg_seconds",
-    )
-    .eq("metric_date", targetIso);
+    .select(DAILY_SELECT)
+    .eq("metric_date", requestedIso);
+
+  let effectiveIso = requestedIso;
+  let fallbackUsed = false;
+
+  if (!metrics || metrics.length === 0) {
+    const { data: latest } = await db
+      .from("creator_daily_metrics")
+      .select("metric_date")
+      .lte("metric_date", requestedIso)
+      .order("metric_date", { ascending: false })
+      .limit(1);
+    if (latest && latest.length > 0 && latest[0].metric_date && latest[0].metric_date !== requestedIso) {
+      effectiveIso = latest[0].metric_date;
+      fallbackUsed = true;
+      const r = await db
+        .from("creator_daily_metrics")
+        .select(DAILY_SELECT)
+        .eq("metric_date", effectiveIso);
+      metrics = r.data;
+    }
+  }
+
+  const targetLong = new Date(effectiveIso).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
 
   const handles = (metrics ?? []).map((m) => m.tiktok_handle_normalized);
   const { data: profiles } = handles.length > 0
@@ -184,7 +208,9 @@ export default async function TagesrankingSharePage({ searchParams }: PageProps)
           </div>
           <div style={{ height: 12 }} />
           <div style={{ fontSize: 17, color: "#7a5b2a", fontStyle: "italic", letterSpacing: "0.01em" }}>
-            Top 3 je Kategorie im aktuellen Tagesstand
+            {fallbackUsed
+              ? "Top 3 je Kategorie · letzter verfuegbarer Tagesstand"
+              : "Top 3 je Kategorie im aktuellen Tagesstand"}
           </div>
         </div>
 
