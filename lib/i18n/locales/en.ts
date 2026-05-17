@@ -119,6 +119,8 @@ export const en = {
     allow_showcase: "Allow public showcase",
     allow_partner: "Allow partner cooperations",
     complete_button: "Complete onboarding",
+    setup_profile: "Set up profile",
+    submitting: "Setting up…",
     success_title: "Welcome to the portal.",
     success_subtitle: "Your profile is set up.",
   },

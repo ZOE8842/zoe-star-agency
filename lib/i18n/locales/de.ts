@@ -121,6 +121,8 @@ export const de = {
     allow_showcase: "Public Showcase erlauben",
     allow_partner: "Partner-Kooperationen erlauben",
     complete_button: "Onboarding abschließen",
+    setup_profile: "Profil einrichten",
+    submitting: "Wird eingerichtet…",
     success_title: "Willkommen im Portal.",
     success_subtitle: "Dein Profil ist eingerichtet.",
   },

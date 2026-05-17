@@ -119,6 +119,8 @@ export const fr = {
     allow_showcase: "Autoriser la vitrine publique",
     allow_partner: "Autoriser les coopérations partenaires",
     complete_button: "Terminer l'onboarding",
+    setup_profile: "Configurer le profil",
+    submitting: "Configuration en cours…",
     success_title: "Bienvenue dans le portail.",
     success_subtitle: "Ton profil est configuré.",
   },

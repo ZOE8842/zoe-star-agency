@@ -31,6 +31,8 @@ function formatRelative(d: Date): string {
 
 export default async function InboxPage({ searchParams }: Props) {
   const { supabase, profile } = await getAuthedProfile();
+  const { loadLocale } = await import("@/lib/i18n");
+  const { t } = await loadLocale();
   const params = await searchParams;
   const query = (params.q || "").trim();
   const tabRaw = params.tab as TabKey | undefined;
@@ -169,9 +171,9 @@ export default async function InboxPage({ searchParams }: Props) {
       <main className="container-luxe py-12 md:py-16 max-w-3xl mx-auto">
         <div className="flex items-start justify-between gap-6 mb-6 flex-wrap">
           <div>
-            <p className="eyebrow mb-3">Postfach</p>
+            <p className="eyebrow mb-3">{t("nav.inbox")}</p>
             <h1 className="font-display italic text-cream text-4xl md:text-6xl leading-[0.95] tracking-[-0.02em]">
-              Inbox.
+              {t("nav.inbox")}.
             </h1>
           </div>
           <Link

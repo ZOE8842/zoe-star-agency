@@ -119,6 +119,8 @@ export const tr = {
     allow_showcase: "Açık vitrine izin ver",
     allow_partner: "Partner işbirliğine izin ver",
     complete_button: "Onboarding'i tamamla",
+    setup_profile: "Profili kur",
+    submitting: "Kuruluyor…",
     success_title: "Portala hoş geldin.",
     success_subtitle: "Profilin hazırlandı.",
   },

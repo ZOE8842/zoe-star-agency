@@ -5,6 +5,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { InboxIndicator } from "./InboxIndicator";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { loadLocale } from "@/lib/i18n";
+import { QuickLanguageSwitch } from "./nav/QuickLanguageSwitch";
+import { createClient } from "@/lib/supabase/server";
 
 // V3 Nav-Reduktion: Showcase ist Profil-Toggle (Profile-Reiter),
 // Support ist Card unter /portal/services.
@@ -51,6 +53,18 @@ export async function PortalNav({ userId, displayName, tiktokUsername, isAdmin, 
   const isStaff = !!isAdmin || !!isManager;
   const { t } = await loadLocale();
   const navItems = buildNavItems(isStaff, !!isAdmin, t);
+
+  // QuickLanguageSwitch: lade aktuelle Sprache des Profils (fuer Visual-State).
+  // Bei nicht-eingeloggt: kein Switch.
+  let currentLanguage: string | null = null;
+  if (userId) {
+    try {
+      const supabase = await createClient();
+      const { data: prof } = await supabase
+        .from("profiles").select("language").eq("id", userId).maybeSingle();
+      currentLanguage = prof?.language ?? null;
+    } catch { /* silent */ }
+  }
   // V3-Datenschutz: keine Email-Initials. Fallback ist Display-Name oder
   // TikTok-Username (kein PII).
   const initials = (displayName || tiktokUsername || "")
@@ -79,6 +93,9 @@ export async function PortalNav({ userId, displayName, tiktokUsername, isAdmin, 
             </Suspense>
           )}
           <ThemeToggle />
+          {userId && (
+            <QuickLanguageSwitch profileId={userId} currentLanguage={currentLanguage} />
+          )}
           <Link
             href="/portal/profile"
             aria-label="Profile"

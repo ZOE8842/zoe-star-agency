@@ -120,16 +120,30 @@ const DEFAULT_STATE: FormState = {
   allow_partner_cooperations: false,
 };
 
+// Phase-4-i18n: optionale Strings vom Server-Wrapper.
+// Wenn ein Feld fehlt → deutscher Fallback (kein Crash).
+export interface OnboardingI18n {
+  back?: string;
+  next?: string;
+  complete?: string;
+  setup_profile?: string;
+  submitting?: string;
+  error_required?: string;
+  error_general?: string;
+}
+
 interface Props {
   profileId: string;
   initialDisplayName?: string | null;
   initialTiktok?: string | null;
   initialLanguage?: string | null;
   initialRegion?: string | null;
+  i18n?: OnboardingI18n;
 }
 
 export function OnboardingFlow({
   profileId, initialDisplayName, initialTiktok, initialLanguage, initialRegion,
+  i18n = {},
 }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -328,7 +342,7 @@ export function OnboardingFlow({
                   onClick={back}
                   className="text-cream/55 hover:text-cream text-[11px] uppercase tracking-[0.25em] py-2 px-2 -ml-2 transition-colors"
                 >
-                  ← Zurueck
+                  ← {i18n.back ?? "Zurueck"}
                 </button>
               ) : (
                 <span className="text-cream/30 text-[11px] uppercase tracking-[0.25em]">
@@ -343,12 +357,12 @@ export function OnboardingFlow({
                 className="btn-cta btn-shimmer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {submitting
-                  ? "Wird eingerichtet…"
+                  ? (i18n.submitting ?? "Wird eingerichtet…")
                   : step === 0
-                  ? "Profil einrichten"
+                  ? (i18n.setup_profile ?? "Profil einrichten")
                   : isPreFinal
-                  ? "Abschliessen"
-                  : "Weiter"}
+                  ? (i18n.complete ?? "Abschliessen")
+                  : (i18n.next ?? "Weiter")}
                 {!submitting && <span className="btn-cta-arrow" aria-hidden>→</span>}
               </button>
             </div>

@@ -119,6 +119,8 @@ export const pt = {
     allow_showcase: "Permitir vitrine pública",
     allow_partner: "Permitir cooperações com parceiros",
     complete_button: "Concluir onboarding",
+    setup_profile: "Configurar perfil",
+    submitting: "Configurando…",
     success_title: "Bem-vindo ao portal.",
     success_subtitle: "Seu perfil está configurado.",
   },

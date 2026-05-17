@@ -5,6 +5,7 @@
 import { redirect } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { OnboardingFlow } from "./OnboardingFlow";
+import { loadLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,8 @@ export default async function OnboardingPage() {
     redirect("/portal");
   }
 
+  const { t } = await loadLocale();
+
   return (
     <OnboardingFlow
       profileId={profile.id}
@@ -23,6 +26,13 @@ export default async function OnboardingPage() {
       initialTiktok={profile.tiktok_username}
       initialLanguage={profile.language}
       initialRegion={profile.region}
+      i18n={{
+        back: t("common.back"),
+        next: t("common.next"),
+        complete: t("onboarding.complete_button"),
+        setup_profile: t("onboarding.setup_profile"),
+        submitting: t("onboarding.submitting"),
+      }}
     />
   );
 }

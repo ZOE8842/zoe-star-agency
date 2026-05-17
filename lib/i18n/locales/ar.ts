@@ -119,6 +119,8 @@ export const ar = {
     allow_showcase: "السماح بالعرض العام",
     allow_partner: "السماح بالتعاون مع الشركاء",
     complete_button: "إكمال التسجيل",
+    setup_profile: "إعداد الملف الشخصي",
+    submitting: "جارٍ الإعداد…",
     success_title: "مرحباً بك في البوابة.",
     success_subtitle: "تم إعداد ملفك الشخصي.",
   },
