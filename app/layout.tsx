@@ -6,6 +6,10 @@ import { baseUrl } from "@/lib/seo/routes";
 import { JsonLd, organizationSchema, websiteSchema } from "@/components/JsonLd";
 import { PublicAnalyticsTracker } from "@/components/analytics/PublicAnalyticsTracker";
 import { InstallHint } from "@/components/install/InstallHint";
+import { PushSetup } from "@/components/pwa/PushSetup";
+import { PermissionHint } from "@/components/pwa/PermissionHint";
+import { BadgeSync } from "@/components/pwa/BadgeSync";
+import { createClient } from "@/lib/supabase/server";
 import { getEffectiveLocale } from "@/lib/i18n";
 import { RTL_LOCALES } from "@/lib/i18n/config";
 
@@ -100,11 +104,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // - Nicht eingeloggt: Cookie zoe_public_lang → Accept-Language → 'de'
   const locale = await getEffectiveLocale();
   const dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
+
+  // Login-Status fuer PWA-Push-Components (Subscribe + Badge + Permission-Hint
+  // nur wenn eingeloggt; SW-Registration laeuft trotzdem global).
+  const sb = await createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  const loggedIn = !!user;
+
   return (
     <html lang={locale} dir={dir} className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <body className="bg-ink text-cream antialiased">
         <JsonLd data={[organizationSchema(), websiteSchema()]} />
         <PublicAnalyticsTracker />
+        <PushSetup loggedIn={loggedIn} />
+        {loggedIn && <PermissionHint loggedIn />}
+        {loggedIn && <BadgeSync loggedIn />}
         <InstallHint />
         <ThemeProvider>{children}</ThemeProvider>
       </body>

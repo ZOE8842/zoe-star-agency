@@ -30,6 +30,7 @@ import {
 import { getTikTokPublic, formatTikTokBlock } from "./tiktok-public";
 import { queuePlatformNotification } from "@/lib/notifications/platform";
 import { queueInboxNotification, pushActivityFeed } from "@/lib/notifications/inbox";
+import { createNotification } from "@/lib/notifications/center";
 
 interface ProcessResult {
   ok: boolean;
@@ -53,6 +54,17 @@ async function notifyCreator(
     body: "Aura hat den Report fuer dich zusammengestellt. Schau ihn dir an wenn du Zeit hast.",
     link,
     bundle_key: "analysis",
+  });
+
+  // PWA Phase 2 — zusaetzlich Web-Push + Badge ueber Notification-Center.
+  // Fail-silent, blockiert nie den Worker.
+  void createNotification({
+    user_id: profile_id,
+    type: "content_review_ready",
+    title: `${module} ist bereit`,
+    body: "Tipps + Score sind im Portal verfuegbar.",
+    target_url: link,
+    metadata: { module },
   });
 }
 

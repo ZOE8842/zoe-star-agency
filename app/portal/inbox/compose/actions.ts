@@ -1,8 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSrvClient } from "@supabase/supabase-js";
+import { createClient as createSrvClient, type SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "@/lib/notifications/center";
 
 interface SendArgs {
   recipientId?: string;
@@ -103,5 +104,53 @@ export async function sendMessage({ recipientId, recipientGroup, subject, body, 
 
   revalidatePath("/portal/inbox");
   revalidatePath(`/portal/inbox/${inserted.id}`);
+
+  // Push + Notification-Center an Empfaenger (Best-Effort, fail-silent).
+  // Bei Broadcast: alle aktiven Creator. Sonst: single recipient.
+  void fireInboxNotifications(admin, inserted.id, effectiveSubject, recipientGroup, recipientId);
+
   return { success: true, id: inserted.id };
+}
+
+async function fireInboxNotifications(
+  admin: SupabaseClient,
+  messageId: string,
+  subject: string,
+  recipientGroup?: string,
+  recipientId?: string,
+): Promise<void> {
+  try {
+    const targetUrl = `/portal/inbox/${messageId}`;
+    const titleShort = "Neue Nachricht";
+    const bodyShort = subject.length > 120 ? `${subject.slice(0, 117)}…` : subject;
+
+    if (recipientGroup === "all_creators") {
+      const { data: creators } = await admin
+        .from("profiles")
+        .select("id")
+        .eq("role", "creator")
+        .eq("status", "active");
+      if (creators) {
+        await Promise.all(creators.map(c => createNotification({
+          user_id: c.id,
+          type: "inbox_message",
+          title: titleShort,
+          body: bodyShort,
+          target_url: targetUrl,
+          metadata: { message_id: messageId, broadcast: true },
+        })));
+      }
+    } else if (recipientId) {
+      await createNotification({
+        user_id: recipientId,
+        type: "inbox_message",
+        title: titleShort,
+        body: bodyShort,
+        target_url: targetUrl,
+        metadata: { message_id: messageId },
+      });
+    }
+  } catch (e) {
+    console.warn("[inbox notify] failed", e instanceof Error ? e.message : e);
+  }
 }
