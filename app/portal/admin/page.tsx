@@ -336,13 +336,13 @@ export default async function AdminPage() {
         {/* WELCOME — Admin/Manager mit Datum-Eyebrow */}
         <section className="mb-14 md:mb-20">
           <p className="eyebrow mb-5 md:mb-6">
-            {new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })} · {isAdmin ? "Admin Console" : "Manager Cockpit"}
+            {new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })} · {isAdmin ? t("admin.console_admin") : t("admin.console_manager")}
           </p>
           <h1 className="heading-display text-4xl md:text-6xl leading-[1.05]">
             {isAdmin ? (
-              <>System <span className="text-champagne">overview.</span></>
+              <>{t("admin.system_overview_h1_a")} <span className="text-champagne">{t("admin.system_overview_h1_b")}</span></>
             ) : (
-              <>Mein <span className="text-champagne">Roster.</span></>
+              <>{t("admin.my_roster_h1_a")} <span className="text-champagne">{t("admin.my_roster_h1_b")}</span></>
             )}
           </h1>
           <p className="text-cream/55 text-xs md:text-sm mt-3 italic font-display">{greeting()}.</p>
@@ -352,17 +352,17 @@ export default async function AdminPage() {
         {/* STATS */}
         <section className={`grid grid-cols-2 ${isAdmin ? "md:grid-cols-5" : "md:grid-cols-3"} gap-3 md:gap-4 mb-12`}>
           <Stat
-            label={isAdmin ? "Users total" : "Mein Roster"}
+            label={isAdmin ? t("admin.stat_users_total") : t("admin.stat_my_roster")}
             value={totalUsers}
             href="/portal/admin/users"
           />
-          <Stat label="Active Creators" value={activeCreators} href="/portal/admin/users" />
+          <Stat label={t("admin.stat_active_creators")} value={activeCreators} href="/portal/admin/users" />
           {isAdmin && (
-            <Stat label="Open Invites" value={openInvites} href="/portal/admin/invites" highlight={openInvites > 0} />
+            <Stat label={t("admin.stat_open_invites")} value={openInvites} href="/portal/admin/invites" highlight={openInvites > 0} />
           )}
-          <Stat label="Events offen" value={upcomingEvents} href="/portal/admin/events" />
+          <Stat label={t("admin.stat_events_open")} value={upcomingEvents} href="/portal/admin/events" />
           {isAdmin && (
-            <Stat label="Tickets offen" value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
+            <Stat label={t("admin.stat_tickets_open")} value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
           )}
         </section>
 
@@ -381,13 +381,13 @@ export default async function AdminPage() {
             >
               <div className="flex items-baseline justify-between gap-4">
                 <div>
-                  <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em] mb-1">Creator Anfragen</p>
+                  <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em] mb-1">{t("admin.creator_requests")}</p>
                   <p className="text-cream font-display italic text-xl">
-                    Eingehende Anfragen ueber /join
+                    {t("admin.creator_requests_subtitle")}
                   </p>
                 </div>
                 <span className="text-champagne text-[11px] uppercase tracking-[0.2em] hover:text-champagne-300">
-                  Oeffnen →
+                  {t("admin.open_link")}
                 </span>
               </div>
             </Link>
@@ -398,9 +398,9 @@ export default async function AdminPage() {
         {isAdmin && (
           <section className="mb-12">
             <div className="flex items-baseline justify-between mb-4">
-              <p className="eyebrow">Operations · offen ({opsTotal})</p>
+              <p className="eyebrow">{t("admin.operations_open")} ({opsTotal})</p>
               <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-                Stand jetzt
+                {t("admin.status_now")}
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
@@ -424,9 +424,9 @@ export default async function AdminPage() {
         {isAdmin && cronHealth.length > 0 && (
           <section className="mb-12">
             <div className="flex items-baseline justify-between mb-4">
-              <p className="eyebrow">Cron-Health · 48h</p>
+              <p className="eyebrow">{t("admin.cron_health_48h")}</p>
               <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-                Letzter Lauf je Job
+                {t("admin.cron_last_run")}
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
@@ -444,9 +444,9 @@ export default async function AdminPage() {
         {isAdmin && (
           <section className="mb-12">
             <div className="flex items-baseline justify-between mb-4">
-              <p className="eyebrow">Diese Woche</p>
+              <p className="eyebrow">{t("admin.this_week")}</p>
               <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-                Ab Montag
+                {t("admin.since_monday")}
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
@@ -471,7 +471,7 @@ export default async function AdminPage() {
 
         {/* QUICK ACTIONS */}
         <section className="mb-12">
-          <p className="eyebrow mb-4">Quick actions</p>
+          <p className="eyebrow mb-4">{t("admin.quick_actions")}</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             <AdminTile href="/portal/admin/users" title={isAdmin ? "Users" : "Roster"} hint={isAdmin ? "Rollen · Status · Sperren" : "Eigene Creator"} />
             {isAdmin && (
@@ -503,11 +503,11 @@ export default async function AdminPage() {
           {/* Recent Signups */}
           <div className="border border-champagne/15 p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="eyebrow">Neueste Creator</p>
-              <Link href="/portal/admin/users" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">Alle →</Link>
+              <p className="eyebrow">{t("admin.recent_creators")}</p>
+              <Link href="/portal/admin/users" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">{t("common.all_link")}</Link>
             </div>
             {recentSignups.length === 0 ? (
-              <p className="editorial-empty">Noch keine Stimmen im Roster.</p>
+              <p className="editorial-empty">{t("admin.empty_roster")}</p>
             ) : (
               <ul className="space-y-3">
                 {recentSignups.map((p) => (
@@ -537,11 +537,11 @@ export default async function AdminPage() {
           {isAdmin && (
           <div className="border border-champagne/15 p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="eyebrow">Letzte Invites</p>
-              <Link href="/portal/admin/invites" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">Alle →</Link>
+              <p className="eyebrow">{t("admin.recent_invites")}</p>
+              <Link href="/portal/admin/invites" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">{t("common.all_link")}</Link>
             </div>
             {recentInvites.length === 0 ? (
-              <p className="editorial-empty">Noch keine Einladungen versandt.</p>
+              <p className="editorial-empty">{t("admin.empty_invites")}</p>
             ) : (
               <ul className="space-y-3">
                 {recentInvites.map((i) => {
@@ -569,11 +569,11 @@ export default async function AdminPage() {
         {isAdmin && (
         <section className="border border-champagne/15 p-6">
           <div className="flex items-center justify-between mb-4">
-            <p className="eyebrow">Letzte Support-Tickets</p>
-            <Link href="/portal/support" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">Alle →</Link>
+            <p className="eyebrow">{t("admin.recent_tickets")}</p>
+            <Link href="/portal/support" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">{t("common.all_link")}</Link>
           </div>
           {recentTickets.length === 0 ? (
-            <p className="editorial-empty">Alles ruhig im Support.</p>
+            <p className="editorial-empty">{t("admin.empty_tickets")}</p>
           ) : (
             <ul className="space-y-2">
               {recentTickets.map((t) => (

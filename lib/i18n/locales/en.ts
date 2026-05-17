@@ -39,6 +39,7 @@ export const en = {
     refresh: "Refresh",
     add: "Add",
     remove: "Remove",
+    all_link: "All →",
   },
   greeting: {
     night: "Night",

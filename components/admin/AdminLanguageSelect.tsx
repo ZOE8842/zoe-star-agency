@@ -2,10 +2,12 @@
 
 // Admin-only Sprach-Selector fuer einen Creator-Profile.
 // Update via supabase-client direkt (RLS erlaubt admin-update auf profiles).
-// Bei Erfolg: Router-Refresh, damit serverseitige Anzeige aktualisiert wird.
+// Bei Erfolg: window.location.reload() damit ALLE Server-Components mit
+// neuer Locale neu rendern. router.refresh() war zu soft - manche
+// Komponenten lasen weiterhin gecachte Werte (Asymmetrie zu
+// CreatorLanguageSelect + QuickLanguageSwitch behoben).
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LOCALES, LOCALE_LABELS, type Locale, normalizeLocale } from "@/lib/i18n/config";
 
@@ -15,16 +17,15 @@ interface Props {
 }
 
 export function AdminLanguageSelect({ profileId, currentLanguage }: Props) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
   const [value, setValue] = useState<Locale>(normalizeLocale(currentLanguage));
-  const [savedAt, setSavedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function onChange(next: Locale) {
     if (next === value || pending) return;
     setError(null);
     setValue(next);
+    setPending(true);
 
     const supabase = createClient();
     const { error: updErr } = await supabase
@@ -35,13 +36,12 @@ export function AdminLanguageSelect({ profileId, currentLanguage }: Props) {
     if (updErr) {
       setError(updErr.message);
       setValue(normalizeLocale(currentLanguage));
+      setPending(false);
       return;
     }
-    setSavedAt(Date.now());
-    startTransition(() => router.refresh());
+    // Vollreload damit Server-Components in neuer Locale rendern.
+    window.location.reload();
   }
-
-  const isSaved = savedAt !== null && (Date.now() - savedAt) < 3000;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -60,7 +60,6 @@ export function AdminLanguageSelect({ profileId, currentLanguage }: Props) {
           {LOCALE_LABELS[l]}
         </button>
       ))}
-      {isSaved && <span className="text-champagne text-xs">Gespeichert.</span>}
       {error && <span className="text-red-400 text-xs">{error}</span>}
     </div>
   );
