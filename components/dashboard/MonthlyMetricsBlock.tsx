@@ -108,10 +108,14 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
     .eq("month", month)
     .maybeSingle<Metric>();
 
+  // i18n
+  const { loadLocale } = await import("@/lib/i18n");
+  const { t } = await loadLocale();
+
   return (
     <section className="mb-12 md:mb-16">
       <div className="flex items-baseline justify-between gap-4 mb-5 md:mb-6">
-        <p className="eyebrow">Dein Monatsstand · {monthLabel(now)}</p>
+        <p className="eyebrow">{t("dashboard.monthly_metrics_title")} · {monthLabel(now)}</p>
         {data?.activity_status && (
           <span
             className={`inline-block px-2.5 py-0.5 text-[10px] uppercase tracking-[0.25em] ${STATUS_TONE[data.activity_status]}`}

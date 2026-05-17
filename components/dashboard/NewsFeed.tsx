@@ -37,6 +37,11 @@ function relativeAge(iso: string): string {
 }
 
 export async function NewsFeed({ supabase }: { supabase: SupabaseClient }) {
+  // i18n: Title + Empty-State lokalisieren (Rest bleibt aus DB)
+  const { loadLocale } = await import("@/lib/i18n");
+  const { t } = await loadLocale();
+  const newsTitle = t("dashboard.news_title");
+  const emptyNews = t("dashboard.empty_no_news");
   // SQL-Filter sind tricky bei .or() + .is.null + .gt() in der Supabase-JS-API
   // (Reihenfolge der Klauseln kann zu unerwarteten Resultaten fuehren).
   // Wir holen die letzten 50 Eintraege und filtern Visibility in JS.
@@ -58,11 +63,9 @@ export async function NewsFeed({ supabase }: { supabase: SupabaseClient }) {
   if (rows.length === 0) {
     return (
       <section className="mb-12 md:mb-16">
-        <p className="eyebrow mb-4">News &amp; Infos</p>
+        <p className="eyebrow mb-4">{newsTitle}</p>
         <div className="border border-champagne/15 p-6 md:p-7">
-          <p className="font-display italic text-cream/45 text-lg">
-            Alles ruhig im Network.
-          </p>
+          <p className="font-display italic text-cream/45 text-lg">{emptyNews}</p>
         </div>
       </section>
     );
@@ -71,9 +74,9 @@ export async function NewsFeed({ supabase }: { supabase: SupabaseClient }) {
   return (
     <section className="mb-12 md:mb-16">
       <div className="flex items-baseline justify-between mb-5">
-        <p className="eyebrow">News &amp; Infos</p>
+        <p className="eyebrow">{newsTitle}</p>
         <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-          {rows.length} {rows.length === 1 ? "Eintrag" : "Eintraege"}
+          {rows.length}
         </span>
       </div>
       <ul className="space-y-3">

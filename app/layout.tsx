@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { baseUrl } from "@/lib/seo/routes";
 import { JsonLd, organizationSchema, websiteSchema } from "@/components/JsonLd";
 import { PublicAnalyticsTracker } from "@/components/analytics/PublicAnalyticsTracker";
+import { getUserLocale } from "@/lib/i18n";
+import { RTL_LOCALES } from "@/lib/i18n/config";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -82,9 +84,13 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0a",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // i18n: lang + dir-Attribut basierend auf User-Locale (profiles.language).
+  // Bei unauthenticated: default 'de' (DEFAULT_LOCALE).
+  const locale = await getUserLocale();
+  const dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
   return (
-    <html lang="de" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+    <html lang={locale} dir={dir} className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <body className="bg-ink text-cream antialiased">
         <JsonLd data={[organizationSchema(), websiteSchema()]} />
         <PublicAnalyticsTracker />

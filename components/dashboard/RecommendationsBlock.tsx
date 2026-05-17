@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { Recommendation } from "@/lib/dashboard/aggregator";
+import { loadLocale } from "@/lib/i18n";
 
-export function RecommendationsBlock({ items }: { items: Recommendation[] }) {
+export async function RecommendationsBlock({ items }: { items: Recommendation[] }) {
   if (items.length === 0) return null;
+  const { t } = await loadLocale();
 
   return (
     <section className="mb-12 md:mb-16">
-      <p className="eyebrow mb-5">Empfohlen</p>
+      <p className="eyebrow mb-5">{t("dashboard.recommendations_title")}</p>
       <ul className="grid md:grid-cols-2 gap-3 md:gap-4">
         {items.map((r) => (
           <li key={r.id}>

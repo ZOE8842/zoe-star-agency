@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { PerformanceInsightBlock } from "@/components/dashboard/PerformanceInsightBlock";
+import { loadLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AnalyseHubPage() {
   const { supabase, profile } = await getAuthedProfile();
+  const { t } = await loadLocale();
 
   const [accountRes, liveRes] = await Promise.all([
     supabase
@@ -57,7 +59,7 @@ export default async function AnalyseHubPage() {
       <div className="atelier-grain" />
 
       <main className="container-luxe relative z-10 py-12 md:py-16 max-w-4xl">
-        <p className="eyebrow mb-3">Analyse</p>
+        <p className="eyebrow mb-3">{t("analyse.title")}</p>
         <h1 className="font-display italic text-cream text-4xl md:text-5xl leading-[1.05] tracking-[-0.02em] mb-4">
           LIVE Performance & <span className="text-champagne">Deep-Checks.</span>
         </h1>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Warning } from "@/lib/dashboard/aggregator";
+import { loadLocale } from "@/lib/i18n";
 
 const SEVERITY_STYLE: Record<Warning["severity"], string> = {
   high: "border border-red-400/40 bg-red-400/[0.04]",
@@ -16,12 +17,13 @@ const SEVERITY_LABEL: Record<Warning["severity"], string> = {
   medium: "Hinweis",
 };
 
-export function WarningsBlock({ items }: { items: Warning[] }) {
+export async function WarningsBlock({ items }: { items: Warning[] }) {
   if (items.length === 0) return null;
+  const { t } = await loadLocale();
 
   return (
     <section className="mb-10 md:mb-12">
-      <p className="eyebrow mb-4">Achtung</p>
+      <p className="eyebrow mb-4">{t("dashboard.warnings_title")}</p>
       <ul className="space-y-3">
         {items.map((w) => (
           <li key={w.id}>

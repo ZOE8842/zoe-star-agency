@@ -15,6 +15,7 @@
 //   - Server-Component: getUserLocale() liest aus auth-session + profile
 //   - Bei kein Login / kein Profile → DEFAULT_LOCALE ("de")
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_LOCALE, type Locale, normalizeLocale } from "./config";
 import de from "./locales/de";
@@ -58,8 +59,11 @@ function resolvePath(obj: unknown, path: string): unknown {
   return cur;
 }
 
-// Server-side Locale-Reader: liest aus auth-session + profiles.language
-export async function getUserLocale(): Promise<Locale> {
+// Server-side Locale-Reader: liest aus auth-session + profiles.language.
+// React.cache() dedupliziert Aufrufe innerhalb desselben Request-Lifecycles,
+// d.h. mehrere Komponenten die getUserLocale() unabhaengig aufrufen,
+// teilen sich genau einen Supabase-Roundtrip pro Render.
+export const getUserLocale = cache(async (): Promise<Locale> => {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -73,21 +77,22 @@ export async function getUserLocale(): Promise<Locale> {
   } catch {
     return DEFAULT_LOCALE;
   }
-}
+});
 
 // Convenience: lade Locale + Dict + curry'd t() in einem Schritt.
+// Ebenfalls per React.cache() dedupliziert.
 // USAGE:
 //   const { locale, t } = await loadLocale();
 //   <h1>{t("nav.dashboard")}</h1>
-export async function loadLocale(): Promise<{
+export const loadLocale = cache(async (): Promise<{
   locale: Locale;
   dict: Dictionary;
   t: (path: string) => string;
-}> {
+}> => {
   const locale = await getUserLocale();
   const dict = getDictionary(locale);
   return { locale, dict, t: (path: string) => t(dict, path) };
-}
+});
 
 // Greeting-Helper basierend auf Stunde + Locale.
 export function greetingKey(hour: number): string {

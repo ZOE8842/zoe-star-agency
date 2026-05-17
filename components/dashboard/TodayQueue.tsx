@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { QueueItem } from "@/lib/dashboard/aggregator";
+import { loadLocale } from "@/lib/i18n";
 
 const URGENCY_TONE: Record<QueueItem["urgency"], string> = {
   now: "border-l-2 border-champagne",
@@ -7,18 +8,19 @@ const URGENCY_TONE: Record<QueueItem["urgency"], string> = {
   info: "border-l-2 border-cream/15",
 };
 
-export function TodayQueue({ items }: { items: QueueItem[] }) {
+export async function TodayQueue({ items }: { items: QueueItem[] }) {
+  const { t } = await loadLocale();
+  const title = t("dashboard.today_queue_title");
+  const empty = t("dashboard.empty_no_queue");
+
   if (items.length === 0) {
     return (
       <section className="mb-12 md:mb-16">
         <div className="flex items-baseline justify-between mb-5">
-          <p className="eyebrow">Heute offen</p>
-          <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">0 Punkte</span>
+          <p className="eyebrow">{title}</p>
         </div>
         <div className="border border-champagne/15 p-6 md:p-7">
-          <p className="font-display italic text-cream/45 text-xl">
-            Keine offenen Punkte.
-          </p>
+          <p className="font-display italic text-cream/45 text-xl">{empty}</p>
         </div>
       </section>
     );
@@ -27,9 +29,9 @@ export function TodayQueue({ items }: { items: QueueItem[] }) {
   return (
     <section className="mb-12 md:mb-16">
       <div className="flex items-baseline justify-between mb-5">
-        <p className="eyebrow">Heute offen</p>
+        <p className="eyebrow">{title}</p>
         <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-          {items.length} {items.length === 1 ? "Punkt" : "Punkte"}
+          {items.length}
         </span>
       </div>
       <ul className="space-y-2">

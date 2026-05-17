@@ -3,11 +3,14 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { ProfileForm } from "./ProfileForm";
 import { AvatarUploader } from "./AvatarUploader";
+import { CreatorLanguageSelect } from "@/components/profile/CreatorLanguageSelect";
+import { loadLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const { supabase, profile } = await getAuthedProfile();
+  const { t } = await loadLocale();
 
   // Showcase-Status fuer prominente Card
   const { data: showcase } = await supabase
@@ -139,6 +142,19 @@ export default async function ProfilePage() {
         </Link>
 
         <ProfileForm profile={profile} />
+
+        <section className="mt-14 pt-10 border-t border-champagne/10">
+          <p className="eyebrow mb-3">{t("profile.my_language")}</p>
+          <h2 className="font-display italic text-xl text-cream mb-5">
+            {t("profile.my_language")}
+          </h2>
+          <CreatorLanguageSelect
+            profileId={profile.id}
+            currentLanguage={profile.language}
+            labelHint={t("profile.language_hint")}
+            savedLabel={t("i18n.saved")}
+          />
+        </section>
       </main>
     </>
   );
