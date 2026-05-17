@@ -1,5 +1,4 @@
-// العربية - Phase-1-Stub.
-// RTL-Sprache. Layout-Spiegelung uebernimmt dir-Attribut im HTML.
+// العربية - RTL Sprache.
 
 export const ar = {
   common: {
@@ -12,6 +11,29 @@ export const ar = {
     abbrechen: "إلغاء",
     senden: "إرسال",
     laden: "جارٍ التحميل…",
+    save: "حفظ",
+    cancel: "إلغاء",
+  },
+  greeting: {
+    night: "تصبح على خير",
+    morning: "صباح الخير",
+    noon: "ظهر سعيد",
+    afternoon: "مساء الخير",
+    evening: "مساء الخير",
+  },
+  nav: {
+    master: "Master",
+    dashboard: "لوحة التحكم",
+    inbox: "الرسائل",
+    analyse: "التحليلات",
+    events: "الفعاليات",
+    services: "الخدمات",
+    academy: "الأكاديمية",
+    info: "معلومات",
+    profile: "الملف الشخصي",
+    umsatz: "الإيرادات",
+    live_analyse: "تحليل LIVE",
+    logout: "تسجيل الخروج",
   },
   comingSoon: {
     title: "قريباً",

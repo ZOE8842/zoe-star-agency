@@ -1,4 +1,4 @@
-// Türkçe - Phase-1-Stub.
+// Türkçe.
 
 export const tr = {
   common: {
@@ -11,6 +11,29 @@ export const tr = {
     abbrechen: "İptal",
     senden: "Gönder",
     laden: "Yükleniyor…",
+    save: "Kaydet",
+    cancel: "İptal",
+  },
+  greeting: {
+    night: "İyi Geceler",
+    morning: "Günaydın",
+    noon: "İyi Öğlenler",
+    afternoon: "İyi Öğleden Sonra",
+    evening: "İyi Akşamlar",
+  },
+  nav: {
+    master: "Master",
+    dashboard: "Panel",
+    inbox: "Mesajlar",
+    analyse: "Analiz",
+    events: "Etkinlikler",
+    services: "Hizmetler",
+    academy: "Akademi",
+    info: "Bilgi",
+    profile: "Profil",
+    umsatz: "Gelir",
+    live_analyse: "Canlı Analiz",
+    logout: "Çıkış",
   },
   comingSoon: {
     title: "Yakında",

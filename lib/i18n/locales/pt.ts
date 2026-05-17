@@ -1,4 +1,4 @@
-// Português - Phase-1-Stub.
+// Português.
 
 export const pt = {
   common: {
@@ -11,6 +11,29 @@ export const pt = {
     abbrechen: "Cancelar",
     senden: "Enviar",
     laden: "Carregando…",
+    save: "Salvar",
+    cancel: "Cancelar",
+  },
+  greeting: {
+    night: "Boa noite",
+    morning: "Bom dia",
+    noon: "Boa tarde",
+    afternoon: "Boa tarde",
+    evening: "Boa noite",
+  },
+  nav: {
+    master: "Master",
+    dashboard: "Painel",
+    inbox: "Mensagens",
+    analyse: "Análise",
+    events: "Eventos",
+    services: "Serviços",
+    academy: "Academia",
+    info: "Info",
+    profile: "Perfil",
+    umsatz: "Receita",
+    live_analyse: "Análise LIVE",
+    logout: "Sair",
   },
   comingSoon: {
     title: "Em breve",

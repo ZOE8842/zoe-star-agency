@@ -74,3 +74,27 @@ export async function getUserLocale(): Promise<Locale> {
     return DEFAULT_LOCALE;
   }
 }
+
+// Convenience: lade Locale + Dict + curry'd t() in einem Schritt.
+// USAGE:
+//   const { locale, t } = await loadLocale();
+//   <h1>{t("nav.dashboard")}</h1>
+export async function loadLocale(): Promise<{
+  locale: Locale;
+  dict: Dictionary;
+  t: (path: string) => string;
+}> {
+  const locale = await getUserLocale();
+  const dict = getDictionary(locale);
+  return { locale, dict, t: (path: string) => t(dict, path) };
+}
+
+// Greeting-Helper basierend auf Stunde + Locale.
+export function greetingKey(hour: number): string {
+  if (hour < 5) return "greeting.night";
+  if (hour < 11) return "greeting.morning";
+  if (hour < 14) return "greeting.noon";
+  if (hour < 18) return "greeting.afternoon";
+  if (hour < 22) return "greeting.evening";
+  return "greeting.night";
+}

@@ -13,22 +13,15 @@ import { WarningsBlock } from "@/components/dashboard/WarningsBlock";
 import { RecommendationsBlock } from "@/components/dashboard/RecommendationsBlock";
 import { NewsFeed } from "@/components/dashboard/NewsFeed";
 import { loadDashboardData } from "@/lib/dashboard/aggregator";
+import { loadLocale, greetingKey } from "@/lib/i18n";
 // ZoeAppCodeBox bleibt im Repo (Component existiert), wird aber nicht mehr
 // im Dashboard gerendert. Backend-Routes /api/zoe-app/request-code +
 // zoe_app_connection_codes Tabelle bleiben als Legacy-Bridge intern.
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 5) return "Nacht";
-  if (h < 11) return "Morgen";
-  if (h < 14) return "Mittag";
-  if (h < 18) return "Nachmittag";
-  if (h < 22) return "Abend";
-  return "Nacht";
-}
-
 export default async function DashboardPage() {
   const { supabase, profile } = await getAuthedProfile();
+  const { t } = await loadLocale();
+  const greeting = () => t(greetingKey(new Date().getHours()));
 
   if (profile.role === "admin") redirect("/portal/admin");
 

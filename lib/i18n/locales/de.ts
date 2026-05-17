@@ -1,5 +1,6 @@
-// Phase-1-Stub: deutsche Inhalte sind aktuell direkt in den Pages.
-// Phase 2: Migration zu next-intl mit dieser Datei als Source-of-Truth.
+// Deutsche Source-of-Truth für alle Portal-Strings.
+// Andere Locales (en, fr, tr, pt, ar) fallen via t() auf diese Keys zurueck,
+// wenn ein Key dort noch fehlt.
 
 export const de = {
   common: {
@@ -12,6 +13,29 @@ export const de = {
     abbrechen: "Abbrechen",
     senden: "Senden",
     laden: "Lädt…",
+    save: "Speichern",
+    cancel: "Abbrechen",
+  },
+  greeting: {
+    night: "Nacht",
+    morning: "Morgen",
+    noon: "Mittag",
+    afternoon: "Nachmittag",
+    evening: "Abend",
+  },
+  nav: {
+    master: "Master",
+    dashboard: "Dashboard",
+    inbox: "Inbox",
+    analyse: "Analyse",
+    events: "Events",
+    services: "Services",
+    academy: "Academy",
+    info: "Info",
+    profile: "Profile",
+    umsatz: "Umsatz",
+    live_analyse: "LIVE-Analyse",
+    logout: "Logout",
   },
   comingSoon: {
     title: "Bald verfügbar",

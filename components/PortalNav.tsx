@@ -4,6 +4,7 @@ import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { InboxIndicator } from "./InboxIndicator";
 import { MobileNavDrawer } from "./MobileNavDrawer";
+import { loadLocale } from "@/lib/i18n";
 
 // V3 Nav-Reduktion: Showcase ist Profil-Toggle (Profile-Reiter),
 // Support ist Card unter /portal/services.
@@ -13,24 +14,24 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
 //
 // V7 (2026-05-16): "Ranking" wird zu Admin-LIVE-Analyse, NUR fuer Admin
 // sichtbar. Manager verliert den Reiter (Scope-Verschaerfung User-Decision).
-function buildNavItems(isStaff: boolean, isAdmin: boolean) {
+//
+// Phase-2-i18n (2026-05-17): Labels per t()-Helper aus Locale geladen.
+function buildNavItems(isStaff: boolean, isAdmin: boolean, t: (k: string) => string) {
   const items: Array<{ href: string; label: string; indicator?: true }> = [
     isStaff
-      ? { href: "/portal/admin", label: "Master" }
-      : { href: "/portal", label: "Dashboard" },
-    { href: "/portal/inbox", label: "Inbox", indicator: true as const },
-    { href: "/portal/analyse", label: "Analyse" },
-    { href: "/portal/events", label: "Events" },
-    { href: "/portal/services", label: "Services" },
-    { href: "/portal/academy", label: "Academy" },
-    { href: "/portal/info", label: "Info" },
-    { href: "/portal/profile", label: "Profile" },
+      ? { href: "/portal/admin", label: t("nav.master") }
+      : { href: "/portal", label: t("nav.dashboard") },
+    { href: "/portal/inbox", label: t("nav.inbox"), indicator: true as const },
+    { href: "/portal/analyse", label: t("nav.analyse") },
+    { href: "/portal/events", label: t("nav.events") },
+    { href: "/portal/services", label: t("nav.services") },
+    { href: "/portal/academy", label: t("nav.academy") },
+    { href: "/portal/info", label: t("nav.info") },
+    { href: "/portal/profile", label: t("nav.profile") },
   ];
-  // V7: Admin-LIVE-Analyse nur fuer Admin, nicht fuer Manager
-  // V12: Umsatz-Modul · auch admin-only · vor LIVE-Analyse
   if (isAdmin) {
-    items.splice(1, 0, { href: "/portal/admin/umsatz", label: "Umsatz" });
-    items.splice(2, 0, { href: "/portal/admin/ranking", label: "LIVE-Analyse" });
+    items.splice(1, 0, { href: "/portal/admin/umsatz", label: t("nav.umsatz") });
+    items.splice(2, 0, { href: "/portal/admin/ranking", label: t("nav.live_analyse") });
   }
   return items;
 }
@@ -46,9 +47,10 @@ interface Props {
   avatarUrl?: string | null;
 }
 
-export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isManager, avatarUrl }: Props) {
+export async function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isManager, avatarUrl }: Props) {
   const isStaff = !!isAdmin || !!isManager;
-  const navItems = buildNavItems(isStaff, !!isAdmin);
+  const { t } = await loadLocale();
+  const navItems = buildNavItems(isStaff, !!isAdmin, t);
   // V3-Datenschutz: keine Email-Initials. Fallback ist Display-Name oder
   // TikTok-Username (kein PII).
   const initials = (displayName || tiktokUsername || "")
@@ -98,7 +100,7 @@ export function PortalNav({ userId, displayName, tiktokUsername, isAdmin, isMana
           </Link>
           <form action="/portal/logout" method="post">
             <button className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em] inline-flex items-center min-h-[40px] px-3">
-              Logout
+              {t("nav.logout")}
             </button>
           </form>
         </div>

@@ -1,6 +1,4 @@
-// Français - Phase-1-Stub.
-// Strings hier sind teilweise uebersetzt; Helper t() faellt auf de zurueck
-// wenn ein Key in dieser Datei fehlt.
+// Français.
 
 export const fr = {
   common: {
@@ -13,6 +11,29 @@ export const fr = {
     abbrechen: "Annuler",
     senden: "Envoyer",
     laden: "Chargement…",
+    save: "Enregistrer",
+    cancel: "Annuler",
+  },
+  greeting: {
+    night: "Bonne nuit",
+    morning: "Bonjour",
+    noon: "Midi",
+    afternoon: "Bon après-midi",
+    evening: "Bonsoir",
+  },
+  nav: {
+    master: "Master",
+    dashboard: "Tableau de bord",
+    inbox: "Messages",
+    analyse: "Analyses",
+    events: "Événements",
+    services: "Services",
+    academy: "Académie",
+    info: "Info",
+    profile: "Profil",
+    umsatz: "Revenus",
+    live_analyse: "Analyse LIVE",
+    logout: "Déconnexion",
   },
   comingSoon: {
     title: "Bientôt disponible",

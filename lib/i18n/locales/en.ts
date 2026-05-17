@@ -1,7 +1,4 @@
-// English locale - Phase-1-Stub.
-// Strings hier sind DE-Fallback Original; bei Sprache-Vollausbau werden
-// einzelne Keys schrittweise uebersetzt. Helper t() faellt automatisch
-// auf de zurueck, wenn ein Key in dieser Datei fehlt.
+// English. Stub-Strings + Phase-2-Translations für Nav/Greeting.
 
 export const en = {
   common: {
@@ -14,6 +11,29 @@ export const en = {
     abbrechen: "Cancel",
     senden: "Send",
     laden: "Loading…",
+    save: "Save",
+    cancel: "Cancel",
+  },
+  greeting: {
+    night: "Night",
+    morning: "Morning",
+    noon: "Noon",
+    afternoon: "Afternoon",
+    evening: "Evening",
+  },
+  nav: {
+    master: "Master",
+    dashboard: "Dashboard",
+    inbox: "Inbox",
+    analyse: "Analytics",
+    events: "Events",
+    services: "Services",
+    academy: "Academy",
+    info: "Info",
+    profile: "Profile",
+    umsatz: "Revenue",
+    live_analyse: "LIVE Analytics",
+    logout: "Log out",
   },
   comingSoon: {
     title: "Coming soon",

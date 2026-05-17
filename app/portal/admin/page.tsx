@@ -5,16 +5,9 @@ import { PortalNav } from "@/components/PortalNav";
 import { NewsFeed } from "@/components/dashboard/NewsFeed";
 import { PortalActivityBlock } from "@/components/dashboard/PortalActivityBlock";
 import { WebsiteAnalyticsBlock } from "@/components/dashboard/WebsiteAnalyticsBlock";
+import { loadLocale, greetingKey } from "@/lib/i18n";
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 5) return "Nacht";
-  if (h < 11) return "Morgen";
-  if (h < 14) return "Mittag";
-  if (h < 18) return "Nachmittag";
-  if (h < 22) return "Abend";
-  return "Nacht";
-}
+// Greeting jetzt locale-aware - definiert innerhalb AdminPage via loadLocale().
 
 function startOfWeekIso(): string {
   const d = new Date();
@@ -43,6 +36,10 @@ export default async function AdminPage() {
 
   if (!profile || !["manager", "admin"].includes(profile.role)) redirect("/portal");
   const isAdmin = profile.role === "admin";
+
+  // i18n: Greeting locale-aware via profile.language
+  const { t } = await loadLocale();
+  const greeting = () => t(greetingKey(new Date().getHours()));
 
   const now = new Date();
 
