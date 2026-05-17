@@ -13,9 +13,16 @@ import { trackPortalEvent, type PortalEventType } from "@/lib/analytics/trackPor
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Client-postable Events (Public-Track-Endpoint).
+// creator_application_submit ist BEWUSST NICHT hier - der Event wird
+// ausschliesslich server-side in /api/creator-applications nach
+// erfolgreichem DB-Insert gefeuert (sonst Inflation-Risiko durch
+// gefakte Submit-Events ohne echte Anwendung). Codex-Finding P2.
 const VALID_EVENTS: ReadonlySet<PortalEventType> = new Set([
   "page_view", "login_success", "logout", "portal_open",
   "admin_open", "creator_dashboard_open",
+  // Public Website Analytics (nur Read-Side Events)
+  "public_page_view", "join_open",
 ]);
 
 // in-memory rate limit pro session_id

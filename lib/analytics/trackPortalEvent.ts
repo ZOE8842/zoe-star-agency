@@ -15,7 +15,11 @@ export type PortalEventType =
   | "logout"
   | "portal_open"
   | "admin_open"
-  | "creator_dashboard_open";
+  | "creator_dashboard_open"
+  // Public Website Analytics
+  | "public_page_view"
+  | "join_open"
+  | "creator_application_submit";
 
 export interface TrackPortalEventInput {
   event_type: PortalEventType;

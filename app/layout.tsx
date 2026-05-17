@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { baseUrl } from "@/lib/seo/routes";
 import { JsonLd, organizationSchema, websiteSchema } from "@/components/JsonLd";
+import { PublicAnalyticsTracker } from "@/components/analytics/PublicAnalyticsTracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="de" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <body className="bg-ink text-cream antialiased">
         <JsonLd data={[organizationSchema(), websiteSchema()]} />
+        <PublicAnalyticsTracker />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

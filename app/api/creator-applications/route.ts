@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { trackPortalEvent } from "@/lib/analytics/trackPortalEvent";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -155,6 +156,14 @@ export async function POST(req: NextRequest) {
         { status: 500 },
       );
     }
+    // Funnel-Tracking: erfolgreicher Insert = creator_application_submit
+    // session_id aus Cookie ableiten (Funnel join_open → submit verbindbar)
+    const sid = req.cookies.get("zoe_session_id")?.value ?? null;
+    await trackPortalEvent({
+      event_type: "creator_application_submit",
+      path: "/join",
+      session_id: sid,
+    });
   } catch (e) {
     console.error("[creator-applications] crash:", e instanceof Error ? e.message : e);
     return NextResponse.json({ error: "Server-Fehler." }, { status: 500 });

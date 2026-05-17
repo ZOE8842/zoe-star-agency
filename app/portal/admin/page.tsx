@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PortalNav } from "@/components/PortalNav";
 import { NewsFeed } from "@/components/dashboard/NewsFeed";
 import { PortalActivityBlock } from "@/components/dashboard/PortalActivityBlock";
+import { WebsiteAnalyticsBlock } from "@/components/dashboard/WebsiteAnalyticsBlock";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -367,6 +368,9 @@ export default async function AdminPage() {
             <Stat label="Tickets offen" value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
           )}
         </section>
+
+        {/* WEBSITE-ANALYTICS — admin-only public-site Tracking */}
+        <WebsiteAnalyticsBlock isAdmin={isAdmin} />
 
         {/* PORTAL-AKTIVITAET — admin-only Tracking-Block */}
         <PortalActivityBlock isAdmin={isAdmin} />
