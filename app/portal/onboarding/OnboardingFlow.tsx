@@ -120,7 +120,7 @@ const DEFAULT_STATE: FormState = {
   allow_partner_cooperations: false,
 };
 
-// Phase-4-i18n: optionale Strings vom Server-Wrapper.
+// Phase-4/5-i18n: optionale Strings vom Server-Wrapper.
 // Wenn ein Feld fehlt → deutscher Fallback (kein Crash).
 export interface OnboardingI18n {
   back?: string;
@@ -130,6 +130,48 @@ export interface OnboardingI18n {
   submitting?: string;
   error_required?: string;
   error_general?: string;
+  // Phase-5 Body-Texte
+  welcome_eyebrow?: string;
+  welcome_title_a?: string;
+  welcome_title_b?: string;
+  welcome_subtitle?: string;
+  s1_eyebrow?: string;
+  s1_title_a?: string;
+  s1_title_b?: string;
+  s2_eyebrow?: string;
+  s2_title_a?: string;
+  s2_title_b?: string;
+  s3_eyebrow?: string;
+  s3_title_a?: string;
+  s3_title_b?: string;
+  s4_eyebrow?: string;
+  s4_title_a?: string;
+  s4_title_b?: string;
+  s5_eyebrow?: string;
+  s5_title_a?: string;
+  s5_title_b?: string;
+  field_display_name?: string;
+  field_display_name_hint?: string;
+  field_tiktok_username?: string;
+  field_tiktok_username_hint?: string;
+  field_language?: string;
+  field_region?: string;
+  field_creator_category?: string;
+  field_live_format?: string;
+  field_live_window?: string;
+  field_live_window_hint?: string;
+  field_goals?: string;
+  field_goals_hint?: string;
+  field_extra_focus?: string;
+  field_telegram?: string;
+  field_instagram?: string;
+  field_bio?: string;
+  field_allow_showcase?: string;
+  field_allow_partner?: string;
+  select_placeholder?: string;
+  success_title?: string;
+  success_subtitle?: string;
+  to_dashboard?: string;
 }
 
 interface Props {
@@ -294,28 +336,27 @@ export function OnboardingFlow({
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               >
-                {step === 0 && <Step1Welcome />}
+                {step === 0 && <Step1Welcome i18n={i18n} />}
                 {step === 1 && (
-                  <Step2Basis
-                    form={form} update={update}
-                  />
+                  <Step2Basis form={form} update={update} i18n={i18n} />
                 )}
                 {step === 2 && (
-                  <Step3LiveProfile form={form} update={update} />
+                  <Step3LiveProfile form={form} update={update} i18n={i18n} />
                 )}
                 {step === 3 && (
-                  <Step4Goals form={form} update={update} toggleGoal={toggleGoal} />
+                  <Step4Goals form={form} update={update} toggleGoal={toggleGoal} i18n={i18n} />
                 )}
                 {step === 4 && (
-                  <Step5Communication form={form} update={update} />
+                  <Step5Communication form={form} update={update} i18n={i18n} />
                 )}
                 {step === 5 && (
-                  <Step6Showcase form={form} update={update} />
+                  <Step6Showcase form={form} update={update} i18n={i18n} />
                 )}
                 {step === 6 && (
                   <Step7Done
                     displayName={form.display_name}
                     onContinue={goToDashboard}
+                    i18n={i18n}
                   />
                 )}
               </motion.div>
@@ -377,18 +418,17 @@ export function OnboardingFlow({
 // STEP COMPONENTS
 // ============================================================
 
-function Step1Welcome() {
+function Step1Welcome({ i18n }: { i18n: OnboardingI18n }) {
   return (
     <div className="text-center">
-      <p className="eyebrow mb-6">Onboarding</p>
+      <p className="eyebrow mb-6">{i18n.welcome_eyebrow ?? "Onboarding"}</p>
       <h1 className="font-display italic text-cream text-5xl md:text-6xl leading-[1.0] tracking-[-0.02em] mb-6">
-        Willkommen im
+        {i18n.welcome_title_a ?? "Willkommen im"}
         <br />
-        <span className="text-champagne">ZOE⭐ Creator Network.</span>
+        <span className="text-champagne">{i18n.welcome_title_b ?? "ZOE⭐ Creator Network."}</span>
       </h1>
       <p className="text-cream/60 text-base md:text-lg leading-relaxed max-w-sm mx-auto">
-        In fuenf ruhigen Schritten richten wir dein Creator-Profil ein.
-        Du entscheidest was rein darf.
+        {i18n.welcome_subtitle ?? "In fuenf ruhigen Schritten richten wir dein Creator-Profil ein. Du entscheidest was rein darf."}
       </p>
       <div className="mt-12 mx-auto w-px h-12 bg-gradient-to-b from-champagne/40 to-transparent" />
     </div>
@@ -396,24 +436,25 @@ function Step1Welcome() {
 }
 
 function Step2Basis({
-  form, update,
+  form, update, i18n,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  i18n: OnboardingI18n;
 }) {
   return (
     <div>
-      <p className="eyebrow mb-4">Schritt 1</p>
+      <p className="eyebrow mb-4">{i18n.s1_eyebrow ?? "Schritt 1"}</p>
       <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-[1.1] tracking-[-0.01em] mb-10">
-        Wie sieht dein
+        {i18n.s1_title_a ?? "Wie sieht dein"}
         <br />
-        <span className="text-champagne">Name auf TikTok aus?</span>
+        <span className="text-champagne">{i18n.s1_title_b ?? "Name auf TikTok aus?"}</span>
       </h2>
 
       <div className="space-y-7">
         <OnboardingField
-          label="TikTok Anzeigename"
-          hint="So wie er bei dir im LIVE oben steht."
+          label={i18n.field_display_name ?? "TikTok Anzeigename"}
+          hint={i18n.field_display_name_hint ?? "So wie er bei dir im LIVE oben steht."}
         >
           <OnboardingInput
             value={form.display_name}
@@ -424,7 +465,10 @@ function Step2Basis({
           />
         </OnboardingField>
 
-        <OnboardingField label="TikTok Username" hint="der technische @-Handle">
+        <OnboardingField
+          label={i18n.field_tiktok_username ?? "TikTok Username"}
+          hint={i18n.field_tiktok_username_hint ?? "der technische @-Handle"}
+        >
           <OnboardingInput
             value={form.tiktok_username}
             onChange={(v) => update("tiktok_username", v.replace(/^@+/, ""))}
@@ -434,7 +478,7 @@ function Step2Basis({
           />
         </OnboardingField>
 
-        <OnboardingField label="Sprache">
+        <OnboardingField label={i18n.field_language ?? "Sprache"}>
           <OnboardingSelect
             value={form.language}
             onChange={(v) => update("language", v)}
@@ -442,7 +486,7 @@ function Step2Basis({
           />
         </OnboardingField>
 
-        <OnboardingField label="Region">
+        <OnboardingField label={i18n.field_region ?? "Region"}>
           <OnboardingSelect
             value={form.region}
             onChange={(v) => update("region", v)}
@@ -455,42 +499,43 @@ function Step2Basis({
 }
 
 function Step3LiveProfile({
-  form, update,
+  form, update, i18n,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  i18n: OnboardingI18n;
 }) {
   return (
     <div>
-      <p className="eyebrow mb-4">Schritt 2</p>
+      <p className="eyebrow mb-4">{i18n.s2_eyebrow ?? "Schritt 2"}</p>
       <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-[1.1] tracking-[-0.01em] mb-10">
-        Was machst du
+        {i18n.s2_title_a ?? "Was machst du"}
         <br />
-        <span className="text-champagne">im LIVE?</span>
+        <span className="text-champagne">{i18n.s2_title_b ?? "im LIVE?"}</span>
       </h2>
 
       <div className="space-y-7">
-        <OnboardingField label="Creator-Kategorie">
+        <OnboardingField label={i18n.field_creator_category ?? "Creator-Kategorie"}>
           <OnboardingSelect
             value={form.creator_category}
             onChange={(v) => update("creator_category", v)}
             options={CATEGORIES}
-            placeholder="Bitte waehlen"
+            placeholder={i18n.select_placeholder ?? "Bitte waehlen"}
           />
         </OnboardingField>
 
-        <OnboardingField label="LIVE-Format">
+        <OnboardingField label={i18n.field_live_format ?? "LIVE-Format"}>
           <OnboardingSelect
             value={form.live_format}
             onChange={(v) => update("live_format", v)}
             options={LIVE_FORMATS}
-            placeholder="Bitte waehlen"
+            placeholder={i18n.select_placeholder ?? "Bitte waehlen"}
           />
         </OnboardingField>
 
         <OnboardingField
-          label="LIVE-Zeitfenster"
-          hint="Wann gehst du meistens live?"
+          label={i18n.field_live_window ?? "LIVE-Zeitfenster"}
+          hint={i18n.field_live_window_hint ?? "Wann gehst du meistens live?"}
         >
           <OnboardingSelect
             value={form.live_window}
@@ -504,20 +549,21 @@ function Step3LiveProfile({
 }
 
 function Step4Goals({
-  form, update, toggleGoal,
+  form, update, toggleGoal, i18n,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
   toggleGoal: (g: string) => void;
+  i18n: OnboardingI18n;
 }) {
   const count = form.goals.length;
   return (
     <div>
-      <p className="eyebrow mb-4">Schritt 3</p>
+      <p className="eyebrow mb-4">{i18n.s3_eyebrow ?? "Schritt 3"}</p>
       <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-[1.1] tracking-[-0.01em] mb-4">
-        Worauf willst du
+        {i18n.s3_title_a ?? "Was sind deine"}
         <br />
-        <span className="text-champagne">fokussieren?</span>
+        <span className="text-champagne">{i18n.s3_title_b ?? "Ziele?"}</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-8">
         Mehrfachauswahl. {count === 0 ? "Such dir aus was passt." : count === 1 ? "1 ausgewaehlt." : `${count} ausgewaehlt.`}
@@ -557,18 +603,19 @@ function Step4Goals({
 }
 
 function Step5Communication({
-  form, update,
+  form, update, i18n,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  i18n: OnboardingI18n;
 }) {
   return (
     <div>
-      <p className="eyebrow mb-4">Schritt 4</p>
+      <p className="eyebrow mb-4">{i18n.s4_eyebrow ?? "Schritt 4"}</p>
       <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-[1.1] tracking-[-0.01em] mb-4">
-        Wie duerfen wir
+        {i18n.s4_title_a ?? "Wie duerfen wir"}
         <br />
-        <span className="text-champagne">dich kontaktieren?</span>
+        <span className="text-champagne">{i18n.s4_title_b ?? "dich kontaktieren?"}</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-10">
         Optional. Nur fuer Creator-Management, Rueckfragen und
@@ -620,18 +667,19 @@ function Step5Communication({
 }
 
 function Step6Showcase({
-  form, update,
+  form, update, i18n,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  i18n: OnboardingI18n;
 }) {
   return (
     <div>
-      <p className="eyebrow mb-4">Schritt 5</p>
+      <p className="eyebrow mb-4">{i18n.s5_eyebrow ?? "Schritt 5"}</p>
       <h2 className="font-display italic text-cream text-3xl md:text-4xl leading-[1.1] tracking-[-0.01em] mb-4">
-        Erzaehl was
+        {i18n.s5_title_a ?? "Erzaehl was"}
         <br />
-        <span className="text-champagne">ueber dich.</span>
+        <span className="text-champagne">{i18n.s5_title_b ?? "ueber dich."}</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-10">
         Alles optional. Bild kannst du spaeter im Profil hochladen.
@@ -674,10 +722,11 @@ function Step6Showcase({
 }
 
 function Step7Done({
-  displayName, onContinue,
+  displayName, onContinue, i18n,
 }: {
   displayName: string;
   onContinue: () => void;
+  i18n: OnboardingI18n;
 }) {
   const first = displayName.split(/\s+/)[0] || "";
   return (
@@ -693,15 +742,13 @@ function Step7Done({
       />
 
       <div className="relative">
-        <p className="eyebrow mb-6">Willkommen</p>
+        <p className="eyebrow mb-6">{i18n.welcome_eyebrow ?? "Willkommen"}</p>
         <h1 className="font-display italic text-cream text-5xl md:text-6xl leading-[1.0] tracking-[-0.02em] mb-6">
           {first ? `${first}, ` : ""}
-          <span className="text-champagne">du bist drin.</span>
+          <span className="text-champagne">{i18n.success_title ?? "du bist drin."}</span>
         </h1>
         <p className="text-cream/65 text-base md:text-lg leading-relaxed max-w-sm mx-auto mb-12">
-          Dein Creator-Profil ist eingerichtet. Ab jetzt findest du
-          alles im Member-Bereich — Services, Inbox, Events, deine
-          Monatszahlen.
+          {i18n.success_subtitle ?? "Dein Creator-Profil ist eingerichtet. Ab jetzt findest du alles im Member-Bereich."}
         </p>
 
         <button
@@ -709,7 +756,7 @@ function Step7Done({
           onClick={onContinue}
           className="btn-cta btn-shimmer"
         >
-          Zum Dashboard
+          {i18n.to_dashboard ?? "Zum Dashboard"}
           <span className="btn-cta-arrow" aria-hidden>→</span>
         </button>
 

@@ -99,6 +99,8 @@ interface PageProps {
 
 export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { profile } = await requireAdmin();
+  const { loadLocale } = await import("@/lib/i18n");
+  const { t } = await loadLocale();
   const sp = await searchParams;
   const tab: SubTab =
     sp.tab === "forecast" ? "forecast" :
@@ -256,9 +258,9 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
       <main className="container-luxe py-10 md:py-16">
         <div className="flex items-baseline justify-between gap-4 mb-6">
           <div>
-            <p className="eyebrow mb-2">Admin · Umsatz</p>
+            <p className="eyebrow mb-2">Admin · {t("nav.umsatz")}</p>
             <h1 className="heading-display text-cream text-3xl md:text-4xl">
-              Umsatz · {monthLabel}
+              {t("nav.umsatz")} · {monthLabel}
             </h1>
             <p className="text-cream/50 text-sm mt-2">
               {rows.length} Creator · Total Revenue {fmtUsd(sumTotal)} ·
