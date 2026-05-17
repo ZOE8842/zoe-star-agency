@@ -21,6 +21,8 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function AdminApplicationsPage(
   { searchParams }: { searchParams: Promise<SearchParams> },
 ) {
+  const { loadLocale } = await import("@/lib/i18n");
+  const { t } = await loadLocale();
   const sp = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -65,11 +67,10 @@ export default async function AdminApplicationsPage(
         <section className="mb-10">
           <p className="eyebrow mb-4">Admin</p>
           <h1 className="heading-display text-4xl md:text-5xl leading-[1.05] mb-3">
-            Creator <span className="text-champagne">Anfragen.</span>
+            {t("admin.applications_title")}<span className="text-champagne">.</span>
           </h1>
           <p className="text-cream/60 text-sm">
-            Eingehende Anfragen ueber das Public-Formular auf <code className="text-champagne">/join</code>.
-            Gesamt: <span className="text-cream">{total}</span>.
+            {t("admin.applications_subtitle")} <span className="text-cream">{total}</span>.
           </p>
         </section>
 

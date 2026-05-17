@@ -149,10 +149,10 @@ export default async function InboxPage({ searchParams }: Props) {
   }).length;
 
   const TABS: Array<{ key: TabKey; label: string; count: number }> = [
-    { key: "messages", label: "Nachrichten", count: msgUnreadCount ?? 0 },
-    { key: "groups", label: "Gruppen", count: groupUnread },
-    { key: "system", label: "System", count: sysUnreadCount ?? 0 },
-    { key: "activity", label: "Aktivitaet", count: 0 },
+    { key: "messages", label: t("inbox.tab_messages"), count: msgUnreadCount ?? 0 },
+    { key: "groups", label: t("inbox.tab_groups"), count: groupUnread },
+    { key: "system", label: t("inbox.tab_system"), count: sysUnreadCount ?? 0 },
+    { key: "activity", label: t("inbox.tab_activity"), count: 0 },
   ];
 
   return (
@@ -180,7 +180,7 @@ export default async function InboxPage({ searchParams }: Props) {
             href="/portal/inbox/compose"
             className="shrink-0 mt-3 text-cream/60 hover:text-champagne text-[10px] uppercase tracking-[0.3em] inline-flex items-center min-h-[40px] px-3 border border-cream/15 hover:border-champagne transition"
           >
-            Verfassen
+            {t("inbox.compose")}
           </Link>
         </div>
 

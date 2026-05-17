@@ -172,6 +172,34 @@ export interface OnboardingI18n {
   success_title?: string;
   success_subtitle?: string;
   to_dashboard?: string;
+  // Phase-6 erweitert
+  s3_subtitle_zero?: string;
+  s3_subtitle_one?: string;
+  s3_subtitle_more?: string;
+  field_extra_focus_placeholder?: string;
+  field_extra_focus_followup?: string;
+  s4_subtitle?: string;
+  field_whatsapp?: string;
+  field_whatsapp_hint?: string;
+  s4_disclaimer?: string;
+  s5_subtitle?: string;
+  field_bio_hint?: string;
+  permissions_eyebrow?: string;
+  field_allow_showcase_label?: string;
+  field_allow_showcase_desc?: string;
+  field_allow_partner_label?: string;
+  field_allow_partner_desc?: string;
+  goal_community?: string;
+  goal_ranking?: string;
+  goal_brand_deals?: string;
+  goal_wachstum?: string;
+  goal_matches?: string;
+  goal_reichweite?: string;
+  lw_tag?: string;
+  lw_abend?: string;
+  lw_nacht?: string;
+  lw_wochenende?: string;
+  lw_flex?: string;
 }
 
 interface Props {
@@ -566,16 +594,22 @@ function Step4Goals({
         <span className="text-champagne">{i18n.s3_title_b ?? "Ziele?"}</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-8">
-        Mehrfachauswahl. {count === 0 ? "Such dir aus was passt." : count === 1 ? "1 ausgewaehlt." : `${count} ausgewaehlt.`}
+        {count === 0
+          ? (i18n.s3_subtitle_zero ?? "Such dir aus was passt.")
+          : count === 1
+          ? (i18n.s3_subtitle_one ?? "1 ausgewaehlt.")
+          : (i18n.s3_subtitle_more ?? "{n} ausgewaehlt.").replace("{n}", String(count))}
       </p>
 
       <div className="flex flex-wrap gap-2.5 mb-10">
         {GOALS.map((g) => {
           const active = form.goals.includes(g.value);
+          // Locale-aware Label-Lookup: i18n.goal_<value> oder fallback
+          const localizedLabel = (i18n as Record<string, string | undefined>)[`goal_${g.value}`] ?? g.label;
           return (
             <OnboardingChip
               key={g.value}
-              label={g.label}
+              label={localizedLabel}
               active={active}
               onToggle={() => toggleGoal(g.value)}
             />
@@ -584,19 +618,19 @@ function Step4Goals({
       </div>
 
       <OnboardingField
-        label="Extra Fokus"
-        hint={`${form.extra_focus.length}/160 Zeichen`}
+        label={i18n.field_extra_focus ?? "Extra Fokus"}
+        hint={`${form.extra_focus.length}/160`}
         optional
       >
         <OnboardingInput
           value={form.extra_focus}
           onChange={(v) => update("extra_focus", v.slice(0, 160))}
-          placeholder="z.B. Events, Moderation, Team, TikTok Shop"
+          placeholder={i18n.field_extra_focus_placeholder ?? "z.B. Events, Moderation, Team, TikTok Shop"}
           maxLength={160}
         />
       </OnboardingField>
       <p className="text-cream/35 text-xs mt-3">
-        Gibt es noch etwas, worauf du dich fokussieren moechtest?
+        {i18n.field_extra_focus_followup ?? "Gibt es noch etwas, worauf du dich fokussieren moechtest?"}
       </p>
     </div>
   );
@@ -618,12 +652,11 @@ function Step5Communication({
         <span className="text-champagne">{i18n.s4_title_b ?? "dich kontaktieren?"}</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-10">
-        Optional. Nur fuer Creator-Management, Rueckfragen und
-        wichtige Updates.
+        {i18n.s4_subtitle ?? "Optional. Nur fuer Creator-Management, Rueckfragen und wichtige Updates."}
       </p>
 
       <div className="space-y-7">
-        <OnboardingField label="Telegram" optional>
+        <OnboardingField label={i18n.field_telegram ?? "Telegram"} optional>
           <OnboardingInput
             value={form.telegram_username}
             onChange={(v) => update("telegram_username", v.replace(/^@+/, ""))}
@@ -633,7 +666,7 @@ function Step5Communication({
           />
         </OnboardingField>
 
-        <OnboardingField label="Instagram" optional>
+        <OnboardingField label={i18n.field_instagram ?? "Instagram"} optional>
           <OnboardingInput
             value={form.instagram_username}
             onChange={(v) => update("instagram_username", v.replace(/^@+/, ""))}
@@ -644,8 +677,8 @@ function Step5Communication({
         </OnboardingField>
 
         <OnboardingField
-          label="WhatsApp"
-          hint="Du kannst einen wa.me-Link nutzen. Wenn du eine Nummer angibst, ist sie fuer das ZOE Team sichtbar."
+          label={i18n.field_whatsapp ?? "WhatsApp"}
+          hint={i18n.field_whatsapp_hint ?? "Du kannst einen wa.me-Link nutzen. Wenn du eine Nummer angibst, ist sie fuer das ZOE Team sichtbar."}
           optional
         >
           <OnboardingInput
@@ -660,7 +693,7 @@ function Step5Communication({
       </div>
 
       <p className="text-cream/35 text-xs mt-8">
-        Nur angeben, wenn wir dich darueber kontaktieren duerfen.
+        {i18n.s4_disclaimer ?? "Nur angeben, wenn wir dich darueber kontaktieren duerfen."}
       </p>
     </div>
   );
@@ -682,19 +715,19 @@ function Step6Showcase({
         <span className="text-champagne">{i18n.s5_title_b ?? "ueber dich."}</span>
       </h2>
       <p className="text-cream/45 text-xs md:text-sm mb-10">
-        Alles optional. Bild kannst du spaeter im Profil hochladen.
+        {i18n.s5_subtitle ?? "Alles optional. Bild kannst du spaeter im Profil hochladen."}
       </p>
 
       <div className="space-y-8">
         <OnboardingField
-          label="Bio"
-          hint={`${form.bio.length}/240 Zeichen · wenn deine TikTok-Bio spaeter erkannt wird, kannst du sie als Vorschlag uebernehmen.`}
+          label={i18n.field_bio ?? "Bio"}
+          hint={`${form.bio.length}/240`}
           optional
         >
           <textarea
             value={form.bio}
             onChange={(e) => update("bio", e.target.value.slice(0, 240))}
-            placeholder="Kurz und ehrlich."
+            placeholder={i18n.field_bio_hint ?? "Kurz und ehrlich."}
             rows={3}
             maxLength={240}
             className="w-full bg-transparent border-b border-champagne/20 focus:border-champagne text-cream text-base py-3 placeholder-cream/25 focus:outline-none transition-colors resize-none"
@@ -702,18 +735,18 @@ function Step6Showcase({
         </OnboardingField>
 
         <div className="space-y-1 pt-2">
-          <p className="eyebrow text-cream/55 mb-3">Freigaben</p>
+          <p className="eyebrow text-cream/55 mb-3">{i18n.permissions_eyebrow ?? "Freigaben"}</p>
           <OnboardingCheck
             checked={form.allow_website_showcase}
             onChange={(v) => update("allow_website_showcase", v)}
-            label="Showcase auf der Webseite"
-            description="Dein TikTok-Profil + Display-Name + Kategorie duerfen auf zoe-star.de erscheinen. Erst nach Admin-Freigabe sichtbar."
+            label={i18n.field_allow_showcase_label ?? "Showcase auf der Webseite"}
+            description={i18n.field_allow_showcase_desc ?? "Dein TikTok-Profil + Display-Name + Kategorie duerfen auf zoe-star.de erscheinen. Erst nach Admin-Freigabe sichtbar."}
           />
           <OnboardingCheck
             checked={form.allow_partner_cooperations}
             onChange={(v) => update("allow_partner_cooperations", v)}
-            label="Brand-Kooperationen"
-            description="Wir kommen auf dich zu wenn ein Partner zu deinem Profil passt. Du entscheidest, ob du teilnehmen willst."
+            label={i18n.field_allow_partner_label ?? "Brand-Kooperationen"}
+            description={i18n.field_allow_partner_desc ?? "Wir kommen auf dich zu wenn ein Partner zu deinem Profil passt. Du entscheidest, ob du teilnehmen willst."}
           />
         </div>
       </div>
