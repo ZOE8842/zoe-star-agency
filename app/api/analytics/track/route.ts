@@ -4,11 +4,23 @@
 // Insert via Service-Role intern.
 //
 // Rate-Limit: in-memory 60 req/min pro session_id (verhindert Bot-Spam,
-// Dedupe-Window 60s im trackPortalEvent fängt Refresh-Wiederholungen).
+// Dedupe-Window 60s im trackPortalEvent faengt Refresh-Wiederholungen).
+//
+// Marketing-Metadata (locale, referrer, utm_*, user_agent, device_type)
+// kommt vom Client + wird durch Server-Header ergaenzt/ueberschrieben:
+//   - referrer: Client kann document.referrer schicken, Server faellt
+//     sonst auf Referer-Header zurueck.
+//   - locale:   Client kann zoe_public_lang lesen, Server faellt sonst
+//     auf Cookie-Header zurueck.
+//   - user_agent + device_type: IMMER Server-Side (kein Trust auf Client-UA).
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { trackPortalEvent, type PortalEventType } from "@/lib/analytics/trackPortalEvent";
+import {
+  cap, deviceTypeFromUA, localeFromCookieString,
+  LOCALE_MAX, REFERRER_MAX, UTM_MAX, USER_AGENT_MAX, PATH_MAX,
+} from "@/lib/analytics/classify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,11 +33,9 @@ export const dynamic = "force-dynamic";
 const VALID_EVENTS: ReadonlySet<PortalEventType> = new Set([
   "page_view", "login_success", "logout", "portal_open",
   "admin_open", "creator_dashboard_open",
-  // Public Website Analytics (nur Read-Side Events)
   "public_page_view", "join_open",
 ]);
 
-// in-memory rate limit pro session_id
 const rateMap = new Map<string, { count: number; reset: number }>();
 const MIN = 60 * 1000;
 const LIMIT_PER_MIN = 60;
@@ -42,8 +52,21 @@ function rateLimit(key: string): boolean {
   return true;
 }
 
+interface TrackBody {
+  event_type?: string;
+  path?: string;
+  session_id?: string;
+  locale?: string;
+  referrer?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+}
+
 export async function POST(req: NextRequest) {
-  let body: { event_type?: string; path?: string; session_id?: string };
+  let body: TrackBody;
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: "invalid JSON" }, { status: 400 }); }
 
@@ -51,12 +74,9 @@ export async function POST(req: NextRequest) {
   if (!event_type || !VALID_EVENTS.has(event_type as PortalEventType)) {
     return NextResponse.json({ error: "invalid event_type" }, { status: 400 });
   }
-  const path = typeof body.path === "string" ? body.path.slice(0, 256) : null;
-  const session_id = typeof body.session_id === "string"
-    ? body.session_id.slice(0, 64)
-    : null;
+  const path       = cap(body.path,       PATH_MAX);
+  const session_id = cap(body.session_id, 64);
 
-  // Rate-Limit-Schluessel: session_id oder IP-Hash fallback
   const rateKey = session_id
     || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || "unknown";
@@ -64,7 +84,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "rate_limit" }, { status: 429 });
   }
 
-  // User aus Session ableiten (kein Trust auf Client-Payload)
+  // Marketing-Metadata zusammenstellen (Client-Input + Server-Header-Fallback).
+  const ua          = cap(req.headers.get("user-agent"), USER_AGENT_MAX);
+  const device_type = deviceTypeFromUA(ua);
+  const referrer    = cap(body.referrer, REFERRER_MAX)
+                   ?? cap(req.headers.get("referer"), REFERRER_MAX);
+  const locale      = cap(body.locale, LOCALE_MAX)
+                   ?? localeFromCookieString(req.headers.get("cookie"));
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -86,6 +113,16 @@ export async function POST(req: NextRequest) {
     role,
     path,
     session_id,
+    locale,
+    referrer,
+    utm_source:   cap(body.utm_source,   UTM_MAX),
+    utm_medium:   cap(body.utm_medium,   UTM_MAX),
+    utm_campaign: cap(body.utm_campaign, UTM_MAX),
+    utm_content:  cap(body.utm_content,  UTM_MAX),
+    utm_term:     cap(body.utm_term,     UTM_MAX),
+    user_agent:   ua,
+    device_type,
+    event_source: "client",
   });
 
   return NextResponse.json({ success: true });

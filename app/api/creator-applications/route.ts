@@ -12,6 +12,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { trackPortalEvent } from "@/lib/analytics/trackPortalEvent";
+import {
+  cap, deviceTypeFromUA, localeFromCookieString,
+  LOCALE_MAX, REFERRER_MAX, USER_AGENT_MAX,
+} from "@/lib/analytics/classify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -212,10 +216,19 @@ export async function POST(req: NextRequest) {
     // Funnel-Tracking: erfolgreicher Insert = creator_application_submit
     // session_id aus Cookie ableiten (Funnel join_open → submit verbindbar)
     const sid = req.cookies.get("zoe_session_id")?.value ?? null;
+    const ua  = cap(req.headers.get("user-agent"), USER_AGENT_MAX);
+    const ref = cap(req.headers.get("referer"),    REFERRER_MAX);
+    const loc = localeFromCookieString(req.headers.get("cookie"))
+             ?? cap(b.language, LOCALE_MAX);
     await trackPortalEvent({
       event_type: "creator_application_submit",
       path: "/join",
       session_id: sid,
+      locale: loc,
+      referrer: ref,
+      user_agent: ua,
+      device_type: deviceTypeFromUA(ua),
+      event_source: "server",
     });
   } catch (e) {
     console.error("[creator-applications] crash:", e instanceof Error ? e.message : e);

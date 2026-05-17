@@ -4,12 +4,19 @@
 // Skip: /portal/*, /api/*, /studio, /_next, /admin (= alle internen/Asset-Pfade).
 // Mountet im RootLayout - feuert public_page_view bei Pfadwechsel.
 //
+// Marketing-Metadata:
+//   - locale: zoe_public_lang Cookie
+//   - referrer: document.referrer (nur bei initial Page-Load wertvoll)
+//   - utm_*: aus aktueller URL-Query (sticky innerhalb der Session-Lifetime
+//     waere komplexer; wir tracken pro Page-View die aktuell sichtbare URL)
+//
 // Spezial-Hook: /join → zusaetzlich join_open Event fuer Funnel-Tracking.
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const SESSION_COOKIE = "zoe_session_id";
+const LOCALE_COOKIE  = "zoe_public_lang";
 const SESSION_TTL_DAYS = 365;
 
 const SKIP_PREFIXES = ["/portal", "/api", "/studio", "/_next", "/admin", "/share"];
@@ -23,10 +30,16 @@ function shouldSkip(pathname: string): boolean {
   return false;
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
 function getOrCreateSessionId(): string {
   if (typeof document === "undefined") return "";
-  const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`));
-  if (m) return m[1];
+  const existing = readCookie(SESSION_COOKIE);
+  if (existing) return existing;
   const id = (typeof crypto !== "undefined" && "randomUUID" in crypto)
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -35,11 +48,24 @@ function getOrCreateSessionId(): string {
   return id;
 }
 
-function fire(event_type: string, path: string, session_id: string) {
+interface FirePayload {
+  event_type: string;
+  path: string;
+  session_id: string;
+  locale: string | null;
+  referrer: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  utm_term: string | null;
+}
+
+function fire(p: FirePayload) {
   fetch("/api/analytics/track", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ event_type, path, session_id }),
+    body: JSON.stringify(p),
     keepalive: true,
   }).catch(() => { /* silent */ });
 }
@@ -47,13 +73,32 @@ function fire(event_type: string, path: string, session_id: string) {
 export function PublicAnalyticsTracker() {
   const pathname = usePathname();
 
+  // UTM lesen wir client-side direkt aus window.location.search statt aus
+  // useSearchParams() - useSearchParams zwingt sonst alle statisch
+  // gerenderten Pages in CSR-Bailout (Next-Build-Fail bei /about etc.).
   useEffect(() => {
     if (!pathname || shouldSkip(pathname)) return;
     const session_id = getOrCreateSessionId();
-    fire("public_page_view", pathname, session_id);
-    // Funnel-Spezial: /join zaehlt auch als join_open (eigenes Event)
+    const locale     = readCookie(LOCALE_COOKIE);
+    const referrer   = typeof document !== "undefined" ? (document.referrer || null) : null;
+
+    const sp = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : null;
+    const utm_source   = sp?.get("utm_source")   ?? null;
+    const utm_medium   = sp?.get("utm_medium")   ?? null;
+    const utm_campaign = sp?.get("utm_campaign") ?? null;
+    const utm_content  = sp?.get("utm_content")  ?? null;
+    const utm_term     = sp?.get("utm_term")     ?? null;
+
+    const base = {
+      path: pathname, session_id, locale, referrer,
+      utm_source, utm_medium, utm_campaign, utm_content, utm_term,
+    };
+
+    fire({ event_type: "public_page_view", ...base });
     if (pathname === "/join") {
-      fire("join_open", pathname, session_id);
+      fire({ event_type: "join_open", ...base });
     }
   }, [pathname]);
 

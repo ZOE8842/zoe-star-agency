@@ -5,7 +5,8 @@
 // DEDUPE_WINDOW_SEC wird ignoriert (verhindert Refresh-Spam ohne
 // kompletten Unique-Constraint, der zu starr waere).
 //
-// Keine IP, keine PII. session_id ist ein anonymer UUID aus dem Cookie.
+// DSGVO: keine IP, session_id ist ein anonymer UUID aus dem Cookie.
+// user_agent wird auf 256 chars gekappt und NICHT gehasht/gefingerprintet.
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -28,6 +29,17 @@ export interface TrackPortalEventInput {
   role?: string | null;
   path?: string | null;
   session_id?: string | null;
+  // Marketing-Metadata (alle optional, alle gekappt beim Caller)
+  locale?: string | null;
+  referrer?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_content?: string | null;
+  utm_term?: string | null;
+  user_agent?: string | null;
+  device_type?: string | null;
+  event_source?: "client" | "server" | null;
 }
 
 const DEDUPE_WINDOW_SEC = 60;
@@ -47,9 +59,8 @@ function admin(): SupabaseClient | null {
 export async function trackPortalEvent(input: TrackPortalEventInput): Promise<void> {
   try {
     const sb = admin();
-    if (!sb) return; // Env fehlt → silent skip (kein Crash, kein Leak)
+    if (!sb) return;
 
-    // Dedupe-Check nur sinnvoll wenn session_id vorhanden.
     if (input.session_id) {
       const since = new Date(Date.now() - DEDUPE_WINDOW_SEC * 1000).toISOString();
       const { data: recent, error: dupErr } = await sb
@@ -64,15 +75,24 @@ export async function trackPortalEvent(input: TrackPortalEventInput): Promise<vo
     }
 
     await sb.from("admin_analytics_events").insert({
-      event_type: input.event_type,
-      user_id: input.user_id ?? null,
-      profile_id: input.profile_id ?? null,
-      role: input.role ?? null,
-      path: input.path ?? null,
-      session_id: input.session_id ?? null,
+      event_type:   input.event_type,
+      user_id:      input.user_id    ?? null,
+      profile_id:   input.profile_id ?? null,
+      role:         input.role       ?? null,
+      path:         input.path       ?? null,
+      session_id:   input.session_id ?? null,
+      locale:       input.locale       ?? null,
+      referrer:     input.referrer     ?? null,
+      utm_source:   input.utm_source   ?? null,
+      utm_medium:   input.utm_medium   ?? null,
+      utm_campaign: input.utm_campaign ?? null,
+      utm_content:  input.utm_content  ?? null,
+      utm_term:     input.utm_term     ?? null,
+      user_agent:   input.user_agent   ?? null,
+      device_type:  input.device_type  ?? null,
+      event_source: input.event_source ?? null,
     });
   } catch (e) {
-    // Tracking darf NIEMALS den User-Flow brechen
     console.error("[trackPortalEvent]", e instanceof Error ? e.message : e);
   }
 }
