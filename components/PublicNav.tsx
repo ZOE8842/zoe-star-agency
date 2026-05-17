@@ -39,7 +39,7 @@ export function PublicNav() {
           scrolled ? "bg-ink/85 backdrop-blur-md border-b border-champagne/10" : "bg-transparent"
         }`}
       >
-        <div className="container-luxe py-4 md:py-5 flex items-center justify-between gap-4">
+        <div className="container-luxe pb-4 md:pb-5 pt-[calc(env(safe-area-inset-top)+1rem)] md:pt-[calc(env(safe-area-inset-top)+1.25rem)] flex items-center justify-between gap-4">
           <Link href="/" aria-label="ZOE Star Agency" className="shrink-0 inline-flex items-center">
             <Logo variant="horizontal" className="h-10 md:h-11" />
           </Link>
@@ -101,7 +101,7 @@ export function PublicNav() {
         }`}
       >
         <div className="absolute inset-0 bg-ink/[0.97] backdrop-blur-2xl" onClick={() => setOpen(false)} />
-        <div className="relative h-full flex flex-col pt-32 pb-12 px-8 sm:px-12 overflow-y-auto">
+        <div className="relative h-full flex flex-col pt-[calc(env(safe-area-inset-top)+8rem)] pb-12 px-8 sm:px-12 overflow-y-auto">
           <p
             className="eyebrow mb-10 text-cream/40"
             style={{ animation: open ? "hero-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both" : "none" }}

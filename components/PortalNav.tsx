@@ -77,7 +77,7 @@ export async function PortalNav({ userId, displayName, tiktokUsername, isAdmin, 
 
   return (
     <header className="border-b border-champagne/10 sticky top-0 bg-ink/95 backdrop-blur z-50">
-      <div className="container-luxe py-4 flex items-center justify-between gap-4 md:gap-6">
+      <div className="container-luxe pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] md:pt-[calc(env(safe-area-inset-top)+1.25rem)] flex items-center justify-between gap-4 md:gap-6">
         <Link href="/portal" aria-label="ZOE Star Agency" className="shrink-0">
           <Logo variant="horizontal" className="h-7 md:h-8" />
         </Link>
