@@ -8,6 +8,7 @@ import { Marquee } from "@/components/Marquee";
 import { GlassCard } from "@/components/GlassCard";
 import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
+import { loadPublicLocale } from "@/lib/i18n";
 import { CreatorShowcaseCard, type CreatorShowcase } from "@/components/CreatorShowcaseCard";
 import { FeaturedCreatorsStrip } from "@/components/FeaturedCreatorsStrip";
 import { HeroParallax } from "@/components/HeroParallax";
@@ -53,6 +54,7 @@ const SOCIAL = {
 const APPLY_URL = "/join";
 
 export default async function HomePage() {
+  const { t } = await loadPublicLocale();
   const all = await fetchHomepageCreators();
   // Random-Pick max 6 — bei jedem Reload leicht anders.
   const picked = all.length > 0 ? randomTake(all, 6).map(toShowcaseCard) : [];
@@ -99,7 +101,7 @@ export default async function HomePage() {
             {/* TOP-Marker */}
             <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
               <p className="text-champagne text-[10px] uppercase tracking-[0.32em] font-medium">
-                TikTok Elite Agency Club Deutschland
+                {t("homepage.elite_club")}
               </p>
             </div>
 
@@ -213,7 +215,7 @@ export default async function HomePage() {
         <div className="relative z-10 container-luxe mb-10 md:mb-14">
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div>
-              <p className="eyebrow mb-4">Roster</p>
+              <p className="eyebrow mb-4">{t("homepage.eyebrow_roster")}</p>
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
                 Unsere <span className="text-champagne italic">Creator.</span>
               </h2>
@@ -398,7 +400,7 @@ export default async function HomePage() {
           <div className="grid md:grid-cols-12 gap-10 md:gap-12 items-end">
             <div className="md:col-span-8">
               <MotionReveal>
-                <p className="eyebrow mb-5">I · Believe</p>
+                <p className="eyebrow mb-5">{t("homepage.eyebrow_believe")}</p>
               </MotionReveal>
               <MotionReveal delay={0.08}>
                 <h2 className="leading-[0.92] tracking-[-0.025em]">
@@ -416,7 +418,7 @@ export default async function HomePage() {
             <div className="md:col-span-4 flex md:justify-end">
               <MotionReveal delay={0.25}>
                 <div className="border-l border-champagne/30 pl-5 max-w-xs">
-                  <p className="eyebrow mb-3">Unser Prinzip</p>
+                  <p className="eyebrow mb-3">{t("homepage.eyebrow_principle")}</p>
                   <p className="font-display italic text-cream text-xl md:text-2xl leading-snug">
                     Langfristiger Creator-Aufbau statt kurzfristiger Hypes.
                   </p>
@@ -486,7 +488,7 @@ export default async function HomePage() {
           <div className="grid md:grid-cols-12 gap-10 md:gap-12 mb-14 md:mb-16 items-end">
             <div className="md:col-span-7">
               <MotionReveal>
-                <p className="eyebrow mb-5">III · Build</p>
+                <p className="eyebrow mb-5">{t("homepage.eyebrow_build")}</p>
               </MotionReveal>
               <MotionReveal delay={0.08}>
                 <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -537,7 +539,7 @@ export default async function HomePage() {
           <div className="grid md:grid-cols-12 gap-10 md:gap-12 items-end">
             <div className="md:col-span-8">
               <MotionReveal>
-                <p className="eyebrow mb-6">IV · Join</p>
+                <p className="eyebrow mb-6">{t("homepage.eyebrow_join")}</p>
               </MotionReveal>
               <MotionReveal delay={0.08}>
                 <h2 className="leading-[0.9] tracking-[-0.025em]">
@@ -565,11 +567,11 @@ export default async function HomePage() {
             <div className="md:col-span-4">
               <MotionReveal delay={0.3}>
                 <div className="border-l border-champagne/30 pl-5">
-                  <p className="eyebrow mb-3">Direkter Kontakt</p>
+                  <p className="eyebrow mb-3">{t("homepage.eyebrow_direkter_kontakt")}</p>
                   <p className="font-display italic text-cream text-xl md:text-2xl leading-snug mb-2">
                     info@zoe-star.de
                   </p>
-                  <p className="text-cream/45 text-xs">Antwort innerhalb 48h</p>
+                  <p className="text-cream/45 text-xs">{t("homepage.answer_in_48h")}</p>
                 </div>
               </MotionReveal>
             </div>

@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
 import { CreatorApplicationForm } from "@/components/forms/CreatorApplicationForm";
+import { loadPublicLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Creator werden",
@@ -11,14 +12,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "/join" },
 };
 
-export default function JoinPage() {
+export default async function JoinPage() {
+  const { t } = await loadPublicLocale();
   return (
     <>
       <Header />
       <main className="bg-ink">
         <section className="container-luxe pt-32 md:pt-40 pb-20">
           <MotionReveal>
-            <p className="eyebrow mb-5">Creator werden</p>
+            <p className="eyebrow mb-5">{t("join_page.eyebrow_creator_werden")}</p>
           </MotionReveal>
           <MotionReveal delay={0.1}>
             <h1 className="heading-display text-4xl md:text-7xl text-cream mb-6 leading-[0.95] max-w-4xl">
@@ -35,7 +37,7 @@ export default function JoinPage() {
 
         <section className="container-luxe pb-20">
           <MotionReveal>
-            <p className="eyebrow mb-10">Wer passt zu uns</p>
+            <p className="eyebrow mb-10">{t("join_page.eyebrow_wer_passt")}</p>
           </MotionReveal>
           <div className="grid md:grid-cols-3 gap-5 mb-16">
             {[
@@ -57,7 +59,7 @@ export default function JoinPage() {
 
         <section className="container-luxe pb-20">
           <MotionReveal>
-            <p className="eyebrow mb-10">So läuft die Bewerbung</p>
+            <p className="eyebrow mb-10">{t("join_page.eyebrow_so_laeuft")}</p>
           </MotionReveal>
           <div className="grid md:grid-cols-3 gap-5 mb-16">
             {[

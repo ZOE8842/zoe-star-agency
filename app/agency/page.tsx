@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
 import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
+import { loadPublicLocale } from "@/lib/i18n";
 
 const APPLY_URL = "/join";
 
@@ -26,7 +27,8 @@ const SERVICES = [
   { num: "08", title: "Karriere-Entwicklung", desc: "Langfristige Roadmap statt kurzfristiger Trend-Hetzerei. Creator-Aufbau in Jahren, nicht Wochen." },
 ];
 
-export default function AgencyPage() {
+export default async function AgencyPage() {
+  const { t } = await loadPublicLocale();
   return (
     <>
       <Header />
@@ -77,7 +79,7 @@ export default function AgencyPage() {
             <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-12 md:mb-16 items-end">
               <div className="md:col-span-7">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">Was wir machen</p>
+                  <p className="eyebrow mb-5">{t("agency_page.eyebrow_was_wir_machen")}</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -118,7 +120,7 @@ export default function AgencyPage() {
           <div className="grid md:grid-cols-12 gap-10">
             <div className="md:col-span-7">
               <MotionReveal>
-                <p className="eyebrow mb-5">Wir wählen bewusst</p>
+                <p className="eyebrow mb-5">{t("agency_page.eyebrow_wir_waehlen")}</p>
               </MotionReveal>
               <MotionReveal delay={0.08}>
                 <h2 className="leading-[0.92] tracking-[-0.02em] mb-6">
