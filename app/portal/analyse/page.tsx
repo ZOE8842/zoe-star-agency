@@ -82,7 +82,7 @@ export default async function AnalyseHubPage() {
             2. AUSWAHL · tiefere Analysen (kein Auto-Render)
             ============================================================ */}
         <section className="mt-2">
-          <p className="eyebrow mb-5">Tiefen-Analyse · auf Abruf</p>
+          <p className="eyebrow mb-5">{t("analyse_deep.deep_eyebrow")}</p>
 
           <div className="grid gap-3 md:gap-4 md:grid-cols-3">
             <Link
@@ -90,17 +90,17 @@ export default async function AnalyseHubPage() {
               className="border border-champagne/25 hover:border-champagne hover:bg-champagne/5 p-5 md:p-6 transition-colors block group"
             >
               <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em] mb-3">
-                Profil pruefen
+                {t("analyse_deep.profil_title")}
               </p>
               <h2 className="font-display italic text-cream text-xl md:text-2xl leading-tight group-hover:text-champagne transition-colors">
-                Account Analyse
+                {t("analyse_deep.profil_title")}
               </h2>
               <p className="text-cream/55 text-xs md:text-sm leading-relaxed mt-3">
-                Bio, Branding, Hook-Staerke, Watchtime-Faktoren.
+                {t("analyse_deep.profil_desc")}
               </p>
               {latestAccount && (
                 <p className="text-cream/35 text-[10px] uppercase tracking-[0.22em] mt-4">
-                  Letzte · {new Date(latestAccount.created_at).toLocaleDateString("de-DE")}
+                  {t("analyse_deep.latest_account")} · {new Date(latestAccount.created_at).toLocaleDateString("de-DE")}
                 </p>
               )}
             </Link>
@@ -110,13 +110,13 @@ export default async function AnalyseHubPage() {
               className="border border-champagne/25 hover:border-champagne hover:bg-champagne/5 p-5 md:p-6 transition-colors block group"
             >
               <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em] mb-3">
-                Content pruefen
+                {t("analyse_deep.content_title")}
               </p>
               <h2 className="font-display italic text-cream text-xl md:text-2xl leading-tight group-hover:text-champagne transition-colors">
-                Content-Helfer
+                {t("analyse_deep.content_title")}
               </h2>
               <p className="text-cream/55 text-xs md:text-sm leading-relaxed mt-3">
-                Bestehende Videos und Captions auf Wirkung pruefen.
+                {t("analyse_deep.content_desc")}
               </p>
             </Link>
 
@@ -125,13 +125,13 @@ export default async function AnalyseHubPage() {
               className="border border-champagne/25 hover:border-champagne hover:bg-champagne/5 p-5 md:p-6 transition-colors block group"
             >
               <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em] mb-3">
-                Video analysieren
+                {t("analyse_deep.video_title")}
               </p>
               <h2 className="font-display italic text-cream text-xl md:text-2xl leading-tight group-hover:text-champagne transition-colors">
-                Neuen Video-Check
+                {t("analyse_deep.video_title")}
               </h2>
               <p className="text-cream/55 text-xs md:text-sm leading-relaxed mt-3">
-                Einzelnes Video einreichen — Hook, Retention, Aenderungen.
+                {t("analyse_deep.video_desc")}
               </p>
             </Link>
           </div>

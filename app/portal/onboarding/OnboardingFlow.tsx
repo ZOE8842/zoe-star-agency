@@ -200,6 +200,11 @@ export interface OnboardingI18n {
   lw_nacht?: string;
   lw_wochenende?: string;
   lw_flex?: string;
+  // Phase-7 Option-Label-Lookups (value → label)
+  categoryLabels?: Record<string, string>;
+  liveFormatLabels?: Record<string, string>;
+  liveWindowLabels?: Record<string, string>;
+  goalLabels?: Record<string, string>;
 }
 
 interface Props {
@@ -542,12 +547,17 @@ function Step3LiveProfile({
         <span className="text-champagne">{i18n.s2_title_b ?? "im LIVE?"}</span>
       </h2>
 
+      {/* Phase-7: Optionen via i18n-Lookup lokalisieren, Fallback auf
+          hardcoded Label. Werte (value) bleiben unveraendert. */}
       <div className="space-y-7">
         <OnboardingField label={i18n.field_creator_category ?? "Creator-Kategorie"}>
           <OnboardingSelect
             value={form.creator_category}
             onChange={(v) => update("creator_category", v)}
-            options={CATEGORIES}
+            options={CATEGORIES.map(o => ({
+              value: o.value,
+              label: i18n.categoryLabels?.[o.value] ?? o.label,
+            }))}
             placeholder={i18n.select_placeholder ?? "Bitte waehlen"}
           />
         </OnboardingField>
@@ -556,7 +566,10 @@ function Step3LiveProfile({
           <OnboardingSelect
             value={form.live_format}
             onChange={(v) => update("live_format", v)}
-            options={LIVE_FORMATS}
+            options={LIVE_FORMATS.map(o => ({
+              value: o.value,
+              label: i18n.liveFormatLabels?.[o.value] ?? o.label,
+            }))}
             placeholder={i18n.select_placeholder ?? "Bitte waehlen"}
           />
         </OnboardingField>
@@ -568,7 +581,10 @@ function Step3LiveProfile({
           <OnboardingSelect
             value={form.live_window}
             onChange={(v) => update("live_window", v)}
-            options={LIVE_WINDOWS}
+            options={LIVE_WINDOWS.map(o => ({
+              value: o.value,
+              label: i18n.liveWindowLabels?.[o.value] ?? o.label,
+            }))}
           />
         </OnboardingField>
       </div>
@@ -604,8 +620,8 @@ function Step4Goals({
       <div className="flex flex-wrap gap-2.5 mb-10">
         {GOALS.map((g) => {
           const active = form.goals.includes(g.value);
-          // Locale-aware Label-Lookup: i18n.goal_<value> oder fallback
-          const localizedLabel = (i18n as Record<string, string | undefined>)[`goal_${g.value}`] ?? g.label;
+          // Locale-aware Label-Lookup: i18n.goalLabels[value] oder fallback
+          const localizedLabel = i18n.goalLabels?.[g.value] ?? g.label;
           return (
             <OnboardingChip
               key={g.value}

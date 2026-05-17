@@ -17,7 +17,25 @@ export default async function OnboardingPage() {
     redirect("/portal");
   }
 
-  const { t } = await loadLocale();
+  const { t, dict } = await loadLocale();
+  // Phase-7: locale-Lookup-Maps fuer Optionen-Listen
+  const categoryLabels = (dict as unknown as { category?: Record<string, string> }).category ?? {};
+  const liveFormatLabels = (dict as unknown as { live_format?: Record<string, string> }).live_format ?? {};
+  const liveWindowLabels: Record<string, string> = {
+    tag: t("onboarding.lw_tag"),
+    abend: t("onboarding.lw_abend"),
+    nacht: t("onboarding.lw_nacht"),
+    wochenende: t("onboarding.lw_wochenende"),
+    flex: t("onboarding.lw_flex"),
+  };
+  const goalLabels: Record<string, string> = {
+    community: t("onboarding.goal_community"),
+    ranking: t("onboarding.goal_ranking"),
+    brand_deals: t("onboarding.goal_brand_deals"),
+    wachstum: t("onboarding.goal_wachstum"),
+    matches: t("onboarding.goal_matches"),
+    reichweite: t("onboarding.goal_reichweite"),
+  };
 
   return (
     <OnboardingFlow
@@ -96,6 +114,11 @@ export default async function OnboardingPage() {
         goal_wachstum: t("onboarding.goal_wachstum"),
         goal_matches: t("onboarding.goal_matches"),
         goal_reichweite: t("onboarding.goal_reichweite"),
+        // Phase-7 Option-Lookups
+        categoryLabels,
+        liveFormatLabels,
+        liveWindowLabels,
+        goalLabels,
       }}
     />
   );

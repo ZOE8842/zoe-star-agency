@@ -383,10 +383,12 @@ interface PageProps {
 export default async function AdminLiveAnalysePage({ searchParams }: PageProps) {
   // SCOPE-LOCK: Manager wird zu /portal geredirected (V7-Admin-Only)
   const { profile } = await requireAdmin();
+  const { loadLocale } = await import("@/lib/i18n");
+  const { t } = await loadLocale();
   const sp = await searchParams;
   const activeTab: TabKey =
-    (TABS.find((t) => t.key === sp.tab)?.key) ?? "diamanten";
-  const tab = TABS.find((t) => t.key === activeTab)!;
+    (TABS.find((tb) => tb.key === sp.tab)?.key) ?? "diamanten";
+  const tab = TABS.find((tb) => tb.key === activeTab)!;
 
   const db = sr();
   const month = currentMonthIso();
@@ -548,9 +550,9 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
       <main className="container-luxe py-10 md:py-16">
         <div className="flex items-baseline justify-between gap-4 mb-6">
           <div>
-            <p className="eyebrow mb-2">Admin · LIVE-Analyse</p>
+            <p className="eyebrow mb-2">Admin · {t("nav.live_analyse")}</p>
             <h1 className="heading-display text-cream text-3xl md:text-4xl">
-              LIVE-Analyse · {monthLabel}
+              {t("nav.live_analyse")} · {monthLabel}
             </h1>
             <p className="text-cream/50 text-sm mt-2">
               {totalRows} Creator · {inPortal} im Portal · {poolOnly} nur Backstage
