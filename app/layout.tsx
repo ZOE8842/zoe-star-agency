@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { baseUrl } from "@/lib/seo/routes";
 import { JsonLd, organizationSchema, websiteSchema } from "@/components/JsonLd";
 import { PublicAnalyticsTracker } from "@/components/analytics/PublicAnalyticsTracker";
+import { InstallHint } from "@/components/install/InstallHint";
 import { getEffectiveLocale } from "@/lib/i18n";
 import { RTL_LOCALES } from "@/lib/i18n/config";
 
@@ -66,10 +67,16 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
-      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+      { url: "/app-icons/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/app-icons/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/icon-512.png", sizes: "512x512" }],
+    apple: [{ url: "/app-icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "ZOE⭐",
+    statusBarStyle: "black-translucent",
   },
   alternates: {
     canonical: "/",
@@ -81,7 +88,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // iPhone-Notch + Home-Indicator nutzen
-  themeColor: "#0a0a0a",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)",  color: "#0A0A0A" },
+    { media: "(prefers-color-scheme: light)", color: "#6B0F1A" },
+  ],
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -95,6 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="bg-ink text-cream antialiased">
         <JsonLd data={[organizationSchema(), websiteSchema()]} />
         <PublicAnalyticsTracker />
+        <InstallHint />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
