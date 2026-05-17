@@ -5,6 +5,7 @@ import { PortalNav } from "@/components/PortalNav";
 import { UserActions } from "./UserActions";
 import { CreatorNotes } from "./CreatorNotes";
 import { InterestPanel } from "./InterestPanel";
+import { AdminLanguageSelect } from "@/components/admin/AdminLanguageSelect";
 
 export default async function CreatorDetailPage({
   params,
@@ -153,7 +154,14 @@ export default async function CreatorDetailPage({
             <Row label="Role" value={user.role} />
             <Row label="Manager" value={managerName || "—"} />
             <Row label="Land" value={user.country || "—"} />
-            <Row label="Sprache" value={user.language?.toUpperCase() || "—"} />
+            {admin.role === "admin" ? (
+              <div className="grid grid-cols-[180px_1fr] items-center gap-4 py-2 border-b border-champagne/5">
+                <dt className="text-cream/40 text-[10px] uppercase tracking-[0.2em]">Sprache</dt>
+                <dd><AdminLanguageSelect profileId={user.id} currentLanguage={user.language} /></dd>
+              </div>
+            ) : (
+              <Row label="Sprache" value={user.language?.toUpperCase() || "—"} />
+            )}
             <Row
               label="Beigetreten"
               value={new Date(user.joined_at).toLocaleDateString("de-DE", {

@@ -6,7 +6,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-const ALLOWED_LANGUAGES = ["de", "en", "fr", "tr", "ar", "other"] as const;
+// Codex-Fix 0052: 'other' ist KEIN gueltiger DB-Wert (CHECK-Constraint
+// profiles_language_supported). Legacy-Onboarding-Submits mit 'other'
+// werden im language-Mapping unten auf 'de' normalisiert.
+const ALLOWED_LANGUAGES = ["de", "en", "fr", "tr", "pt", "ar"] as const;
 const ALLOWED_REGIONS = ["DE", "AT", "CH", "LI"] as const;
 const ALLOWED_LIVE_WINDOWS = ["tag", "abend", "nacht", "wochenende", "flex"] as const;
 const ALLOWED_GOALS = [
@@ -54,8 +57,10 @@ export async function upsertOnboarding(input: OnboardingInput): Promise<ActionRe
   const tiktok_username = clean(input.tiktok_username?.replace(/^@/, ""), 64);
   if (!tiktok_username) return { ok: false, error: "TikTok Username fehlt." };
 
-  const language = ALLOWED_LANGUAGES.includes(input.language as never)
-    ? input.language : "de";
+  // Mapping: Legacy 'other' (vor CHECK-Constraint) → 'de'.
+  const rawLang = input.language === "other" ? "de" : input.language;
+  const language = ALLOWED_LANGUAGES.includes(rawLang as never)
+    ? rawLang : "de";
 
   if (!ALLOWED_REGIONS.includes(input.region as never)) {
     return { ok: false, error: "Region ungueltig." };

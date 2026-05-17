@@ -50,8 +50,8 @@ const LANGUAGES = [
   { value: "en", label: "Englisch" },
   { value: "fr", label: "Franzoesisch" },
   { value: "tr", label: "Tuerkisch" },
+  { value: "pt", label: "Portugiesisch" },
   { value: "ar", label: "Arabisch" },
-  { value: "other", label: "Andere" },
 ];
 
 const REGIONS = [
