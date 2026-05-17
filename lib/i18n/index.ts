@@ -16,8 +16,11 @@
 //   - Bei kein Login / kein Profile → DEFAULT_LOCALE ("de")
 
 import { cache } from "react";
+import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_LOCALE, type Locale, normalizeLocale } from "./config";
+import { DEFAULT_LOCALE, LOCALES, type Locale, normalizeLocale } from "./config";
+
+export const PUBLIC_LOCALE_COOKIE = "zoe_public_lang";
 import de from "./locales/de";
 import en from "./locales/en";
 import fr from "./locales/fr";
@@ -90,6 +93,65 @@ export const loadLocale = cache(async (): Promise<{
   t: (path: string) => string;
 }> => {
   const locale = await getUserLocale();
+  const dict = getDictionary(locale);
+  return { locale, dict, t: (path: string) => t(dict, path) };
+});
+
+// Public-Locale-Reader fuer NICHT-eingeloggte Besucher.
+// Fallback-Kaskade:
+//   1) Cookie zoe_public_lang (manuell gesetzt via Language-Switch)
+//   2) Accept-Language Header (vom Browser)
+//   3) DEFAULT_LOCALE ("de")
+//
+// React.cache() dedupliziert pro Request.
+export const getPublicLocale = cache(async (): Promise<Locale> => {
+  try {
+    const cookieStore = await cookies();
+    const cookieVal = cookieStore.get(PUBLIC_LOCALE_COOKIE)?.value;
+    if (cookieVal && (LOCALES as readonly string[]).includes(cookieVal)) {
+      return cookieVal as Locale;
+    }
+    // Accept-Language parsing: iteriere alle Praeferenzen in Order und nimm
+    // die erste supported Locale (Codex-P3-Fix). Beispiel:
+    //   "es-ES,fr;q=0.9,en;q=0.8" → "fr" (nicht "de")
+    const hdrs = await headers();
+    const al = hdrs.get("accept-language");
+    if (al) {
+      const prefs = al.split(",")
+        .map((p) => p.split(";")[0].trim().split("-")[0].toLowerCase())
+        .filter(Boolean);
+      for (const p of prefs) {
+        if ((LOCALES as readonly string[]).includes(p)) {
+          return p as Locale;
+        }
+      }
+    }
+  } catch { /* silent */ }
+  return DEFAULT_LOCALE;
+});
+
+// Effective-Locale: bevorzugt User-Profile (wenn eingeloggt), sonst Public.
+// Genutzt im RootLayout fuer html lang + dir.
+export const getEffectiveLocale = cache(async (): Promise<Locale> => {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles").select("language").eq("id", user.id).maybeSingle();
+      if (profile?.language) return normalizeLocale(profile.language);
+    }
+  } catch { /* silent */ }
+  return getPublicLocale();
+});
+
+// loadPublicLocale: analog loadLocale, fuer Public-Pages (Homepage, /join etc.)
+export const loadPublicLocale = cache(async (): Promise<{
+  locale: Locale;
+  dict: Dictionary;
+  t: (path: string) => string;
+}> => {
+  const locale = await getPublicLocale();
   const dict = getDictionary(locale);
   return { locale, dict, t: (path: string) => t(dict, path) };
 });
