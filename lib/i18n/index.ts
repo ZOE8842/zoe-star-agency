@@ -62,11 +62,21 @@ function resolvePath(obj: unknown, path: string): unknown {
   return cur;
 }
 
+// DE-ONLY-LOCK (2026-05-19): bis sauberes i18n-System fertig migriert ist
+// liefern alle Locale-Reader DEFAULT_LOCALE (de). Verhindert Misch-Sprache
+// (Header franzoesisch / Cards deutsch / Buttons portugiesisch). Die
+// User-Sprache wird weiter in profiles.language gespeichert (Onboarding),
+// aber NICHT zum Render-Zeitpunkt gelesen. Switch hat aktuell visuell
+// keinen Effekt - das ist gewollt, bis das echte i18n re-built ist.
+// Re-Enable: einfach LOCALE_LOCK auf false setzen.
+const LOCALE_LOCK = true;
+
 // Server-side Locale-Reader: liest aus auth-session + profiles.language.
 // React.cache() dedupliziert Aufrufe innerhalb desselben Request-Lifecycles,
 // d.h. mehrere Komponenten die getUserLocale() unabhaengig aufrufen,
 // teilen sich genau einen Supabase-Roundtrip pro Render.
 export const getUserLocale = cache(async (): Promise<Locale> => {
+  if (LOCALE_LOCK) return DEFAULT_LOCALE;
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -108,6 +118,7 @@ export const loadLocale = cache(async (): Promise<{
 // Fallback wenn Header fehlt (z.B. middleware nicht aktiv): cookies/AL direkt.
 // React.cache() dedupliziert pro Request.
 export const getPublicLocale = cache(async (): Promise<Locale> => {
+  if (LOCALE_LOCK) return DEFAULT_LOCALE;
   try {
     const hdrs = await headers();
     const headerVal = hdrs.get("x-zoe-locale");
@@ -139,6 +150,7 @@ export const getPublicLocale = cache(async (): Promise<Locale> => {
 // Effective-Locale: bevorzugt User-Profile (wenn eingeloggt), sonst Public.
 // Genutzt im RootLayout fuer html lang + dir.
 export const getEffectiveLocale = cache(async (): Promise<Locale> => {
+  if (LOCALE_LOCK) return DEFAULT_LOCALE;
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
