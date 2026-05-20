@@ -114,7 +114,7 @@ export default async function AdminAccountAnalyseQueue() {
                     disabled={["done", "reviewed"].includes(r.status)}
                   />
                   <Link
-                    href={`/portal/analyse/account/${r.id}`}
+                    href={`/portal/admin/analyse/account/${r.id}`}
                     className="text-champagne hover:text-champagne-300"
                   >
                     Oeffnen →
