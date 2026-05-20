@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { invalidateShowcase } from "@/lib/showcase/invalidation";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,13 @@ export default async function ConsentConfirmPage({ params }: Props) {
   if (!token) redirect("/portal/profile/showcase");
 
   const r = await consumeToken(profile.id, token);
+
+  // CDX-1: Nur bei erfolgreichem Consume (allow_*_confirmed=true geschrieben)
+  // Cache invalidieren. Bei deny / invalid / expired / error explizit NICHT,
+  // weil keine Public-Visibility-Aenderung erfolgt ist.
+  if (r.ok) {
+    await invalidateShowcase();
+  }
 
   return (
     <>

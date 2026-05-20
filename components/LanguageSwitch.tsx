@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LOCALES, LOCALE_LABELS, LOCALE_SHORT, type Locale, DEFAULT_LOCALE } from "@/lib/i18n/config";
+import { AVAILABLE_LOCALES, LOCALES, LOCALE_LABELS, LOCALE_SHORT, type Locale, DEFAULT_LOCALE } from "@/lib/i18n/config";
 
 const COOKIE_NAME = "zoe_public_lang";
+
+// CDX-1: solange nur eine Locale voll uebersetzt ist (AVAILABLE_LOCALES=['de']
+// in lib/i18n/config.ts) UND LOCALE_LOCK=true in lib/i18n/index.ts ist,
+// rendern wir keinen Switcher. Cookie wuerde gesetzt, UI bleibt aber DE
+// → keine UI-Theater anzeigen.
+const SWITCHER_ACTIVE = AVAILABLE_LOCALES.length > 1;
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -12,6 +18,11 @@ function readCookie(name: string): string | null {
 }
 
 export function LanguageSwitch({ className = "" }: { className?: string }) {
+  if (!SWITCHER_ACTIVE) return null;
+  return <LanguageSwitchInner className={className} />;
+}
+
+function LanguageSwitchInner({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState<Locale>(DEFAULT_LOCALE);
   const [busy, setBusy] = useState(false);

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { queuePlatformNotification } from "@/lib/notifications/platform";
 import { queueInboxNotification, pushActivityFeed } from "@/lib/notifications/inbox";
+import { invalidateShowcase } from "@/lib/showcase/invalidation";
 
 async function requireAdminClient() {
   const supabase = await createClient();
@@ -75,7 +76,7 @@ export async function approveShowcase(id: string, featured: boolean = true): Pro
     }
 
     revalidatePath("/portal/admin/showcase");
-    revalidatePath("/");
+    await invalidateShowcase();
     return { ok: true };
   } catch (err: unknown) {
     return { ok: false, error: err instanceof Error ? err.message : "Fehler." };
@@ -96,7 +97,7 @@ export async function rejectShowcase(id: string): Promise<{ ok: boolean; error?:
       .eq("id", id);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/portal/admin/showcase");
-    revalidatePath("/");
+    await invalidateShowcase();
     return { ok: true };
   } catch (err: unknown) {
     return { ok: false, error: err instanceof Error ? err.message : "Fehler." };
@@ -112,7 +113,7 @@ export async function toggleFeatured(id: string, featured: boolean): Promise<{ o
       .eq("id", id);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/portal/admin/showcase");
-    revalidatePath("/");
+    await invalidateShowcase();
     return { ok: true };
   } catch (err: unknown) {
     return { ok: false, error: err instanceof Error ? err.message : "Fehler." };
@@ -128,7 +129,7 @@ export async function updateSortOrder(id: string, sort_order: number): Promise<{
       .eq("id", id);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/portal/admin/showcase");
-    revalidatePath("/");
+    await invalidateShowcase();
     return { ok: true };
   } catch (err: unknown) {
     return { ok: false, error: err instanceof Error ? err.message : "Fehler." };
@@ -226,7 +227,7 @@ export async function updateShowcaseAdmin(
     }
 
     revalidatePath("/portal/admin/showcase");
-    revalidatePath("/");
+    await invalidateShowcase();
     return { ok: true };
   } catch (err: unknown) {
     return { ok: false, error: err instanceof Error ? err.message : "Fehler." };
@@ -242,7 +243,7 @@ export async function deleteShowcaseAdmin(id: string): Promise<{ ok: boolean; er
       .eq("id", id);
     if (error) return { ok: false, error: error.message };
     revalidatePath("/portal/admin/showcase");
-    revalidatePath("/");
+    await invalidateShowcase();
     return { ok: true };
   } catch (err: unknown) {
     return { ok: false, error: err instanceof Error ? err.message : "Fehler." };

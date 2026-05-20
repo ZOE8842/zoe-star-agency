@@ -28,8 +28,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-// ISR statt force-dynamic: Creator-Detail-Seite alle 5 Min revalidiert.
-export const revalidate = 300;
+// CDX-1: force-dynamic statt ISR(300s).
+// Grund: ISR-Negative-Cache speicherte notFound()-Antworten bis zu 5 min,
+// was bei neu approveten Creators zu Phantom-404 fuehrte ("Premium-Brecher B-7").
+// Trade-off: jeder Visit = neue Vercel-Function-Invocation. Bei aktueller
+// Visitor-Last vernachlaessigbar.
+export const dynamic = "force-dynamic";
 
 export default async function CreatorDetailPage({ params }: Params) {
   const { username } = await params;

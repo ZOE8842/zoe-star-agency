@@ -7,6 +7,7 @@ import {
   sendShowcaseConsentMail,
   sendCooperationConsentMail,
 } from "@/lib/email/consent-mails";
+import { invalidateShowcase } from "@/lib/showcase/invalidation";
 
 interface ImageEntry {
   url: string;
@@ -204,7 +205,7 @@ export async function upsertShowcase(input: ShowcaseInput): Promise<{ ok: boolea
 
   revalidatePath("/portal/profile/showcase");
   revalidatePath("/portal/profile");
-  revalidatePath("/");
+  await invalidateShowcase();
   return { ok: true, mail_sent: sent };
 }
 
@@ -286,6 +287,6 @@ export async function deleteOwnShowcase(): Promise<{ ok: boolean; error?: string
 
   if (error) return { ok: false, error: error.message };
   revalidatePath("/portal/profile/showcase");
-  revalidatePath("/");
+  await invalidateShowcase();
   return { ok: true };
 }

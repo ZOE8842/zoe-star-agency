@@ -2,6 +2,7 @@
 
 import { requireManagerOrAdmin } from "@/lib/supabase/auth-helpers";
 import { revalidatePath } from "next/cache";
+import { invalidateShowcase } from "@/lib/showcase/invalidation";
 
 type Kind = "showcase" | "cooperation";
 type Status = "pending" | "accepted" | "declined";
@@ -43,5 +44,8 @@ export async function adminSetInterest(
   }
 
   revalidatePath(`/portal/admin/users/${userId}`);
+  // CDX-1: Admin-Eingriff in Creator-Interest beruehrt allow_*-Felder
+  // und damit Public-Visibility. Cache invalidieren.
+  await invalidateShowcase();
   return { ok: true };
 }

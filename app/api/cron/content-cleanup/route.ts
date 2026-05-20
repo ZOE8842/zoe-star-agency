@@ -39,6 +39,19 @@ export async function GET(request: NextRequest) {
     .limit(500);
 
   if (fetchErr) {
+    // CDX-1: Auch der Early-Fail-Pfad MUSS data_source_health-Row schreiben,
+    // sonst silent fail bei DB-Fehlern im Vor-Cleanup.
+    await supabase
+      .from("data_source_health")
+      .insert({
+        source: "claude_worker",
+        kind: "content_cleanup",
+        ok: false,
+        count_items: 0,
+        error_message: `fetch candidates failed: ${fetchErr.message}`,
+        payload: { cutoff, stage: "fetch_candidates" },
+      })
+      .then(() => undefined, () => undefined);
     return NextResponse.json({ error: fetchErr.message }, { status: 500 });
   }
 
@@ -97,13 +110,39 @@ export async function GET(request: NextRequest) {
   // Audit-Log — source ist auf ('apify_tiktok','backstage_sync','claude_worker')
   // eingeschraenkt (Check-Constraint), deshalb "claude_worker" mit kind als
   // Sub-Tag.
-  await supabase.from("data_source_health").insert({
-    source: "claude_worker",
-    kind: "content_cleanup",
-    ok: failed === 0,
-    count_items: cleaned,
-    payload: { cutoff, cleaned, failed, total_candidates: candidates.length },
-  }).then(() => undefined, () => undefined);
+  //
+  // CDX-1: error_message MUSS gesetzt sein wenn ok=false (CHECK-Constraint
+  // aus Migration 0054). Bei partial failure listen wir die ersten Fehler
+  // explizit, damit das Dashboard nicht "FAIL ohne Grund" zeigt.
+  const errorDetails = results
+    .filter((r) => !r.ok && r.error)
+    .slice(0, 10)
+    .map((r) => `${r.id}: ${r.error}`);
+  const isOk = failed === 0;
+  const errorSummary = isOk
+    ? null
+    : `partial cleanup failure: ${failed}/${candidates.length} items failed${
+        errorDetails.length > 0
+          ? ` · first errors: ${errorDetails.slice(0, 3).join(" | ")}`
+          : ""
+      }`;
+  await supabase
+    .from("data_source_health")
+    .insert({
+      source: "claude_worker",
+      kind: "content_cleanup",
+      ok: isOk,
+      count_items: cleaned,
+      error_message: errorSummary,
+      payload: {
+        cutoff,
+        cleaned,
+        failed,
+        total_candidates: candidates.length,
+        sample_errors: errorDetails,
+      },
+    })
+    .then(() => undefined, () => undefined);
 
   return NextResponse.json({
     success: true,

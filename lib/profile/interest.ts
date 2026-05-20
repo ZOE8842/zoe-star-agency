@@ -8,6 +8,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { invalidateShowcase } from "@/lib/showcase/invalidation";
 
 export type InterestKind = "showcase" | "cooperation";
 export type InterestStatus = "pending" | "accepted" | "declined";
@@ -58,5 +59,10 @@ export async function setInterestStatus(
 
   revalidatePath("/portal");
   revalidatePath("/portal/profile");
+  // CDX-1: Interest-Flow beruehrt allow_*-Felder die in Public-Visibility-
+  // Berechnung eingehen. Public-Cache muss invalidiert werden, sobald
+  // Creator-Intent sich aendert (auch wenn _confirmed erst spaeter via
+  // Email-Token gesetzt wird).
+  await invalidateShowcase();
   return { ok: true };
 }
