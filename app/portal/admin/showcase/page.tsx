@@ -5,16 +5,20 @@ import { ShowcaseAdminTable } from "./ShowcaseAdminTable";
 export default async function AdminShowcasePage() {
   const { supabase, profile } = await requireAdmin();
 
-  // CDX-1: Edit-Felder (brand_safe, public_note) plus showcase_creators-Basis
-  // mit-laden, damit ShowcaseAdminTable → ShowcaseEditModal nicht versehentlich
-  // mit null-Defaults bestehende Werte ueberschreibt.
+  // CDX-1 HOTFIX (2026-05-20): brand_safe + public_note aus Select entfernt,
+  // weil die Spalten in showcase_creators NICHT existieren. Die geplante
+  // Migration 0027 wurde nie angewendet. Mit fehlenden Spalten wirft
+  // PostgREST einen Error -> rows=null -> Counter zeigt 0/0/0/0 (Regress
+  // gegenueber Pre-CDX-1-Verhalten). ShowcaseEditModal liest die Felder
+  // weiterhin als optional/undefined → bleibt im selben State wie vor CDX-1
+  // (Save dieser beiden Felder ist sowieso broken bis Migration kommt).
+  // Fix in CDX-2: entweder Migration nachholen oder Modal-Felder zuruckbauen.
   const { data: rows } = await supabase
     .from("showcase_creators")
     .select(`
       id, profile_id, display_name, category, showcase_image, showcase_images,
       tiktok_url, instagram_url, is_approved, is_featured,
-      sort_order, created_at, updated_at, approved_at,
-      brand_safe, public_note
+      sort_order, created_at, updated_at, approved_at
     `)
     .order("created_at", { ascending: false });
 
