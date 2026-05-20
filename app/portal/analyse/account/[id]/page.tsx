@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 
@@ -32,6 +32,16 @@ interface Props {
 export default async function AccountAnalyseDetail({ params }: Props) {
   const { id } = await params;
   const { supabase, profile } = await getAuthedProfile();
+
+  // F-1 (2026-05-20): Admin-Redirect auf eigene Admin-Detail-Route.
+  // Alte Notifications + Push + Bookmarks zeigen weiterhin auf diese
+  // Creator-URL. Wenn ein Admin sie oeffnet, sonst notFound (profile_id-
+  // Filter unten greift). Stattdessen sauberer Redirect.
+  // Creator-Privacy bleibt strikt: nur admin-role wird umgeleitet,
+  // alle anderen Rollen laufen weiter in den profile_id-Filter.
+  if (profile.role === "admin") {
+    redirect(`/portal/admin/analyse/account/${id}`);
+  }
 
   const { data: row } = await supabase
     .from("account_analyses")
