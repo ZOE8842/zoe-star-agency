@@ -5,19 +5,68 @@ import { ShowcaseAdminTable } from "./ShowcaseAdminTable";
 export default async function AdminShowcasePage() {
   const { supabase, profile } = await requireAdmin();
 
+  // CDX-1: Edit-Felder (brand_safe, public_note) plus showcase_creators-Basis
+  // mit-laden, damit ShowcaseAdminTable → ShowcaseEditModal nicht versehentlich
+  // mit null-Defaults bestehende Werte ueberschreibt.
   const { data: rows } = await supabase
     .from("showcase_creators")
     .select(`
       id, profile_id, display_name, category, showcase_image, showcase_images,
       tiktok_url, instagram_url, is_approved, is_featured,
-      sort_order, created_at, updated_at, approved_at
+      sort_order, created_at, updated_at, approved_at,
+      brand_safe, public_note
     `)
     .order("created_at", { ascending: false });
 
-  const all = rows ?? [];
+  const showcaseRows = rows ?? [];
+
+  // CDX-1: JOIN auf profiles fuer Consent-Flags + tiktok_username.
+  // Admin-UI muss dieselbe Wahrheit zeigen wie der Public-Resolver, sonst
+  // suggeriert "X live" eine Sichtbarkeit, die DSGVO-Filter spaeter beschneiden.
+  const profileIds = showcaseRows
+    .map((r) => r.profile_id)
+    .filter((id): id is string => !!id);
+  // CDX-1: bio, region, language fuer ShowcaseEditModal mit-laden (profile-side).
+  const { data: profileRows } = profileIds.length > 0
+    ? await supabase
+        .from("profiles")
+        .select(
+          "id, tiktok_username, allow_website_showcase_confirmed, allow_partner_cooperations_confirmed, bio, region, language",
+        )
+        .in("id", profileIds)
+    : { data: [] };
+  const profileById = new Map(
+    (profileRows ?? []).map((p) => [p.id as string, p] as const),
+  );
+
+  // Pro Row die Visibility-Booleans anreichern. Wenn Profile fehlt
+  // (Edge-Case: Cleanup-Drift), behandeln wir es als "nicht öffentlich".
+  const all = showcaseRows.map((r) => {
+    const p = r.profile_id ? profileById.get(r.profile_id) : undefined;
+    const webOk = !!p?.allow_website_showcase_confirmed;
+    const coopOk = !!p?.allow_partner_cooperations_confirmed;
+    return {
+      ...r,
+      tiktok_username: p?.tiktok_username ?? null,
+      bio: p?.bio ?? null,
+      region: p?.region ?? null,
+      language: p?.language ?? null,
+      web_ok: webOk,
+      coop_ok: coopOk,
+      is_public_homepage: r.is_approved && r.is_featured && webOk,
+      is_public_coop: r.is_approved && r.is_featured && coopOk,
+    };
+  });
+
   const pending = all.filter((r) => !r.is_approved);
   const live = all.filter((r) => r.is_approved && r.is_featured);
   const approved_unfeatured = all.filter((r) => r.is_approved && !r.is_featured);
+
+  // CDX-1: Truth-Counts. Die Differenz zwischen "Live" und "Public (Web)"
+  // ist genau die DSGVO-Hidden-Liste, die Admin sonst nicht sieht.
+  const publicWeb = live.filter((r) => r.is_public_homepage).length;
+  const publicCoop = live.filter((r) => r.is_public_coop).length;
+  const blocked = live.length - publicWeb;
 
   return (
     <>
@@ -37,16 +86,26 @@ export default async function AdminShowcasePage() {
           </h1>
           <p className="text-cream/60 text-base md:text-lg mt-4 max-w-2xl">
             Creator-Showcase-Cards verwalten. Approve/Reject, Featured-Toggle und Reihenfolge.
-            Nur freigegebene + featured Cards erscheinen auf der Public-Site.
+            Nur freigegebene + featured Cards mit aktivem Consent erscheinen auf der Public-Site.
           </p>
         </section>
 
-        {/* Counts */}
-        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-10 md:mb-14">
+        {/* CDX-1: 4 Counter (Pending, Live, Public Web, Public Coop). Plus
+            kompakter "blockiert via DSGVO"-Hinweis falls > 0. */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-3">
           <CountCard label="Pending" value={pending.length} highlight={pending.length > 0} />
-          <CountCard label="Live" value={live.length} />
-          <CountCard label="Approved (off)" value={approved_unfeatured.length} />
+          <CountCard label="Live total" value={live.length} />
+          <CountCard label="Public (Web)" value={publicWeb} />
+          <CountCard label="Public (Coop)" value={publicCoop} />
         </div>
+        {blocked > 0 && (
+          <p className="text-cream/55 text-xs mb-10 md:mb-14">
+            {blocked} von {live.length} Live-Karten sind aktuell DSGVO-blockiert
+            (kein bestaetigter Web-Showcase-Consent) und erscheinen NICHT auf
+            der Public-Site.
+          </p>
+        )}
+        {blocked === 0 && <div className="mb-10 md:mb-14" />}
 
         {pending.length > 0 && (
           <section className="mb-12 md:mb-16">
@@ -57,7 +116,7 @@ export default async function AdminShowcasePage() {
 
         {live.length > 0 && (
           <section className="mb-12 md:mb-16">
-            <p className="eyebrow mb-5">Live auf Homepage · {live.length}</p>
+            <p className="eyebrow mb-5">Live · {live.length}</p>
             <ShowcaseAdminTable rows={live} />
           </section>
         )}

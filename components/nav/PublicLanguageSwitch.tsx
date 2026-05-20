@@ -5,13 +5,23 @@
 // Initial-Locale wird vom Server als prop uebergeben.
 
 import { useState, useRef, useEffect } from "react";
-import { LOCALES, LOCALE_SHORT, LOCALE_LABELS, type Locale } from "@/lib/i18n/config";
+import { AVAILABLE_LOCALES, LOCALES, LOCALE_SHORT, LOCALE_LABELS, type Locale } from "@/lib/i18n/config";
 
 interface Props {
   initialLocale: Locale;
 }
 
+// CDX-1: Solange nur eine Locale voll uebersetzt ist (AVAILABLE_LOCALES=['de']),
+// rendern wir keinen Switcher. Setzt Cookie wuerde aktuell keinen UI-Effekt
+// haben (LOCALE_LOCK in lib/i18n/index.ts).
+const SWITCHER_ACTIVE = AVAILABLE_LOCALES.length > 1;
+
 export function PublicLanguageSwitch({ initialLocale }: Props) {
+  if (!SWITCHER_ACTIVE) return null;
+  return <PublicLanguageSwitchInner initialLocale={initialLocale} />;
+}
+
+function PublicLanguageSwitchInner({ initialLocale }: Props) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [value, setValue] = useState<Locale>(initialLocale);

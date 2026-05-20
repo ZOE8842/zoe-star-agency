@@ -31,11 +31,37 @@ interface Row {
   bio?: string | null;
   region?: string | null;
   language?: string | null;
+  // CDX-1: Visibility-Badges. Page reicht diese aus dem profiles-JOIN durch.
+  tiktok_username?: string | null;
+  web_ok?: boolean;
+  coop_ok?: boolean;
+  is_public_homepage?: boolean;
+  is_public_coop?: boolean;
 }
 
 function countImages(r: Row): number {
   const arr = Array.isArray(r.showcase_images) ? r.showcase_images : [];
   return arr.filter((i) => i?.url && /^https?:\/\//i.test(i.url)).length;
+}
+
+// CDX-1: kleine Visibility-Badge. active=true -> champagne, active=false -> faded.
+function VisibilityBadge({ active, label }: { active: boolean; label: string }) {
+  return (
+    <span
+      className={`px-2 py-0.5 text-[9px] uppercase tracking-[0.22em] border ${
+        active
+          ? "border-champagne/60 text-champagne"
+          : "border-cream/15 text-cream/30"
+      }`}
+      title={
+        active
+          ? `${label}: sichtbar`
+          : `${label}: blockiert (kein Consent / nicht featured)`
+      }
+    >
+      {active ? label : `${label} ✕`}
+    </span>
+  );
 }
 
 export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
@@ -102,6 +128,14 @@ export function ShowcaseAdminTable({ rows }: { rows: Row[] }) {
                 )}
               </div>
               {r.category && <p className="text-cream/55 text-[11px] uppercase tracking-[0.25em] mt-1">{r.category}</p>}
+              {/* CDX-1: 3 Visibility-Badges fuer approved-Rows. Live + Web + Coop. */}
+              {r.is_approved && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  <VisibilityBadge active={r.is_featured} label="Live" />
+                  <VisibilityBadge active={!!r.is_public_homepage} label="Web" />
+                  <VisibilityBadge active={!!r.is_public_coop} label="Coop" />
+                </div>
+              )}
               <div className="flex flex-wrap gap-2 mt-2 text-[11px]">
                 {r.tiktok_url && (
                   <a href={r.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-champagne hover:underline">TikTok ↗</a>
