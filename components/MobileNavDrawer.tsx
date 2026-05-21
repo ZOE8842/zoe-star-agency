@@ -167,15 +167,13 @@ export function MobileNavDrawer({
       />
 
       {/* Drawer · echtes solides Panel · z-9999 · keine Transparenz
-          Swipe-Right schließt (iOS-PWA-Ersatz für Hardware-Back) */}
+          Swipe-Geste NUR auf dedicated Drag-Handle (linker Edge),
+          NICHT auf gesamtes <aside> — sonst werden Tap-Events der
+          Nav-Links geschluckt (Regression aus cedcccf). */}
       <aside
         id="zoe-mobile-drawer"
         role="dialog" aria-modal="true" aria-label="Hauptmenue"
         aria-hidden={!open}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onTouchCancel={onTouchEnd}
         className={`fixed top-0 right-0 h-[100dvh] z-[9999] ${
           dragX > 0 ? "" : "transition-transform duration-300 ease-out"
         } ${open ? "translate-x-0" : "translate-x-full"}`}
@@ -186,9 +184,25 @@ export function MobileNavDrawer({
           borderLeft: "1px solid rgba(212,175,107,0.22)",
           boxShadow: "-20px 0 80px rgba(0,0,0,0.98)",
           transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
-          touchAction: "pan-y",
         }}
       >
+        {/* Drag-Handle · 16px breit am linken Drawer-Rand
+            Nur HIER sind Touch-Handler aktiv → Nav-Links bleiben tap-bar */}
+        <div
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchEnd}
+          className="absolute top-0 left-0 h-full w-4 z-10"
+          style={{ touchAction: "pan-y" }}
+          aria-hidden
+        >
+          {/* visueller Grip-Indikator · vertikaler Champagne-Strich */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 left-1.5 w-0.5 h-12 rounded-full opacity-50"
+            style={{ background: GOLD }}
+          />
+        </div>
         <div
           className="flex flex-col"
           style={{ background: SOLID_BLACK, minHeight: "100%" }}
@@ -220,7 +234,7 @@ export function MobileNavDrawer({
             </button>
           </div>
 
-          {/* Swipe-Hint · sehr dezent, nur sichtbar wenn Drawer offen */}
+          {/* Schließen-Hint · zeigt 2 Wege: Drag-Handle ODER X */}
           <div
             className="text-center py-1.5 text-[10px] tracking-[0.2em] uppercase"
             style={{
@@ -229,7 +243,7 @@ export function MobileNavDrawer({
               background: SOLID_BLACK,
             }}
           >
-            ⟶  nach rechts wischen zum schliessen
+            × oben rechts · oder links am rand wischen
           </div>
 
           {/* User-Card */}
