@@ -29,6 +29,8 @@ interface ComputeRow {
   live_current_diamonds: number | null;
   live_valid_days: number | null;
   live_duration_seconds: number | null;
+  live_streams_count: number | null;
+  live_new_followers: number | null;
   data_completeness: "sot_live" | "legacy_only" | "pre_maerz_only" | "empty";
   drift_pct: number | null;
   meta_invitation_type: "Regulär" | "Premium" | "Elite" | null;
@@ -126,7 +128,32 @@ function statusBadge(s: string | null): { label: string; cls: string } {
 }
 
 interface PageProps {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; expand?: string }>;
+}
+
+// V1.4 · Detail-Row-Type · ergänzt aus v_creator_incentive_summary
+interface ExpandedDetail {
+  tiktok_username: string;
+  meta_last_live_at: string | null;
+  live_diamonds_compare: number | null;
+  live_days_compare: number | null;
+  live_days_compare_pct: number | null;
+  live_duration_compare_sec: number | null;
+  live_duration_compare_pct: number | null;
+  live_streams_compare: number | null;
+  live_streams_compare_pct: number | null;
+  live_followers_compare: number | null;
+  live_followers_compare_pct: number | null;
+  live_avg_watch: number | null;
+  live_compare_start: string | null;
+  live_compare_end: string | null;
+  ist_tier_progress: number | null;
+  ist_tier_target: number | null;
+  ist_match_diamonds: number | null;
+  ist_forecast_revenue_usd: number | null;
+  ist_forecast_diamonds: number | null;
+  meta_mgmt_start: string | null;
+  meta_mgmt_end: string | null;
 }
 
 export default async function AdminUmsatzPage({ searchParams }: PageProps) {
@@ -140,6 +167,9 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
     sp.tab === "missing"  ? "missing"  :
     sp.tab === "creator"  ? "creator"  :
     sp.tab === "current"  ? "current"  : "overview";  // Default ab v1.18: overview
+
+  // V1.4 · expand parameter (normalized handle)
+  const expandHandle = (sp.expand ?? "").trim().toLowerCase().replace(/^@/, "");
 
   const db = sr();
   const month = currentMonthIso();
@@ -166,13 +196,26 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { data: computeRows } = (tab === "overview" || tab === "creator")
     ? await db
         .from("v_creator_incentive_compute")
-        .select("tiktok_username, ist_estimated_bonus_usd, ist_activity_usd, ist_tier_usd, ist_incremental_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_status, ist_activity_status, ist_incremental_status, live_current_diamonds, live_valid_days, live_duration_seconds, data_completeness, drift_pct, meta_invitation_type, meta_is_new_creator, month_day, month_days_total, month_days_remaining, real_projected_bonus_usd_eom, real_projected_diamonds_eom, max_diamonds_to_next_tier, days_to_next_activity_level, hist_3m_avg_total, hist_3m_count, trend_class")
+        .select("tiktok_username, ist_estimated_bonus_usd, ist_activity_usd, ist_tier_usd, ist_incremental_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_status, ist_activity_status, ist_incremental_status, live_current_diamonds, live_valid_days, live_duration_seconds, live_streams_count, live_new_followers, data_completeness, drift_pct, meta_invitation_type, meta_is_new_creator, month_day, month_days_total, month_days_remaining, real_projected_bonus_usd_eom, real_projected_diamonds_eom, max_diamonds_to_next_tier, days_to_next_activity_level, hist_3m_avg_total, hist_3m_count, trend_class")
         .eq("period_month", month)
         .order("ist_estimated_bonus_usd", { ascending: false, nullsFirst: false })
     : { data: [] };
   const compute: ComputeRow[] = (computeRows ?? []) as unknown as ComputeRow[];
   const computeByHandle = new Map<string, ComputeRow>();
   for (const c of compute) computeByHandle.set(c.tiktok_username.toLowerCase(), c);
+
+  // V1.4 · Detail-Fetch für ausgeklappten Creator (nur 1 Row)
+  const { data: expandedDetailRow } = (tab === "overview" && expandHandle)
+    ? await db
+        .from("v_creator_incentive_summary")
+        .select("tiktok_username, meta_last_live_at, live_diamonds_compare, live_days_compare, live_days_compare_pct, live_duration_compare_sec, live_duration_compare_pct, live_streams_compare, live_streams_compare_pct, live_followers_compare, live_followers_compare_pct, live_avg_watch, live_compare_start, live_compare_end, ist_tier_progress, ist_tier_target, ist_match_diamonds, ist_forecast_revenue_usd, ist_forecast_diamonds, meta_mgmt_start, meta_mgmt_end")
+        .eq("tiktok_handle_normalized", expandHandle)
+        .eq("period_month", month)
+        .maybeSingle()
+    : { data: null };
+  const expandedDetail: ExpandedDetail | null = expandedDetailRow
+    ? (expandedDetailRow as unknown as ExpandedDetail)
+    : null;
 
   const rows: Row[] = (metrics ?? []).map((m) => ({
     profile_id: m.profile_id,
@@ -728,13 +771,25 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                         }
                         const hint = hints.length === 0 ? "—" : hints.join(" · ");
 
+                        const handleLower = c.tiktok_username.toLowerCase();
+                        const isExpanded = expandHandle === handleLower;
+                        // Toggle-URL: wenn aktuell expanded → expand wegnehmen, sonst auf diesen Handle setzen
+                        const toggleHref = isExpanded
+                          ? `?tab=overview`
+                          : `?tab=overview&expand=${encodeURIComponent(handleLower)}`;
                         return (
-                          <tr key={c.tiktok_username} className={rowCls}>
-                            <td className="px-3 py-3 text-cream/40 font-display italic text-base">{i + 1}</td>
+                          <>
+                          <tr key={c.tiktok_username} className={`${rowCls} cursor-pointer`}>
+                            <td className="px-3 py-3 text-cream/40 font-display italic text-base">
+                              <a href={toggleHref} className="block w-full">
+                                <span className={isExpanded ? "text-champagne" : ""}>{i + 1}</span>
+                              </a>
+                            </td>
                             <td className="px-3 py-3">
-                              <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
-                                 className="text-cream hover:text-champagne">
-                                @{c.tiktok_username}
+                              <a href={toggleHref}
+                                 className="text-cream hover:text-champagne flex items-center gap-2">
+                                <span className="text-cream/40 text-xs leading-none">{isExpanded ? "▼" : "▸"}</span>
+                                <span>@{c.tiktok_username}</span>
                               </a>
                             </td>
                             <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(c.ist_estimated_bonus_usd)}</td>
@@ -759,6 +814,175 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                             </td>
                             <td className="px-3 py-3 text-cream/75 text-xs">{hint}</td>
                           </tr>
+                          {isExpanded && expandedDetail && (
+                            <tr key={c.tiktok_username + "-detail"} className="border-t border-champagne/30 bg-ink/40">
+                              <td className="px-3 py-4" colSpan={10}>
+                                {/* Begründungs-Block (oberhalb) */}
+                                <div className="mb-4 pb-3 border-b border-champagne/15">
+                                  <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Warum diese Position</p>
+                                  <p className="text-cream/85 text-sm">
+                                    {prio === 1 ? "Aktivitäts-Aufstieg in Reichweite (≤1 LIVE-Tag bis nächstes Level)."
+                                     : prio === 2 ? "Tier-Aufstieg in Reichweite (≤50 000 Diamanten bis nächste Stufe)."
+                                     : prio === 3 ? "Über persönlichem 3-Monats-Schnitt."
+                                     : c.trend_class === "fallend" ? "Aktuell unter persönlichem 3-Monats-Schnitt — meist strukturell durch fehlenden inkrementellen Bonus."
+                                     : c.meta_is_new_creator ? "Neuer Creator · Trend-Vergleich noch nicht aussagekräftig."
+                                     : "Stabil im Mittelfeld."}
+                                  </p>
+                                </div>
+
+                                {/* 4-Spalten-Detail-Grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                  {/* LIVE-Performance */}
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-2">LIVE-Tage</p>
+                                    <p className="text-cream font-medium text-sm">
+                                      {c.live_valid_days ?? "—"}
+                                      {expandedDetail.live_days_compare !== null && (
+                                        <span className="text-cream/45 text-xs ml-1">
+                                          vs. {expandedDetail.live_days_compare}
+                                        </span>
+                                      )}
+                                    </p>
+                                    {expandedDetail.live_days_compare_pct !== null && (
+                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_days_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                        {Number(expandedDetail.live_days_compare_pct) >= 0 ? "+" : ""}
+                                        {Number(expandedDetail.live_days_compare_pct).toFixed(1).replace(".", ",")} %
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-2">LIVE-Dauer</p>
+                                    <p className="text-cream font-medium text-sm">
+                                      {c.live_duration_seconds !== null
+                                        ? `${Math.floor(c.live_duration_seconds / 3600)}h ${Math.floor((c.live_duration_seconds % 3600) / 60)}m`
+                                        : "—"}
+                                    </p>
+                                    {expandedDetail.live_duration_compare_pct !== null && (
+                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_duration_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                        {Number(expandedDetail.live_duration_compare_pct) >= 0 ? "+" : ""}
+                                        {Number(expandedDetail.live_duration_compare_pct).toFixed(1).replace(".", ",")} %
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-2">Streams</p>
+                                    <p className="text-cream font-medium text-sm">
+                                      {c.live_streams_count ?? "—"}
+                                      {expandedDetail.live_streams_compare !== null && (
+                                        <span className="text-cream/45 text-xs ml-1">
+                                          vs. {expandedDetail.live_streams_compare}
+                                        </span>
+                                      )}
+                                    </p>
+                                    {expandedDetail.live_streams_compare_pct !== null && (
+                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_streams_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                        {Number(expandedDetail.live_streams_compare_pct) >= 0 ? "+" : ""}
+                                        {Number(expandedDetail.live_streams_compare_pct).toFixed(1).replace(".", ",")} %
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-2">Neue Follower</p>
+                                    <p className="text-cream font-medium text-sm">
+                                      {c.live_new_followers ?? "—"}
+                                      {expandedDetail.live_followers_compare !== null && (
+                                        <span className="text-cream/45 text-xs ml-1">
+                                          vs. {expandedDetail.live_followers_compare}
+                                        </span>
+                                      )}
+                                    </p>
+                                    {expandedDetail.live_followers_compare_pct !== null && (
+                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_followers_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                        {Number(expandedDetail.live_followers_compare_pct) >= 0 ? "+" : ""}
+                                        {Number(expandedDetail.live_followers_compare_pct).toFixed(1).replace(".", ",")} %
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Tier-Fortschritt Mini-Bar */}
+                                {expandedDetail.ist_tier_target !== null && c.live_current_diamonds !== null && (
+                                  <div className="mb-4">
+                                    <div className="flex items-baseline justify-between mb-1.5">
+                                      <p className="text-cream/55 text-[10px] uppercase tracking-[0.2em]">
+                                        Tier-Fortschritt · Stufe {c.ist_tier_level ?? "?"}
+                                      </p>
+                                      <p className="text-cream/85 text-xs">
+                                        {fmtBigInt(expandedDetail.ist_tier_progress)} / {fmtBigInt(expandedDetail.ist_tier_target)}
+                                      </p>
+                                    </div>
+                                    <div className="h-1 bg-champagne/10 rounded-none overflow-hidden">
+                                      <div
+                                        className="h-full bg-champagne/60"
+                                        style={{
+                                          width: `${Math.min(100, Math.max(0, ((Number(expandedDetail.ist_tier_progress) || 0) / Math.max(1, Number(expandedDetail.ist_tier_target) || 1)) * 100))}%`
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Bottom-Reihe · Activity / Forecast / Meta / Drift */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px]">
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-1">Aktivität · Bonusverhältnis</p>
+                                    <p className="text-cream/85">
+                                      Level {c.ist_activity_level ?? "?"}
+                                      {c.ist_activity_ratio !== null && ` · ${(Number(c.ist_activity_ratio) * 100).toFixed(1).replace(".", ",")} %`}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-1">TikTok-Forecast</p>
+                                    <p className="text-cream/85">
+                                      {fmtUsd(expandedDetail.ist_forecast_revenue_usd)} · {fmtBigInt(expandedDetail.ist_forecast_diamonds)}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-1">Letztes LIVE</p>
+                                    <p className="text-cream/85">
+                                      {expandedDetail.meta_last_live_at
+                                        ? new Date(expandedDetail.meta_last_live_at).toLocaleString("de-DE", {
+                                            day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                                          })
+                                        : "—"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-cream/45 text-[9px] uppercase tracking-[0.2em] mb-1">Vergleichszeitraum</p>
+                                    <p className="text-cream/85">
+                                      {expandedDetail.live_compare_start && expandedDetail.live_compare_end
+                                        ? `${new Date(expandedDetail.live_compare_start).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })} – ${new Date(expandedDetail.live_compare_end).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}`
+                                        : "—"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Drift-Indikator nur wenn relevant */}
+                                {c.drift_pct !== null && Number(c.drift_pct) > 1 && (
+                                  <p className="text-cream/40 text-[10px] mt-3 pt-3 border-t border-champagne/10">
+                                    Sanity-Check Drift TikTok ↔ ZOE-Summe: {Number(c.drift_pct).toFixed(2).replace(".", ",")} %
+                                  </p>
+                                )}
+
+                                {/* Footer-Aktion: Volle Detail-Page */}
+                                <div className="mt-4 pt-3 border-t border-champagne/15 flex justify-between items-baseline">
+                                  <a href={toggleHref} className="text-cream/55 hover:text-cream text-[10px] uppercase tracking-[0.2em]">
+                                    ← schließen
+                                  </a>
+                                  <a
+                                    href={`/portal/admin/umsatz/creator/${encodeURIComponent(handleLower)}`}
+                                    className="text-champagne/85 hover:text-champagne text-[10px] uppercase tracking-[0.2em]"
+                                  >
+                                    Monats-Historie öffnen →
+                                  </a>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          </>
                         );
                       })}
                     </tbody>
