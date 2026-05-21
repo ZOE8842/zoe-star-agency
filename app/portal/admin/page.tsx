@@ -7,6 +7,40 @@ import { PortalActivityBlock } from "@/components/dashboard/PortalActivityBlock"
 import { WebsiteAnalyticsBlock } from "@/components/dashboard/WebsiteAnalyticsBlock";
 import { loadLocale, greetingKey } from "@/lib/i18n";
 
+// V2-A · Format-Helpers für Top-Block (USD + BigInt)
+function fmtUsdNum(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "—";
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return `${v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+}
+function fmtBigIntNum(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "—";
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2).replace(".", ",")}M`;
+  if (v >= 1_000) return `${Math.round(v / 100) / 10}k`.replace(".", ",");
+  return v.toString();
+}
+
+// V2-A · Compute-Row-Subset für Top-Block
+interface AdminComputeRow {
+  tiktok_username: string;
+  ist_estimated_bonus_usd: number | null;
+  live_current_diamonds: number | null;
+  live_valid_days: number | null;
+  live_duration_seconds: number | null;
+  ist_tier_level: number | null;
+  ist_activity_level: number | null;
+  days_to_next_activity_level: number | null;
+  max_diamonds_to_next_tier: number | null;
+  trend_class: "wachsend" | "stabil" | "fallend" | "new_creator" | "unknown" | null;
+  meta_is_new_creator: boolean | null;
+  real_projected_bonus_usd_eom: number | null;
+  hist_3m_avg_total: number | null;
+  data_completeness: string;
+}
+
 // Greeting jetzt locale-aware - definiert innerhalb AdminPage via loadLocale().
 
 function startOfWeekIso(): string {
@@ -162,6 +196,21 @@ export default async function AdminPage() {
     };
   }
   const opsTotal = Object.values(ops).reduce((s, n) => s + n, 0);
+
+  // V2-A · Top-Block-Daten · v_creator_incentive_compute (admin-only, aktueller Monat)
+  const currentMonthIso = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  })();
+  let topBlockRows: AdminComputeRow[] = [];
+  if (isAdmin) {
+    const { data: cRows } = await supabase
+      .from("v_creator_incentive_compute")
+      .select("tiktok_username, ist_estimated_bonus_usd, live_current_diamonds, live_valid_days, live_duration_seconds, ist_tier_level, ist_activity_level, days_to_next_activity_level, max_diamonds_to_next_tier, trend_class, meta_is_new_creator, real_projected_bonus_usd_eom, hist_3m_avg_total, data_completeness")
+      .eq("period_month", currentMonthIso)
+      .eq("data_completeness", "sot_live");
+    topBlockRows = (cRows ?? []) as unknown as AdminComputeRow[];
+  }
 
   // INBOX-WAITING — Threads, deren letzte Message von Non-Admin an Admin ging
   let inboxWaiting = 0;
@@ -333,6 +382,190 @@ export default async function AdminPage() {
       />
 
       <main className="container-luxe py-12 md:py-20">
+        {/* ═══ V2-A · TOP-BLOCK · HEUTE WICHTIG + NETWORK OVERVIEW ═══ */}
+        {isAdmin && topBlockRows.length > 0 && (() => {
+          // ──────────────────────────────────────────────────────────
+          // Aggregate für Network-Overview
+          // ──────────────────────────────────────────────────────────
+          const sotLive = topBlockRows;
+          const networkIst = sotLive.reduce((s, c) => s + (Number(c.ist_estimated_bonus_usd) || 0), 0);
+          const networkReal = sotLive.reduce((s, c) => s + (Number(c.real_projected_bonus_usd_eom) || 0), 0);
+          const networkHistAvg = sotLive.reduce((s, c) => s + (Number(c.hist_3m_avg_total) || 0), 0);
+          const eligibleCount = sotLive.filter((c) =>
+            (c.live_valid_days ?? 0) >= 7 && (c.live_duration_seconds ?? 0) >= 15 * 3600
+          ).length;
+          const wachsendCount = sotLive.filter((c) => c.trend_class === "wachsend").length;
+          const fallendCount = sotLive.filter((c) => c.trend_class === "fallend").length;
+          // Goal-Ring: REAL_EOM gegen historischen 3M-Schnitt als implicit goal
+          const goalPct = networkHistAvg > 0
+            ? Math.min(120, Math.round((networkReal / networkHistAvg) * 100))
+            : null;
+
+          // ──────────────────────────────────────────────────────────
+          // Top-Prioritäten · operativ, max 7
+          // ──────────────────────────────────────────────────────────
+          type Prio = {
+            username: string;
+            primary: string;
+            secondary: string;
+            weight: number;
+            accent?: "warm" | "neutral";
+          };
+          const all: Prio[] = [];
+          for (const c of sotLive) {
+            const istZero = (Number(c.ist_estimated_bonus_usd) || 0) === 0;
+            const hasDiamonds = (Number(c.live_current_diamonds) || 0) > 100_000;
+            const days = c.live_valid_days ?? 0;
+            const secs = c.live_duration_seconds ?? 0;
+            const daysMissing = Math.max(0, 7 - days);
+            const hoursMissing = Math.ceil(Math.max(0, 15 * 3600 - secs) / 3600);
+            const eligible = daysMissing === 0 && hoursMissing === 0;
+            // 1 · Eligibility fast erreicht (höchste Prio)
+            if (istZero && hasDiamonds && !eligible && (daysMissing <= 1 && hoursMissing <= 1)) {
+              const parts: string[] = [];
+              if (daysMissing > 0) parts.push(`${daysMissing} LIVE-Tag${daysMissing === 1 ? "" : "e"}`);
+              if (hoursMissing > 0) parts.push(`${hoursMissing} LIVE-Stunde${hoursMissing === 1 ? "" : "n"}`);
+              all.push({
+                username: c.tiktok_username,
+                primary: `Nur noch ${parts.join(" + ")} bis Eligibility`,
+                secondary: `Stufe ${c.ist_tier_level ?? "?"} · TikTok-Forecast greift sofort`,
+                weight: 1,
+                accent: "warm",
+              });
+              continue;
+            }
+            // 2 · Aktivitätsaufstieg jetzt möglich
+            if (c.days_to_next_activity_level === 0 && (c.ist_activity_level ?? 0) < 5) {
+              all.push({
+                username: c.tiktok_username,
+                primary: `Aktivitätsaufstieg jetzt möglich`,
+                secondary: `Level ${c.ist_activity_level ?? "?"} → ${(c.ist_activity_level ?? 0) + 1}`,
+                weight: 2,
+                accent: "warm",
+              });
+              continue;
+            }
+            // 3 · Tier-Aufstieg ≤50k
+            const dm = c.max_diamonds_to_next_tier;
+            if (dm !== null && dm > 0 && dm <= 50_000) {
+              all.push({
+                username: c.tiktok_username,
+                primary: `Tier-Aufstieg in Reichweite`,
+                secondary: `${fmtBigIntNum(dm)} Diamanten bis Stufe ${(c.ist_tier_level ?? 0) + 1}`,
+                weight: 3,
+                accent: "warm",
+              });
+              continue;
+            }
+            // 4 · Wachsend über Schnitt
+            if (c.trend_class === "wachsend") {
+              all.push({
+                username: c.tiktok_username,
+                primary: `Wächst über persönlichem Schnitt`,
+                secondary: `Hochrechnung ${fmtUsdNum(c.real_projected_bonus_usd_eom)} bis Monatsende`,
+                weight: 4,
+                accent: "neutral",
+              });
+              continue;
+            }
+          }
+          const topPrios = all.sort((a, b) => a.weight - b.weight).slice(0, 7);
+
+          return (
+            <section className="mb-12 md:mb-14">
+              {/* HEUTE WICHTIG */}
+              <div className="mb-8">
+                <p className="eyebrow mb-4">Heute wichtig</p>
+                {topPrios.length === 0 ? (
+                  <div className="border border-champagne/15 px-5 py-6">
+                    <p className="text-cream/55 text-sm">
+                      Aktuell keine Hebel-Kandidaten · alle Creator stabil oder ohne unmittelbare Aufstiegs-Chance.
+                    </p>
+                  </div>
+                ) : (
+                  <ul className="space-y-2">
+                    {topPrios.map((p, i) => (
+                      <li
+                        key={p.username + i}
+                        className={`border px-4 py-3 md:px-5 md:py-4 flex items-center justify-between gap-4 transition-colors hover:bg-champagne/[0.04] ${
+                          p.accent === "warm"
+                            ? "border-champagne/40 bg-champagne/[0.04]"
+                            : "border-champagne/20"
+                        }`}
+                      >
+                        <Link
+                          href={`/portal/admin/umsatz/creator/${encodeURIComponent(p.username.toLowerCase())}`}
+                          className="min-w-0 flex-1"
+                        >
+                          <p className="text-cream text-sm font-medium leading-tight">
+                            <span className="text-champagne/80">@{p.username}</span>
+                            <span className="text-cream/55"> · </span>
+                            {p.primary}
+                          </p>
+                          <p className="text-cream/45 text-xs mt-1">{p.secondary}</p>
+                        </Link>
+                        <span className="text-champagne/60 text-[10px] uppercase tracking-[0.2em] shrink-0">
+                          öffnen →
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* NETWORK OVERVIEW · KPI + Goal-Ring */}
+              <div className="border border-champagne/25 bg-champagne/[0.02]">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 md:gap-8 p-5 md:p-7 items-center">
+                  {/* Linke Spalte · KPIs */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">
+                    <div>
+                      <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Netzwerkstand heute</p>
+                      <p className="font-display italic text-2xl md:text-3xl text-champagne leading-none">{fmtUsdNum(networkIst)}</p>
+                    </div>
+                    <div>
+                      <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Hochrechnung Monatsende</p>
+                      <p className="font-display italic text-2xl md:text-3xl text-cream leading-none">{fmtUsdNum(networkReal)}</p>
+                      <p className="text-cream/40 text-[10px] mt-1.5">bei gleichbleibender Pace</p>
+                    </div>
+                    <div>
+                      <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Aktive Creator</p>
+                      <p className="font-display italic text-2xl md:text-3xl text-cream leading-none">
+                        {sotLive.length}
+                        <span className="text-cream/40 text-base ml-2">/ {eligibleCount} eligible</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Über Schnitt</p>
+                      <p className="font-display italic text-xl md:text-2xl text-cream leading-none">{wachsendCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Unter Schnitt</p>
+                      <p className="font-display italic text-xl md:text-2xl text-cream/65 leading-none">{fallendCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Detail-Ansicht</p>
+                      <Link
+                        href="/portal/admin/umsatz"
+                        className="text-champagne text-sm hover:text-champagne-300 inline-flex items-baseline"
+                      >
+                        Umsatz öffnen →
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Rechte Spalte · Goal-Ring */}
+                  <div className="flex flex-col items-center md:items-end">
+                    <GoalRing pct={goalPct} />
+                    <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mt-3 text-center md:text-right max-w-[160px] leading-relaxed">
+                      Hochrechnung vs. 3-Monats-Schnitt
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
+
         {/* WELCOME — Admin/Manager mit Datum-Eyebrow */}
         <section className="mb-14 md:mb-20">
           <p className="eyebrow mb-5 md:mb-6">
@@ -713,6 +946,74 @@ function AdminTile({ href, title, hint }: { href: string; title: string; hint: s
       </h3>
       <p className="text-cream/45 text-xs leading-relaxed tracking-wide">{hint}</p>
     </Link>
+  );
+}
+
+// V2-A · Goal-Ring · pure SVG, Server-Component-fähig.
+// Visualisiert pct (0-120) als Champagne-Kreis. Bei null: leerer Ring.
+function GoalRing({ pct }: { pct: number | null }) {
+  const size = 124;
+  const stroke = 6;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const safePct = pct === null ? 0 : Math.max(0, Math.min(120, pct));
+  const dashOffset = circumference * (1 - Math.min(100, safePct) / 100);
+  // Bei >100% blendet ein zweiter Ring "über" den ersten ein (subtil)
+  const overflow = safePct > 100 ? safePct - 100 : 0;
+  const overflowOffset = circumference * (1 - overflow / 100);
+  return (
+    <div className="relative inline-block" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        {/* Hintergrund-Kreis */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="rgba(212,175,107,0.12)"
+          strokeWidth={stroke}
+        />
+        {/* Progress-Ring */}
+        {pct !== null && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(212,175,107,0.85)"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+          />
+        )}
+        {/* Overflow-Ring (>100%) */}
+        {overflow > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(245,231,206,0.75)"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={overflowOffset}
+          />
+        )}
+      </svg>
+      {/* Center-Label */}
+      <div className="absolute inset-0 flex items-center justify-center flex-col">
+        {pct === null ? (
+          <p className="text-cream/40 text-sm">—</p>
+        ) : (
+          <>
+            <p className="font-display italic text-cream text-2xl md:text-3xl leading-none">{Math.round(pct)}<span className="text-cream/50 text-lg">%</span></p>
+            <p className="text-cream/40 text-[9px] uppercase tracking-[0.2em] mt-1">vs. Schnitt</p>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
