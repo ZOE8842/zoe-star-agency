@@ -42,6 +42,20 @@ const RevenueRowSchema = z.object({
   legacy_incremental_usd:    z.number().finite().nonnegative().nullable().optional(),
   legacy_beginner_bonus_usd: z.number().finite().nonnegative().nullable().optional(),
   legacy_program_label:      z.string().nullable().optional(),
+  // C₁ Phase · Source-of-Truth + DOM-Detail-Felder (Migration 0057)
+  // R13: Level/Ratio kommen direkt aus DOM, defensive Ranges aus Master-Prompt-Tabellen.
+  estimated_bonus_usd:        z.number().finite().nonnegative().nullable().optional(),
+  tier_current_level:         z.number().int().min(1).max(10).nullable().optional(),
+  tier_progress_diamonds:     z.number().int().nonnegative().nullable().optional(),
+  tier_target_diamonds:       z.number().int().nonnegative().nullable().optional(),
+  tier_status:                z.string().max(200).nullable().optional(),
+  activity_current_level:     z.number().int().min(1).max(5).nullable().optional(),
+  activity_bonus_ratio:       z.number().min(0).max(0.05).nullable().optional(),
+  activity_status:            z.string().max(200).nullable().optional(),
+  incremental_status:         z.string().max(500).nullable().optional(),
+  match_diamonds:             z.number().int().nonnegative().nullable().optional(),
+  eligible_incentives_count:  z.number().int().min(0).max(20).nullable().optional(),
+  source_schema_version:      z.string().max(50).nullable().optional(),
   raw_snapshot:            z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -107,6 +121,41 @@ export async function POST(request: NextRequest) {
       { error: "invalid body schema", issues: parsed.error.issues.slice(0, 20) },
       { status: 400 },
     );
+  }
+
+  // C₁ Phase · Latente Drift-Detection (kein User-facing UI · R12)
+  // Wenn estimated_bonus_usd vom Scraper geliefert wird, prüfen wir ob
+  // unsere Summe activity+tier+incremental signifikant abweicht.
+  // > 5 % → Sentry-Warning (Notbremse, kein Push-Reject).
+  for (const r of parsed.data.rows) {
+    if (r.estimated_bonus_usd != null && r.estimated_bonus_usd > 0) {
+      const sum =
+        (r.activity_revenue_usd ?? 0) +
+        (r.tier_revenue_usd ?? 0) +
+        (r.incremental_revenue_usd ?? 0);
+      const driftUsd = Math.abs(r.estimated_bonus_usd - sum);
+      const driftPct = driftUsd / r.estimated_bonus_usd * 100;
+      if (driftPct > 5) {
+        // Codex-Review-Fix · LOW: normalized handle für konsistentes Filtering
+        const normalizedTag = (r.tiktok_username || "")
+          .replace(/\s+/g, "")
+          .toLowerCase()
+          .replace(/^@/, "");
+        Sentry.captureMessage(
+          `Revenue drift > 5% for ${r.tiktok_username}: ` +
+          `tiktok=${r.estimated_bonus_usd.toFixed(2)} zoe=${sum.toFixed(2)} ` +
+          `(${driftPct.toFixed(2)}%)`,
+          {
+            level: "warning",
+            tags: {
+              source: "backstage-revenue-drift",
+              period: r.period_month,
+              handle: normalizedTag,
+            },
+          },
+        );
+      }
+    }
   }
 
   try {

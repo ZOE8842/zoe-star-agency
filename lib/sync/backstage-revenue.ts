@@ -40,6 +40,23 @@ export interface RevenueRow {
   legacy_beginner_bonus_usd?: number | null;
   legacy_program_label?: string | null;
 
+  // C₁ Phase (Migration 0057) · Source-of-Truth + DOM-Detail-Felder
+  // R1: TikTok Source of Truth — estimated_bonus_usd ist der Anker-Wert,
+  // unsere Summe activity+tier+incr ist nur Derived/Sanity-Check.
+  // R13: Level/Stufe/Bonusverhältnis kommen direkt aus DOM, nie berechnet.
+  estimated_bonus_usd?: number | null;
+  tier_current_level?: number | null;
+  tier_progress_diamonds?: number | null;
+  tier_target_diamonds?: number | null;
+  tier_status?: string | null;
+  activity_current_level?: number | null;
+  activity_bonus_ratio?: number | null;
+  activity_status?: string | null;
+  incremental_status?: string | null;
+  match_diamonds?: number | null;
+  eligible_incentives_count?: number | null;
+  source_schema_version?: string | null;
+
   raw_snapshot?: Record<string, unknown>;
 }
 
@@ -193,6 +210,9 @@ export async function syncBackstageRevenue(
           : null;
 
     // V12.8 Phantom-Skip erweitert um Legacy-Felder
+    // Codex-Review-Fix · MEDIUM: C₁-Felder ergänzt damit Source-of-Truth-Rows
+    // (nur estimated_bonus_usd / tier_* / match_diamonds) nicht fälschlich
+    // als phantom verworfen werden.
     const hasAnyMeaningfulField =
       hasAnyNewComponent ||
       hasAnyLegacyComponent ||
@@ -200,7 +220,14 @@ export async function syncBackstageRevenue(
       clipFloat(row.forecast_revenue_usd) !== null ||
       clipFloat(row.forecast_bonus_usd) !== null ||
       clipInt(row.forecast_diamonds) !== null ||
-      clipFloat(row.last_period_total_usd) !== null;
+      clipFloat(row.last_period_total_usd) !== null ||
+      clipFloat(row.estimated_bonus_usd) !== null ||
+      clipInt(row.tier_current_level) !== null ||
+      clipInt(row.tier_progress_diamonds) !== null ||
+      clipInt(row.tier_target_diamonds) !== null ||
+      clipInt(row.activity_current_level) !== null ||
+      clipFloat(row.activity_bonus_ratio) !== null ||
+      clipInt(row.match_diamonds) !== null;
     if (!hasAnyMeaningfulField) {
       result.errors.push({
         handle: rawHandle, period,
@@ -210,12 +237,24 @@ export async function syncBackstageRevenue(
       continue;
     }
 
-    const { data: existing } = await sb
+    // Codex-Review-Fix · HIGH:
+    // .maybeSingle() error darf NIE ignoriert werden, sonst kann ein
+    // temporärer DB-Fehler Frozen-Historicals-Bypass auslösen
+    // (existing fälschlich null → period < currentMonth Check schlägt nicht an).
+    const { data: existing, error: existingErr } = await sb
       .from("creator_revenue_metrics")
       .select("id")
       .eq("tiktok_handle_normalized", normalized)
       .eq("period_month", period)
       .maybeSingle();
+    if (existingErr) {
+      result.errors.push({
+        handle: rawHandle, period,
+        reason: `existing-row lookup failed: ${existingErr.message}`,
+      });
+      result.skipped++;
+      continue;
+    }
 
     // FREEZE-Regel: vergangene Monate werden NUR EINMAL gespeichert.
     // Wenn period < currentMonth UND row existiert → skip (kein Overwrite).
@@ -251,6 +290,19 @@ export async function syncBackstageRevenue(
           legacy_incremental_usd:    clipFloat(row.legacy_incremental_usd),
           legacy_beginner_bonus_usd: clipFloat(row.legacy_beginner_bonus_usd),
           legacy_program_label:      row.legacy_program_label ?? null,
+          // C₁ Phase (Migration 0057) · Source-of-Truth + DOM-Details
+          estimated_bonus_usd:       clipFloat(row.estimated_bonus_usd),
+          tier_current_level:        clipInt(row.tier_current_level),
+          tier_progress_diamonds:    clipInt(row.tier_progress_diamonds),
+          tier_target_diamonds:      clipInt(row.tier_target_diamonds),
+          tier_status:               row.tier_status ?? null,
+          activity_current_level:    clipInt(row.activity_current_level),
+          activity_bonus_ratio:      clipFloat(row.activity_bonus_ratio),
+          activity_status:           row.activity_status ?? null,
+          incremental_status:        row.incremental_status ?? null,
+          match_diamonds:            clipInt(row.match_diamonds),
+          eligible_incentives_count: clipInt(row.eligible_incentives_count),
+          source_schema_version:     row.source_schema_version ?? null,
           source:                  "backstage",
           synced_at:               new Date().toISOString(),
           raw_snapshot:            row.raw_snapshot ?? null,
