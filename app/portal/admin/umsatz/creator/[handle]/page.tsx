@@ -9,6 +9,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { MobileBackWrapper } from "@/components/mobile/MobileBackWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -191,10 +192,12 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
         isAdmin={true}
         isManager={false}
       />
-      <main className="container-luxe py-10 md:py-16">
-        {/* Breadcrumb */}
+      <main className="container-luxe py-6 md:py-16">
+        {/* Mobile · großer Back-Button + Edge-Swipe (Wrapper) */}
+        <MobileBackWrapper fallbackHref="/portal/admin" label="Zurück zu Master">
+        {/* Desktop · klassisches kleines Breadcrumb */}
         <a href="/portal/admin"
-           className="text-cream/55 hover:text-champagne text-[10px] uppercase tracking-[0.25em] inline-block mb-4">
+           className="hidden md:inline-block text-cream/55 hover:text-champagne text-[10px] uppercase tracking-[0.25em] mb-4">
           ← Master
         </a>
 
@@ -515,6 +518,7 @@ python backstage_revenue_scraper.py --month 2026-04 --only ${normalized} --push-
             Vergangene Monate sind ansonsten frozen (Auto-Sync ueberschreibt sie nicht).
           </p>
         </div>
+        </MobileBackWrapper>
       </main>
     </>
   );
