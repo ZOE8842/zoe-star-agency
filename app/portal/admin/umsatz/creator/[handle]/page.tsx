@@ -87,108 +87,75 @@ function fmtUsd2(n: number | null | undefined): string {
   return `${v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 }
 
-// V2-A · Empfohlene Coaching-Nachricht · Admin-Vorschlag zum Copy-Paste
-// R15/R16: KEIN Auto-Send · NIE Diamond-/Umsatz-Pressure ·
-// Fokus auf LIVE-Konstanz, ≥61 Min, TikTok-Ausspielung.
+// V2-A · Empfohlene Coaching-Nachricht · momentum-based, KEIN State-Leak.
+//
+// HARTE REGELN (User-Korrektur):
+//  ✗ NIE Admin-Daten leaken (Eligibility, Threshold, "Voraussetzungen erfüllt",
+//    "TikTok aktualisiert", "Level X→Y", konkrete Stufen-Zahlen)
+//  ✗ NIE "fertig / erreicht / abgeschlossen" suggerieren
+//  ✗ NIE Diamond-/Umsatz-Pressure
+//  ✓ IMMER permanenter Progress · nächste Stufe · Momentum
+//  ✓ IMMER Fokus: regelmäßig LIVE · ≥61 Min · TikTok-Ausspielung
+//  ✓ IMMER Coaching-Ton, keine Dashboard-Sprache
+//
+// 4 Fälle:
+//  A · activityFehlt + tierFehlt   → beide pushen
+//  B · activityFehlt, tier ok      → Aktivität + Konstanz
+//  C · activity ok, tierFehlt      → Konstanz halten, Reichweite ausbauen
+//  D · beides stark                → Momentum erhalten
 function pickRecommendedMessage(args: {
-  istZero: boolean;
-  hasDiamonds: boolean;
-  isEligible: boolean;
-  daysMissing: number;
-  hoursMissing: number;
   activityLevel: number | null;
   daysToNextActivity: number | null;
   maxDiamondsToNextTier: number | null;
-  trendClass: string | null | undefined;
 }): string {
-  const a = args;
-  const lvl = a.activityLevel ?? 0;
-  const nextLvl = lvl + 1;
-  // 1. Eligibility fehlt
-  if (a.istZero && a.hasDiamonds && !a.isEligible) {
-    const fehlt: string[] = [];
-    if (a.daysMissing > 0) fehlt.push(`${a.daysMissing} gültige LIVE-Tag${a.daysMissing === 1 ? "" : "e"}`);
-    if (a.hoursMissing > 0) fehlt.push(`${a.hoursMissing} LIVE-Stunde${a.hoursMissing === 1 ? "" : "n"}`);
-    const fehltStr = fehlt.join(" + ");
+  const lvl = args.activityLevel ?? 0;
+  const dn = args.daysToNextActivity;
+  const dm = args.maxDiamondsToNextTier;
+
+  // activityFehlt · Aktivität nicht maximal (Level < 5 UND noch Tage nötig)
+  // dn === null wird konservativ als "fehlt" interpretiert (= unbekannt)
+  const activityFehlt = lvl < 5 && (dn === null || dn > 0);
+  // tierFehlt · noch Diamanten bis nächste Stufe
+  const tierFehlt = dm !== null && dm > 0;
+
+  // A · Beides fehlt
+  if (activityFehlt && tierFehlt) {
     return `Hey 😊
 
-aktuell rechnet TikTok bei dir noch keinen Bonus ein, weil die Mindestaktivität noch nicht erfüllt ist.
+versuch aktuell wirklich regelmäßig LIVE zu gehen und die LIVEs auch länger laufen zu lassen.
 
-Konkret fehlen dir: ${fehltStr}.
+TikTok pusht aktive Creator momentan deutlich stärker und genau dadurch baut man Reichweite, Momentum und langfristig stärkere Ausspielung auf.
 
-Versuch die nächsten Tage konstant live zu gehen. Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
-
-Sobald die Schwelle erreicht ist, springt der Bonus automatisch an.`;
+Wichtig:
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück 😊`;
   }
-  // 2. Activity-Schwelle erreicht (days = 0, level < 5)
-  if (a.daysToNextActivity === 0 && lvl < 5) {
+  // B · Nur Aktivität fehlt
+  if (activityFehlt) {
     return `Hey 😊
 
-du hast die Voraussetzungen für das nächste Activity-Level bereits erreicht. TikTok aktualisiert das meistens etwas verzögert.
+versuch aktuell wirklich regelmäßig LIVE zu gehen und die Konstanz reinzubekommen.
 
-Versuch jetzt auf jeden Fall weiter konstant LIVE zu gehen, weil TikTok aktive Creator aktuell deutlich stärker ausspielt.
+TikTok spielt aktive Creator momentan deutlich stärker aus und genau dadurch baut man langfristig Reichweite und Momentum auf.
 
-Wichtig: Ein gültiger LIVE-Tag zählt erst ab mindestens 61 Minuten LIVE am Stück.
-
-Genau diese Regelmäßigkeit ist aktuell eine wichtige Zielvorgabe von TikTok.`;
+Wichtig ist auch:
+Ein gültiger LIVE-Tag zählt erst ab mindestens 61 Minuten am Stück 😊`;
   }
-  // 3. Activity-Up nahe (1-3 Tage fehlen)
-  if (a.daysToNextActivity !== null && a.daysToNextActivity > 0 && a.daysToNextActivity <= 3 && lvl < 5) {
-    const n = a.daysToNextActivity;
+  // C · Nur Stufe fehlt
+  if (tierFehlt) {
     return `Hey 😊
 
-dir fehlt aktuell nur noch ${n} gültige${n === 1 ? "r" : ""} LIVE-Tag${n === 1 ? "" : "e"} bis Level ${nextLvl}.
+du bist aktuell auf einem guten Weg, jetzt heißt es weiter konstant bleiben damit TikTok dich weiter stark ausspielt.
 
-Versuch die nächsten Tage unbedingt konstant LIVE zu gehen, weil TikTok aktive Creator momentan deutlich stärker ausspielt.
-
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
-
-Genau diese Konstanz ist aktuell eine wichtige Vorgabe von TikTok.`;
+Gerade regelmäßige und längere LIVEs helfen extrem dabei, die nächste Stufe zu erreichen und langfristig mehr Momentum aufzubauen 😊`;
   }
-  // 4. Tier-Aufstieg in Reichweite (≤50k Diamonds)
-  if (a.maxDiamondsToNextTier !== null && a.maxDiamondsToNextTier > 0 && a.maxDiamondsToNextTier <= 50_000) {
-    return `Hey 😊
-
-du bist aktuell ziemlich nah an der nächsten Stufe.
-
-Was jetzt am meisten hilft: konstant LIVE gehen. TikTok spielt aktive Creator gerade deutlich besser aus, das wirkt sich automatisch auf alles aus.
-
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück — versuche die nächsten Tage diese Marke konsequent zu treffen.
-
-Diese Konstanz ist aktuell genau das, was TikTok belohnt.`;
-  }
-  // 5. Wachsend (über Schnitt)
-  if (a.trendClass === "wachsend") {
-    return `Hey 😊
-
-du liegst diesen Monat aktuell über deinem persönlichen 3-Monats-Schnitt — das ist stark.
-
-Was jetzt zählt: dranbleiben. TikTok spielt aktive Creator gerade deutlich besser aus, deshalb ist Konstanz aktuell der wichtigste Hebel.
-
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
-
-Wenn du das Tempo hältst, sollte der Monat sehr stark abschließen.`;
-  }
-  // 6. Fallend (unter Schnitt)
-  if (a.trendClass === "fallend") {
-    return `Hey 😊
-
-diesen Monat liegst du aktuell unter deinem persönlichen Schnitt — meistens kommt das einfach von weniger LIVE-Tagen.
-
-Versuch die nächsten Tage konstant LIVE zu gehen. TikTok spielt aktive Creator gerade deutlich stärker aus.
-
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
-
-Diese Konstanz ist aktuell genau das, was TikTok belohnt.`;
-  }
-  // 7. Default
+  // D · Beides stark
   return `Hey 😊
 
-du läufst gerade stabil mit. Was diesen Monat am meisten hilft: konstant LIVE gehen. TikTok bevorzugt aktuell stark aktive Creator.
+du bist aktuell wirklich stabil unterwegs 😊
 
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
+Versuch genau diese Regelmäßigkeit jetzt weiter beizubehalten, weil TikTok aktive Creator momentan deutlich stärker pusht.
 
-Diese Regelmäßigkeit ist aktuell ein wichtiger TikTok-Hebel.`;
+Gerade Konstanz sorgt langfristig dafür, dass man immer stärker ausgespielt wird und weiter wachsen kann.`;
 }
 
 // Pre-Maerz-Cutoff: User-Decision (Backstage hatte vorher andere Metriken).
@@ -502,15 +469,9 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
               </div>
               <pre className="text-cream/85 text-sm leading-relaxed whitespace-pre-wrap font-sans select-all bg-ink/40 border border-champagne/10 p-3 md:p-4">
 {pickRecommendedMessage({
-  istZero,
-  hasDiamonds: Number(summary?.live_current_diamonds ?? 0) > 100_000,
-  isEligible,
-  daysMissing,
-  hoursMissing,
   activityLevel: summary?.ist_activity_level ?? null,
   daysToNextActivity: compute?.days_to_next_activity_level ?? null,
   maxDiamondsToNextTier: compute?.max_diamonds_to_next_tier ?? null,
-  trendClass: compute?.trend_class ?? null,
 })}
               </pre>
               <p className="text-cream/40 text-[10px] mt-3 leading-relaxed">
