@@ -132,19 +132,17 @@ interface PageProps {
   searchParams: Promise<{ tab?: string; expand?: string }>;
 }
 
-// V1.4 · Detail-Row-Type · ergänzt aus v_creator_incentive_summary
+// V1.4 · Detail-Row-Type · ergänzt aus v_creator_incentive_summary.
+// HINWEIS: Die Summary-View hat KEINE *_pct-Spalten (nur absolute
+// Compare-Deltas). Prozente werden client-side berechnet.
 interface ExpandedDetail {
   tiktok_username: string;
   meta_last_live_at: string | null;
   live_diamonds_compare: number | null;
   live_days_compare: number | null;
-  live_days_compare_pct: number | null;
   live_duration_compare_sec: number | null;
-  live_duration_compare_pct: number | null;
   live_streams_compare: number | null;
-  live_streams_compare_pct: number | null;
   live_followers_compare: number | null;
-  live_followers_compare_pct: number | null;
   live_avg_watch: number | null;
   live_compare_start: string | null;
   live_compare_end: string | null;
@@ -155,6 +153,14 @@ interface ExpandedDetail {
   ist_forecast_diamonds: number | null;
   meta_mgmt_start: string | null;
   meta_mgmt_end: string | null;
+}
+
+// Helper · pct aus current + delta (compare = current - delta)
+function comparePct(current: number | null, delta: number | null): number | null {
+  if (current === null || delta === null) return null;
+  const before = current - delta;
+  if (!Number.isFinite(before) || before === 0) return null;
+  return Math.round((delta / before) * 1000) / 10;
 }
 
 export default async function AdminUmsatzPage({ searchParams }: PageProps) {
@@ -209,7 +215,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { data: expandedDetailRow } = (tab === "overview" && expandHandle)
     ? await db
         .from("v_creator_incentive_summary")
-        .select("tiktok_username, meta_last_live_at, live_diamonds_compare, live_days_compare, live_days_compare_pct, live_duration_compare_sec, live_duration_compare_pct, live_streams_compare, live_streams_compare_pct, live_followers_compare, live_followers_compare_pct, live_avg_watch, live_compare_start, live_compare_end, ist_tier_progress, ist_tier_target, ist_match_diamonds, ist_forecast_revenue_usd, ist_forecast_diamonds, meta_mgmt_start, meta_mgmt_end")
+        .select("tiktok_username, meta_last_live_at, live_diamonds_compare, live_days_compare, live_duration_compare_sec, live_streams_compare, live_followers_compare, live_avg_watch, live_compare_start, live_compare_end, ist_tier_progress, ist_tier_target, ist_match_diamonds, ist_forecast_revenue_usd, ist_forecast_diamonds, meta_mgmt_start, meta_mgmt_end")
         .eq("tiktok_handle_normalized", expandHandle)
         .eq("period_month", month)
         .maybeSingle()
@@ -956,12 +962,15 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                         </span>
                                       )}
                                     </p>
-                                    {expandedDetail.live_days_compare_pct !== null && (
-                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_days_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                        {Number(expandedDetail.live_days_compare_pct) >= 0 ? "+" : ""}
-                                        {Number(expandedDetail.live_days_compare_pct).toFixed(1).replace(".", ",")} %
-                                      </p>
-                                    )}
+                                    {(() => {
+                                      const p = comparePct(c.live_valid_days, expandedDetail.live_days_compare);
+                                      return p === null ? null : (
+                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                          {p >= 0 ? "+" : ""}
+                                          {p.toFixed(1).replace(".", ",")} %
+                                        </p>
+                                      );
+                                    })()}
                                   </div>
 
                                   <div>
@@ -971,12 +980,15 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                         ? `${Math.floor(c.live_duration_seconds / 3600)}h ${Math.floor((c.live_duration_seconds % 3600) / 60)}m`
                                         : "—"}
                                     </p>
-                                    {expandedDetail.live_duration_compare_pct !== null && (
-                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_duration_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                        {Number(expandedDetail.live_duration_compare_pct) >= 0 ? "+" : ""}
-                                        {Number(expandedDetail.live_duration_compare_pct).toFixed(1).replace(".", ",")} %
-                                      </p>
-                                    )}
+                                    {(() => {
+                                      const p = comparePct(c.live_duration_seconds, expandedDetail.live_duration_compare_sec);
+                                      return p === null ? null : (
+                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                          {p >= 0 ? "+" : ""}
+                                          {p.toFixed(1).replace(".", ",")} %
+                                        </p>
+                                      );
+                                    })()}
                                   </div>
 
                                   <div>
@@ -989,12 +1001,15 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                         </span>
                                       )}
                                     </p>
-                                    {expandedDetail.live_streams_compare_pct !== null && (
-                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_streams_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                        {Number(expandedDetail.live_streams_compare_pct) >= 0 ? "+" : ""}
-                                        {Number(expandedDetail.live_streams_compare_pct).toFixed(1).replace(".", ",")} %
-                                      </p>
-                                    )}
+                                    {(() => {
+                                      const p = comparePct(c.live_streams_count, expandedDetail.live_streams_compare);
+                                      return p === null ? null : (
+                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                          {p >= 0 ? "+" : ""}
+                                          {p.toFixed(1).replace(".", ",")} %
+                                        </p>
+                                      );
+                                    })()}
                                   </div>
 
                                   <div>
@@ -1007,12 +1022,15 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                         </span>
                                       )}
                                     </p>
-                                    {expandedDetail.live_followers_compare_pct !== null && (
-                                      <p className={`text-[10px] mt-0.5 ${Number(expandedDetail.live_followers_compare_pct) >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                        {Number(expandedDetail.live_followers_compare_pct) >= 0 ? "+" : ""}
-                                        {Number(expandedDetail.live_followers_compare_pct).toFixed(1).replace(".", ",")} %
-                                      </p>
-                                    )}
+                                    {(() => {
+                                      const p = comparePct(c.live_new_followers, expandedDetail.live_followers_compare);
+                                      return p === null ? null : (
+                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
+                                          {p >= 0 ? "+" : ""}
+                                          {p.toFixed(1).replace(".", ",")} %
+                                        </p>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
 
