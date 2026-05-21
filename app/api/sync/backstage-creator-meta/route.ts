@@ -33,7 +33,10 @@ const BackstageMetaRowSchema = z.object({
 
   is_new_creator: z.boolean().nullable().optional(),
   graduation_status_label: z.string().max(200).nullable().optional(),
-  last_live_at_observed: z.string().datetime().nullable().optional(),
+  // .datetime({ offset: true }) akzeptiert sowohl "Z" als auch "+HH:MM"
+  // Python's datetime.isoformat() mit timezone.utc liefert "+00:00",
+  // Zod's default .datetime() würde das mit "invalid_format" rejecten.
+  last_live_at_observed: z.string().datetime({ offset: true }).nullable().optional(),
 
   follower_count_snapshot: z.number().int().nonnegative().nullable().optional(),
   videos_count_snapshot: z.number().int().nonnegative().nullable().optional(),
