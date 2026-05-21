@@ -420,35 +420,34 @@ export default async function AdminPage() {
           </section>
         )}
 
-        {/* CRON-HEALTH — letzter Lauf pro Worker / Sync / Cleanup */}
-        {isAdmin && cronHealth.length > 0 && (
-          <section className="mb-12">
-            <div className="flex items-baseline justify-between mb-4">
-              <p className="eyebrow">{t("admin.cron_health_48h")}</p>
-              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-                {t("admin.cron_last_run")}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-              {cronHealth.map((h) => (
-                <CronTile key={h.label} {...h} />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* CRON-HEALTH — collapsed by default, glow wenn warn/fail */}
+        {isAdmin && cronHealth.length > 0 && (() => {
+          const failOrWarn = cronHealth.filter((h) => h.state === "fail" || h.state === "warn").length;
+          return (
+            <AdminSection
+              title="Synchronisierungs-Status"
+              hint="Letzter Lauf der Hintergrund-Worker · 48h"
+              badge={failOrWarn > 0 ? failOrWarn : null}
+              warn={failOrWarn > 0}
+            >
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                {cronHealth.map((h) => (
+                  <CronTile key={h.label} {...h} />
+                ))}
+              </div>
+            </AdminSection>
+          );
+        })()}
 
         {/* NEWS & INFOS — Birthdays, neue Creator, System-Hinweise */}
         <NewsFeed supabase={supabase} />
 
-        {/* KPI-Block — diese Woche */}
+        {/* KPI-Block — diese Woche · collapsed by default */}
         {isAdmin && (
-          <section className="mb-12">
-            <div className="flex items-baseline justify-between mb-4">
-              <p className="eyebrow">{t("admin.this_week")}</p>
-              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-                {t("admin.since_monday")}
-              </span>
-            </div>
+          <AdminSection
+            title="Diese Woche"
+            hint="Reviews · Push · Matches · Kosten · seit Montag"
+          >
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
               <KpiTile label="Reviews fertig" value={kpi.reviews_done.toString()} />
               <KpiTile label="Push bestaetigt" value={kpi.push_selected.toString()} />
@@ -466,7 +465,7 @@ export default async function AdminPage() {
                   : "—"}
               />
             </div>
-          </section>
+          </AdminSection>
         )}
 
         {/* QUICK ACTIONS */}
@@ -498,8 +497,13 @@ export default async function AdminPage() {
           </div>
         </section>
 
-        {/* ACTIVITY FEEDS */}
-        <section className={`grid ${isAdmin ? "md:grid-cols-2" : "md:grid-cols-1"} gap-6 mb-8`}>
+        {/* ACTIVITY FEEDS · collapsed by default */}
+        <AdminSection
+          title="Neue Creator & Einladungen"
+          hint={isAdmin ? "Signups · Invites · letzte 7 Tage" : "Signups · letzte 7 Tage"}
+          badge={recentSignups.length + (isAdmin ? recentInvites.length : 0) || null}
+        >
+        <div className={`grid ${isAdmin ? "md:grid-cols-2" : "md:grid-cols-1"} gap-6`}>
           {/* Recent Signups */}
           <div className="border border-champagne/15 p-6">
             <div className="flex items-center justify-between mb-4">
@@ -563,11 +567,17 @@ export default async function AdminPage() {
             )}
           </div>
           )}
-        </section>
+        </div>
+        </AdminSection>
 
-        {/* Recent Tickets (full-width) — Admin-only */}
+        {/* Recent Tickets (full-width) — Admin-only · collapsed by default */}
         {isAdmin && (
-        <section className="border border-champagne/15 p-6">
+        <AdminSection
+          title="Support-Anfragen"
+          hint="Letzte Tickets · offen · in Bearbeitung · erledigt"
+          badge={openTickets > 0 ? openTickets : null}
+          warn={openTickets > 0}
+        >
           <div className="flex items-center justify-between mb-4">
             <p className="eyebrow">{t("admin.recent_tickets")}</p>
             <Link href="/portal/support" className="text-champagne text-[10px] uppercase tracking-[0.2em] hover:text-champagne-300">{t("common.all_link")}</Link>
@@ -576,22 +586,22 @@ export default async function AdminPage() {
             <p className="editorial-empty">{t("admin.empty_tickets")}</p>
           ) : (
             <ul className="space-y-2">
-              {recentTickets.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 py-2 border-b border-champagne/5 last:border-b-0">
+              {recentTickets.map((tk) => (
+                <li key={tk.id} className="flex items-center gap-3 py-2 border-b border-champagne/5 last:border-b-0">
                   <span className={`text-[10px] uppercase tracking-[0.2em] shrink-0 px-2 py-0.5 border ${
-                    t.status === "open" ? "border-champagne text-champagne" :
-                    t.status === "in_progress" ? "border-cream/40 text-cream/60" :
+                    tk.status === "open" ? "border-champagne text-champagne" :
+                    tk.status === "in_progress" ? "border-cream/40 text-cream/60" :
                     "border-cream/20 text-cream/40"
-                  }`}>{t.status}</span>
-                  <p className="text-cream text-sm truncate flex-1">{t.subject}</p>
+                  }`}>{tk.status}</span>
+                  <p className="text-cream text-sm truncate flex-1">{tk.subject}</p>
                   <span className="text-cream/30 text-[10px] uppercase tracking-[0.15em] shrink-0">
-                    {new Date(t.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })}
+                    {new Date(tk.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "short" })}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </AdminSection>
         )}
       </main>
     </>
@@ -703,5 +713,58 @@ function AdminTile({ href, title, hint }: { href: string; title: string; hint: s
       </h3>
       <p className="text-cream/45 text-xs leading-relaxed tracking-wide">{hint}</p>
     </Link>
+  );
+}
+
+// Block C · Accordion-Wrapper für nicht-kritische Bereiche.
+// Native <details>/<summary> — kein JS, kein Client-State, kein Hydration-Cost.
+// Default collapsed. Wenn `badge` > 0: subtiler Champagne-Glow auf der Border.
+function AdminSection({
+  title, hint, badge, warn = false, defaultOpen = false, children,
+}: {
+  title: string;
+  hint?: string;
+  badge?: number | null;
+  warn?: boolean;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const hasSignal = (badge ?? 0) > 0;
+  const borderCls = warn && hasSignal
+    ? "border-red-400/40 bg-red-400/[0.03]"
+    : hasSignal
+    ? "border-champagne/35 bg-champagne/[0.03]"
+    : "border-champagne/15";
+  return (
+    <details
+      open={defaultOpen}
+      className={`group mb-4 border ${borderCls}`}
+    >
+      <summary className="list-none cursor-pointer px-5 py-4 flex items-baseline justify-between gap-4 hover:bg-champagne/[0.02]">
+        <div className="flex items-baseline gap-3 min-w-0 flex-1">
+          <span className="inline-block text-champagne/55 group-open:text-champagne transition-transform group-open:rotate-90 text-[11px] leading-none mt-1">
+            ▸
+          </span>
+          <div className="min-w-0">
+            <p className="text-cream/85 text-sm font-medium">{title}</p>
+            {hint && (
+              <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em] mt-0.5">{hint}</p>
+            )}
+          </div>
+        </div>
+        {hasSignal && (
+          <span className={`inline-flex items-center text-[10px] uppercase tracking-[0.2em] px-2 py-1 ${
+            warn
+              ? "border border-red-400/50 bg-red-400/[0.06] text-red-300/90"
+              : "border border-champagne/45 bg-champagne/[0.06] text-champagne"
+          }`}>
+            {badge}
+          </span>
+        )}
+      </summary>
+      <div className="px-5 pb-5 pt-1 border-t border-champagne/10">
+        {children}
+      </div>
+    </details>
   );
 }
