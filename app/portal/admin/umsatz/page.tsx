@@ -442,9 +442,40 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
 
         {/* ============= OVERVIEW-TAB (Phase B2 · Compute-View) ============= */}
         {tab === "overview" && (() => {
-          // V1.5 · Priority-Sort: 1 = höchste (Activity-Up jetzt), 2 = Tier-≤50k,
-          // 3 = wachsend, 4 = sonst. Innerhalb gleicher Prio: nach REAL_EOM DESC.
+          // V1.6 · Tier-Bonus-Eligibility (TikTok-Mindestanforderung)
+          //   ≥7 gültige LIVE-Tage UND ≥15h (54.000 s) LIVE-Dauer
+          // Wenn nicht erfüllt: TikTok zahlt $0 Tier-Bonus trotz vieler Diamonds.
+          const TIER_MIN_DAYS = 7;
+          const TIER_MIN_SECONDS = 15 * 3600;
+          const getEligibility = (c: ComputeRow) => {
+            const days = c.live_valid_days;
+            const secs = c.live_duration_seconds;
+            if (days === null || secs === null) {
+              return { eligible: false, daysMissing: 0, hoursMissing: 0, dataKnown: false };
+            }
+            const daysMissing = Math.max(0, TIER_MIN_DAYS - days);
+            const secsMissing = Math.max(0, TIER_MIN_SECONDS - secs);
+            const hoursMissing = Math.ceil(secsMissing / 3600);
+            return {
+              eligible: daysMissing === 0 && secsMissing === 0,
+              daysMissing,
+              hoursMissing,
+              dataKnown: true,
+            };
+          };
+
+          // V1.5 · Priority-Sort. Erweitert um Prio 0 = Eligibility nahe
+          // (≤1 Tag oder ≤1h fehlt — sehr operativ relevant, weil Bonus
+          // sonst gar nicht auszahlt).
           const computePriority = (c: ComputeRow): number => {
+            const elig = getEligibility(c);
+            // Prio 0: Eligibility fast erreicht UND aktuell noch $0
+            if (!elig.eligible && elig.dataKnown
+                && (elig.daysMissing <= 1 && elig.hoursMissing <= 1)
+                && (Number(c.ist_estimated_bonus_usd) || 0) === 0
+                && (Number(c.live_current_diamonds) || 0) > 100_000) {
+              return 0;
+            }
             const dn = c.days_to_next_activity_level;
             const dm = c.max_diamonds_to_next_tier;
             if (dn !== null && dn <= 1 && (c.ist_activity_level ?? 0) < 5) return 1;
@@ -739,9 +770,12 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                        : c.trend_class === "fallend"  ? "text-cream/50"
                                        : c.trend_class === "stabil"   ? "text-cream/75"
                                        : "text-cream/40";
-                        // V1.3 · Premium-Signal-System (Champagne-Spektrum, kein rot/grün)
+                        // V1.3+V1.6 · Premium-Signal-System (Champagne-Spektrum, kein rot/grün)
                         const prio = computePriority(c);
-                        const rowCls = prio === 1
+                        const elig = getEligibility(c);
+                        const rowCls = prio === 0
+                          ? "border-t border-champagne/40 bg-champagne/[0.08] hover:bg-champagne/[0.12]"
+                          : prio === 1
                           ? "border-t border-champagne/30 bg-champagne/[0.06] hover:bg-champagne/[0.10]"
                           : prio === 2
                           ? "border-t border-champagne/20 bg-champagne/[0.03] hover:bg-champagne/[0.07]"
@@ -751,11 +785,21 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                           ? "border-t border-champagne/8 opacity-75 hover:bg-champagne/[0.03] hover:opacity-100"
                           : "border-t border-champagne/10 hover:bg-champagne/[0.03]";
                         // Quick-Win-Hinweis · Priorität-Vorgriff (Phase B3 wird das ablösen)
-                        // Sammelt bis zu 2 fehlende Schritte (Activity + Tier sind orthogonal)
+                        // V1.6: Eligibility-Hinweis hat höchste Priorität wenn nicht eligible UND $0
                         const hints: string[] = [];
                         const dn = c.days_to_next_activity_level;
                         const dm = c.max_diamonds_to_next_tier;
-                        if (dn === 0 && (c.ist_activity_level ?? 0) < 5) {
+                        const istZero = (Number(c.ist_estimated_bonus_usd) || 0) === 0;
+                        const hasDiamonds = (Number(c.live_current_diamonds) || 0) > 100_000;
+
+                        if (!elig.eligible && elig.dataKnown && istZero && hasDiamonds) {
+                          const parts: string[] = [];
+                          if (elig.daysMissing > 0) parts.push(`${elig.daysMissing} LIVE-Tag${elig.daysMissing === 1 ? "" : "e"}`);
+                          if (elig.hoursMissing > 0) parts.push(`${elig.hoursMissing} LIVE-Stunde${elig.hoursMissing === 1 ? "" : "n"}`);
+                          hints.push(parts.length > 0
+                            ? `Eligibility: noch ${parts.join(" + ")}`
+                            : "Eligibility fehlt");
+                        } else if (dn === 0 && (c.ist_activity_level ?? 0) < 5) {
                           hints.push("Aktivitätsaufstieg jetzt möglich");
                         } else if (dn !== null && dn > 0 && dn <= 3 && (c.ist_activity_level ?? 0) < 5) {
                           hints.push(`noch ${dn} LIVE-Tag${dn === 1 ? "" : "e"}`);
@@ -792,7 +836,18 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                 <span>@{c.tiktok_username}</span>
                               </a>
                             </td>
-                            <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(c.ist_estimated_bonus_usd)}</td>
+                            <td className="px-3 py-3 text-right">
+                              {istZero && hasDiamonds && !elig.eligible && elig.dataKnown ? (
+                                <div className="flex flex-col items-end leading-tight">
+                                  <span className="text-cream/85 font-medium">{fmtUsd(c.ist_estimated_bonus_usd)}</span>
+                                  <span className="text-[9px] uppercase tracking-[0.18em] text-champagne/70 mt-0.5">
+                                    Eligibility fehlt
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-champagne font-medium">{fmtUsd(c.ist_estimated_bonus_usd)}</span>
+                              )}
+                            </td>
                             <td className="px-3 py-3 text-right text-cream/85">{fmtUsd(c.real_projected_bonus_usd_eom)}</td>
                             <td className={`px-3 py-3 text-center text-[11px] ${trendCls}`}>{trendDe}</td>
                             <td className="px-3 py-3 text-center text-cream/75">{c.ist_tier_level ?? "—"}</td>
@@ -817,11 +872,41 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                           {isExpanded && expandedDetail && (
                             <tr key={c.tiktok_username + "-detail"} className="border-t border-champagne/30 bg-ink/40">
                               <td className="px-3 py-4" colSpan={10}>
+                                {/* V1.6 · Eligibility-Block (nur wenn nicht teilnahmeberechtigt UND $0) */}
+                                {!elig.eligible && elig.dataKnown && istZero && hasDiamonds && (
+                                  <div className="mb-4 pb-3 border-b border-champagne/15 bg-champagne/[0.04] -mx-3 -mt-4 px-3 pt-3">
+                                    <div className="flex items-baseline justify-between mb-2">
+                                      <p className="text-champagne text-xs font-medium uppercase tracking-[0.18em]">
+                                        ▴ Noch nicht teilnahmeberechtigt
+                                      </p>
+                                      {expandedDetail.ist_forecast_revenue_usd !== null && Number(expandedDetail.ist_forecast_revenue_usd) > 0 && (
+                                        <p className="text-cream/55 text-[10px]">
+                                          Forecast bei Eligibility: <span className="text-champagne/85">{fmtUsd(expandedDetail.ist_forecast_revenue_usd)}</span>
+                                        </p>
+                                      )}
+                                    </div>
+                                    <p className="text-cream/80 text-sm leading-relaxed">
+                                      Aktuell $0 Tier-Bonus, weil TikTok die Mindestaktivität noch nicht erfüllt sieht.
+                                      Es fehlen noch
+                                      {elig.daysMissing > 0 && (
+                                        <span className="text-champagne/85"> {elig.daysMissing} gültige LIVE-Tag{elig.daysMissing === 1 ? "" : "e"}</span>
+                                      )}
+                                      {elig.daysMissing > 0 && elig.hoursMissing > 0 && " und "}
+                                      {elig.hoursMissing > 0 && (
+                                        <span className="text-champagne/85">{elig.hoursMissing} LIVE-Stunde{elig.hoursMissing === 1 ? "" : "n"}</span>
+                                      )}
+                                      {" "}(Mindestanforderung: 7 LIVE-Tage + 15h LIVE-Dauer).
+                                      Sobald das erreicht ist, springt der Tier-Bonus auf den TikTok-Forecast.
+                                    </p>
+                                  </div>
+                                )}
+
                                 {/* Begründungs-Block (oberhalb) */}
                                 <div className="mb-4 pb-3 border-b border-champagne/15">
                                   <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Warum diese Position</p>
                                   <p className="text-cream/85 text-sm">
-                                    {prio === 1 ? "Aktivitäts-Aufstieg in Reichweite (≤1 LIVE-Tag bis nächstes Level)."
+                                    {prio === 0 ? "Eligibility fast erreicht — Bonus springt sobald LIVE-Mindestaktivität erfüllt ist."
+                                     : prio === 1 ? "Aktivitäts-Aufstieg in Reichweite (≤1 LIVE-Tag bis nächstes Level)."
                                      : prio === 2 ? "Tier-Aufstieg in Reichweite (≤50 000 Diamanten bis nächste Stufe)."
                                      : prio === 3 ? "Über persönlichem 3-Monats-Schnitt."
                                      : c.trend_class === "fallend" ? "Aktuell unter persönlichem 3-Monats-Schnitt — meist strukturell durch fehlenden inkrementellen Bonus."
