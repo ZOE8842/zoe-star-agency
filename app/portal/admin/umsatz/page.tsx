@@ -876,11 +876,30 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                             </td>
                             <td className="px-3 py-3 text-cream/75 text-xs">{hint}</td>
                           </tr>
-                          {isExpanded && expandedDetail && (
+                          {isExpanded && (
                             <tr key={c.tiktok_username + "-detail"} className="border-t border-champagne/30 bg-ink/40">
                               <td className="px-3 py-4" colSpan={10}>
+                                {/* V2-A Diagnose-Fallback wenn Detail-Query null lieferte */}
+                                {!expandedDetail && (
+                                  <div className="mb-4 pb-3 border-b border-champagne/15 bg-champagne/[0.03] -mx-3 -mt-4 px-3 pt-3">
+                                    <p className="text-champagne/85 text-xs font-medium uppercase tracking-[0.18em] mb-1.5">
+                                      Detail-Daten konnten nicht geladen werden
+                                    </p>
+                                    <p className="text-cream/70 text-xs leading-relaxed mb-2">
+                                      Diese Zeile ist aufgeklappt, aber die ergänzenden Felder
+                                      (LIVE-Compare, Forecast, Tier-Progress) wurden vom Server nicht geliefert.
+                                    </p>
+                                    <p className="text-cream/45 text-[10px] font-mono">
+                                      expand={String(expandHandle)} ·
+                                      row={String(handleKey)} ·
+                                      period_month={String(month)} ·
+                                      tiktok_username={String(c.tiktok_username)}
+                                    </p>
+                                  </div>
+                                )}
+
                                 {/* V1.6 · Eligibility-Block (nur wenn nicht teilnahmeberechtigt UND $0) */}
-                                {!elig.eligible && elig.dataKnown && istZero && hasDiamonds && (
+                                {!elig.eligible && elig.dataKnown && istZero && hasDiamonds && expandedDetail && (
                                   <div className="mb-4 pb-3 border-b border-champagne/15 bg-champagne/[0.04] -mx-3 -mt-4 px-3 pt-3">
                                     <div className="flex items-baseline justify-between mb-2">
                                       <p className="text-champagne text-xs font-medium uppercase tracking-[0.18em]">
@@ -908,6 +927,8 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                   </div>
                                 )}
 
+                                {/* Detail-Block · nur wenn DB-Query Daten lieferte */}
+                                {expandedDetail && (<>
                                 {/* Begründungs-Block (oberhalb) */}
                                 <div className="mb-4 pb-3 border-b border-champagne/15">
                                   <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Warum diese Position</p>
@@ -1071,6 +1092,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                     Monats-Historie öffnen →
                                   </a>
                                 </div>
+                                </>)}
                               </td>
                             </tr>
                           )}
