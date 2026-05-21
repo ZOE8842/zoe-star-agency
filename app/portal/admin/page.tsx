@@ -25,6 +25,7 @@ function fmtBigIntNum(n: number | null | undefined): string {
 
 // V2-A · Compute-Row-Subset für Top-Block
 interface AdminComputeRow {
+  tiktok_handle_normalized: string;
   tiktok_username: string;
   ist_estimated_bonus_usd: number | null;
   live_current_diamonds: number | null;
@@ -206,7 +207,7 @@ export default async function AdminPage() {
   if (isAdmin) {
     const { data: cRows } = await supabase
       .from("v_creator_incentive_compute")
-      .select("tiktok_username, ist_estimated_bonus_usd, live_current_diamonds, live_valid_days, live_duration_seconds, ist_tier_level, ist_activity_level, days_to_next_activity_level, max_diamonds_to_next_tier, trend_class, meta_is_new_creator, real_projected_bonus_usd_eom, hist_3m_avg_total, data_completeness")
+      .select("tiktok_handle_normalized, tiktok_username, ist_estimated_bonus_usd, live_current_diamonds, live_valid_days, live_duration_seconds, ist_tier_level, ist_activity_level, days_to_next_activity_level, max_diamonds_to_next_tier, trend_class, meta_is_new_creator, real_projected_bonus_usd_eom, hist_3m_avg_total, data_completeness")
       .eq("period_month", currentMonthIso)
       .eq("data_completeness", "sot_live");
     topBlockRows = (cRows ?? []) as unknown as AdminComputeRow[];
@@ -405,7 +406,8 @@ export default async function AdminPage() {
           // Top-Prioritäten · 3-Zeilen-Format · operativ konkret
           // ──────────────────────────────────────────────────────────
           type Prio = {
-            username: string;
+            handle: string;    // DB-PK · für URL/Anchor (eindeutig, kanonisch)
+            username: string;  // Display · für Z1-Anzeige
             reason: string;    // Z1 · Hauptgrund kurz
             missing: string;   // Z2 · konkrete Lücke
             benefit: string;   // Z3 · Nutzen / nächster Schritt
@@ -414,6 +416,7 @@ export default async function AdminPage() {
           };
           const all: Prio[] = [];
           for (const c of sotLive) {
+            const handlePk = c.tiktok_handle_normalized;
             const istZero = (Number(c.ist_estimated_bonus_usd) || 0) === 0;
             const hasDiamonds = (Number(c.live_current_diamonds) || 0) > 100_000;
             const days = c.live_valid_days ?? 0;
@@ -428,6 +431,7 @@ export default async function AdminPage() {
               if (daysMissing > 0) parts.push(`${daysMissing} LIVE-Tag${daysMissing === 1 ? "" : "e"}`);
               if (hoursMissing > 0) parts.push(`${hoursMissing} LIVE-Stunde${hoursMissing === 1 ? "" : "n"}`);
               all.push({
+                handle: handlePk,
                 username: c.tiktok_username,
                 reason: "Eligibility fehlt",
                 missing: `Noch ${parts.join(" + ")}`,
@@ -442,6 +446,7 @@ export default async function AdminPage() {
             if (dn !== null && dn <= 1 && (c.ist_activity_level ?? 0) < 5) {
               const next = (c.ist_activity_level ?? 0) + 1;
               all.push({
+                handle: handlePk,
                 username: c.tiktok_username,
                 reason: "Activity-Level möglich",
                 missing: dn === 0
@@ -457,6 +462,7 @@ export default async function AdminPage() {
             const dm = c.max_diamonds_to_next_tier;
             if (dm !== null && dm > 0 && dm <= 50_000) {
               all.push({
+                handle: handlePk,
                 username: c.tiktok_username,
                 reason: "Tier-Aufstieg nah",
                 missing: `Noch ${fmtBigIntNum(dm)} Diamanten`,
@@ -469,6 +475,7 @@ export default async function AdminPage() {
             // 4 · Wachsend über persönlichem Schnitt
             if (c.trend_class === "wachsend") {
               all.push({
+                handle: handlePk,
                 username: c.tiktok_username,
                 reason: "Wächst über Schnitt",
                 missing: `Aktuell ${fmtUsdNum(c.ist_estimated_bonus_usd)}`,
@@ -505,12 +512,10 @@ export default async function AdminPage() {
                   </p>
                 ) : (
                   <ul className="space-y-2">
-                    {topPrios.map((p, i) => {
-                      const handle = p.username.toLowerCase();
-                      return (
-                        <li key={p.username + i}>
+                    {topPrios.map((p, i) => (
+                      <li key={p.handle + i}>
                           <Link
-                            href={`/portal/admin/umsatz?tab=overview&expand=${encodeURIComponent(handle)}#creator-${encodeURIComponent(handle)}`}
+                            href={`/portal/admin/umsatz?tab=overview&expand=${encodeURIComponent(p.handle)}#creator-${encodeURIComponent(p.handle)}`}
                             className={`flex items-center justify-between gap-4 border px-4 py-3 md:px-5 md:py-4 transition-colors hover:bg-champagne/[0.04] active:opacity-80 ${
                               p.accent === "warm"
                                 ? "border-champagne/40 bg-champagne/[0.04]"
@@ -538,8 +543,7 @@ export default async function AdminPage() {
                             </span>
                           </Link>
                         </li>
-                      );
-                    })}
+                    ))}
                   </ul>
                 )}
               </AdminSection>

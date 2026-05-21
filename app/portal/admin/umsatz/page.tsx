@@ -15,6 +15,7 @@ type SubTab = "overview" | "current" | "forecast" | "missing" | "creator";
 
 // Phase B2 · Compute-View-Row · v_creator_incentive_compute
 interface ComputeRow {
+  tiktok_handle_normalized: string;
   tiktok_username: string;
   ist_estimated_bonus_usd: number | null;
   ist_activity_usd: number | null;
@@ -196,7 +197,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { data: computeRows } = (tab === "overview" || tab === "creator")
     ? await db
         .from("v_creator_incentive_compute")
-        .select("tiktok_username, ist_estimated_bonus_usd, ist_activity_usd, ist_tier_usd, ist_incremental_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_status, ist_activity_status, ist_incremental_status, live_current_diamonds, live_valid_days, live_duration_seconds, live_streams_count, live_new_followers, data_completeness, drift_pct, meta_invitation_type, meta_is_new_creator, month_day, month_days_total, month_days_remaining, real_projected_bonus_usd_eom, real_projected_diamonds_eom, max_diamonds_to_next_tier, days_to_next_activity_level, hist_3m_avg_total, hist_3m_count, trend_class")
+        .select("tiktok_handle_normalized, tiktok_username, ist_estimated_bonus_usd, ist_activity_usd, ist_tier_usd, ist_incremental_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_status, ist_activity_status, ist_incremental_status, live_current_diamonds, live_valid_days, live_duration_seconds, live_streams_count, live_new_followers, data_completeness, drift_pct, meta_invitation_type, meta_is_new_creator, month_day, month_days_total, month_days_remaining, real_projected_bonus_usd_eom, real_projected_diamonds_eom, max_diamonds_to_next_tier, days_to_next_activity_level, hist_3m_avg_total, hist_3m_count, trend_class")
         .eq("period_month", month)
         .order("ist_estimated_bonus_usd", { ascending: false, nullsFirst: false })
     : { data: [] };
@@ -815,12 +816,14 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                         }
                         const hint = hints.length === 0 ? "—" : hints.join(" · ");
 
-                        const handleLower = c.tiktok_username.toLowerCase();
-                        const isExpanded = expandHandle === handleLower;
-                        // Toggle-URL: wenn aktuell expanded → expand wegnehmen, sonst auf diesen Handle setzen
+                        // V2-A · Handle-Konsistenz: DB-PK tiktok_handle_normalized als
+                        // einzige kanonische Quelle (für URL, Anchor, isExpanded-Match).
+                        const handleKey = c.tiktok_handle_normalized;
+                        const handleLower = handleKey;
+                        const isExpanded = expandHandle === handleKey;
                         const toggleHref = isExpanded
                           ? `?tab=overview`
-                          : `?tab=overview&expand=${encodeURIComponent(handleLower)}`;
+                          : `?tab=overview&expand=${encodeURIComponent(handleKey)}`;
                         return (
                           <>
                           <tr
