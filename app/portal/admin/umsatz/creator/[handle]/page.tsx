@@ -87,6 +87,110 @@ function fmtUsd2(n: number | null | undefined): string {
   return `${v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 }
 
+// V2-A · Empfohlene Coaching-Nachricht · Admin-Vorschlag zum Copy-Paste
+// R15/R16: KEIN Auto-Send · NIE Diamond-/Umsatz-Pressure ·
+// Fokus auf LIVE-Konstanz, ≥61 Min, TikTok-Ausspielung.
+function pickRecommendedMessage(args: {
+  istZero: boolean;
+  hasDiamonds: boolean;
+  isEligible: boolean;
+  daysMissing: number;
+  hoursMissing: number;
+  activityLevel: number | null;
+  daysToNextActivity: number | null;
+  maxDiamondsToNextTier: number | null;
+  trendClass: string | null | undefined;
+}): string {
+  const a = args;
+  const lvl = a.activityLevel ?? 0;
+  const nextLvl = lvl + 1;
+  // 1. Eligibility fehlt
+  if (a.istZero && a.hasDiamonds && !a.isEligible) {
+    const fehlt: string[] = [];
+    if (a.daysMissing > 0) fehlt.push(`${a.daysMissing} gültige LIVE-Tag${a.daysMissing === 1 ? "" : "e"}`);
+    if (a.hoursMissing > 0) fehlt.push(`${a.hoursMissing} LIVE-Stunde${a.hoursMissing === 1 ? "" : "n"}`);
+    const fehltStr = fehlt.join(" + ");
+    return `Hey 😊
+
+aktuell rechnet TikTok bei dir noch keinen Bonus ein, weil die Mindestaktivität noch nicht erfüllt ist.
+
+Konkret fehlen dir: ${fehltStr}.
+
+Versuch die nächsten Tage konstant live zu gehen. Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
+
+Sobald die Schwelle erreicht ist, springt der Bonus automatisch an.`;
+  }
+  // 2. Activity-Schwelle erreicht (days = 0, level < 5)
+  if (a.daysToNextActivity === 0 && lvl < 5) {
+    return `Hey 😊
+
+du hast die Voraussetzungen für das nächste Activity-Level bereits erreicht. TikTok aktualisiert das meistens etwas verzögert.
+
+Versuch jetzt auf jeden Fall weiter konstant LIVE zu gehen, weil TikTok aktive Creator aktuell deutlich stärker ausspielt.
+
+Wichtig: Ein gültiger LIVE-Tag zählt erst ab mindestens 61 Minuten LIVE am Stück.
+
+Genau diese Regelmäßigkeit ist aktuell eine wichtige Zielvorgabe von TikTok.`;
+  }
+  // 3. Activity-Up nahe (1-3 Tage fehlen)
+  if (a.daysToNextActivity !== null && a.daysToNextActivity > 0 && a.daysToNextActivity <= 3 && lvl < 5) {
+    const n = a.daysToNextActivity;
+    return `Hey 😊
+
+dir fehlt aktuell nur noch ${n} gültige${n === 1 ? "r" : ""} LIVE-Tag${n === 1 ? "" : "e"} bis Level ${nextLvl}.
+
+Versuch die nächsten Tage unbedingt konstant LIVE zu gehen, weil TikTok aktive Creator momentan deutlich stärker ausspielt.
+
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
+
+Genau diese Konstanz ist aktuell eine wichtige Vorgabe von TikTok.`;
+  }
+  // 4. Tier-Aufstieg in Reichweite (≤50k Diamonds)
+  if (a.maxDiamondsToNextTier !== null && a.maxDiamondsToNextTier > 0 && a.maxDiamondsToNextTier <= 50_000) {
+    return `Hey 😊
+
+du bist aktuell ziemlich nah an der nächsten Stufe.
+
+Was jetzt am meisten hilft: konstant LIVE gehen. TikTok spielt aktive Creator gerade deutlich besser aus, das wirkt sich automatisch auf alles aus.
+
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück — versuche die nächsten Tage diese Marke konsequent zu treffen.
+
+Diese Konstanz ist aktuell genau das, was TikTok belohnt.`;
+  }
+  // 5. Wachsend (über Schnitt)
+  if (a.trendClass === "wachsend") {
+    return `Hey 😊
+
+du liegst diesen Monat aktuell über deinem persönlichen 3-Monats-Schnitt — das ist stark.
+
+Was jetzt zählt: dranbleiben. TikTok spielt aktive Creator gerade deutlich besser aus, deshalb ist Konstanz aktuell der wichtigste Hebel.
+
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
+
+Wenn du das Tempo hältst, sollte der Monat sehr stark abschließen.`;
+  }
+  // 6. Fallend (unter Schnitt)
+  if (a.trendClass === "fallend") {
+    return `Hey 😊
+
+diesen Monat liegst du aktuell unter deinem persönlichen Schnitt — meistens kommt das einfach von weniger LIVE-Tagen.
+
+Versuch die nächsten Tage konstant LIVE zu gehen. TikTok spielt aktive Creator gerade deutlich stärker aus.
+
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
+
+Diese Konstanz ist aktuell genau das, was TikTok belohnt.`;
+  }
+  // 7. Default
+  return `Hey 😊
+
+du läufst gerade stabil mit. Was diesen Monat am meisten hilft: konstant LIVE gehen. TikTok bevorzugt aktuell stark aktive Creator.
+
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück.
+
+Diese Regelmäßigkeit ist aktuell ein wichtiger TikTok-Hebel.`;
+}
+
 // Pre-Maerz-Cutoff: User-Decision (Backstage hatte vorher andere Metriken).
 const NEW_METRICS_CUTOFF = "2026-03-01";
 
@@ -365,7 +469,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
 
             {/* Trend */}
             {compute?.trend_class && (
-              <div className="border border-champagne/15 p-4 md:p-5 mb-8">
+              <div className="border border-champagne/15 p-4 md:p-5 mb-3">
                 <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Trend vs. 3-Monats-Schnitt</p>
                 <p className={`text-base font-medium ${
                   compute.trend_class === "wachsend" ? "text-emerald-400/85"
@@ -385,6 +489,35 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 )}
               </div>
             )}
+
+            {/* V2-A · Empfohlene Nachricht (Admin-Vorschlag, KEIN Auto-Send · R15/R16) */}
+            <div className="border border-champagne/30 bg-champagne/[0.03] p-4 md:p-5 mb-8">
+              <div className="flex items-baseline justify-between mb-3">
+                <p className="text-champagne/85 text-[10px] uppercase tracking-[0.22em]">
+                  ✍ Empfohlene Nachricht
+                </p>
+                <p className="text-cream/35 text-[9px] uppercase tracking-[0.18em]">
+                  Vorschlag · zum Kopieren
+                </p>
+              </div>
+              <pre className="text-cream/85 text-sm leading-relaxed whitespace-pre-wrap font-sans select-all bg-ink/40 border border-champagne/10 p-3 md:p-4">
+{pickRecommendedMessage({
+  istZero,
+  hasDiamonds: Number(summary?.live_current_diamonds ?? 0) > 100_000,
+  isEligible,
+  daysMissing,
+  hoursMissing,
+  activityLevel: summary?.ist_activity_level ?? null,
+  daysToNextActivity: compute?.days_to_next_activity_level ?? null,
+  maxDiamondsToNextTier: compute?.max_diamonds_to_next_tier ?? null,
+  trendClass: compute?.trend_class ?? null,
+})}
+              </pre>
+              <p className="text-cream/40 text-[10px] mt-3 leading-relaxed">
+                Admin-Vorschlag · auf Basis aktueller TikTok-Daten generiert. NICHT automatisch
+                verschickt · vor Versand prüfen + anpassen.
+              </p>
+            </div>
           </>
         )}
 
@@ -393,7 +526,19 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
             <p className="text-cream/55">Noch keine Umsatz-Daten fuer diesen Creator.</p>
           </div>
         ) : (
-          <>
+          <details className="group border border-champagne/15 mb-4">
+            <summary className="list-none cursor-pointer px-4 py-3 md:px-5 md:py-4 flex items-baseline justify-between gap-4 hover:bg-champagne/[0.02]">
+              <div className="flex items-baseline gap-3">
+                <span className="inline-block text-champagne/55 group-open:text-champagne transition-transform group-open:rotate-90 text-[11px] leading-none mt-1">▸</span>
+                <div>
+                  <p className="text-cream/85 text-sm font-medium">Monats-Historie · Revenue-Details</p>
+                  <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em] mt-0.5">
+                    {rows.length} Monate · Stat-Cards + Tabelle + Legacy-Daten
+                  </p>
+                </div>
+              </div>
+            </summary>
+            <div className="px-4 pb-5 pt-1 md:px-5 border-t border-champagne/10">
             {/* ============= Stat-Cards · Reihenfolge: Gesamt → Forecast → aktueller Monat ============= */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
               <StatCard label="Gesamt Umsatz" value={fmtUsd(sumTotal)} highlight />
@@ -494,15 +639,22 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 </tbody>
               </table>
             </div>
-          </>
+            </div>
+          </details>
         )}
 
-        {/* HISTORIE-NACHLADE-WORKFLOW · Phase 4
-            Webapp (Vercel) kann nicht direkt Workstation-Scraper triggern
-            (zwei getrennte Maschinen, keine API zwischen ihnen).
-            Pragmatisch: kopierfertiger CLI-Befehl + Workflow-Hinweis.
-            User triggert auf Workstation manuell. */}
-        <div className="mt-8 border border-champagne/20 p-5">
+        {/* HISTORIE-NACHLADE-WORKFLOW · collapsed by default */}
+        <details className="group border border-champagne/15 mb-4">
+          <summary className="list-none cursor-pointer px-4 py-3 md:px-5 md:py-4 flex items-baseline gap-3 hover:bg-champagne/[0.02]">
+            <span className="inline-block text-champagne/55 group-open:text-champagne transition-transform group-open:rotate-90 text-[11px] leading-none mt-1">▸</span>
+            <div>
+              <p className="text-cream/85 text-sm font-medium">Historie nachladen</p>
+              <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em] mt-0.5">
+                CLI-Befehl für ältere Monate · manuelle Ausführung
+              </p>
+            </div>
+          </summary>
+          <div className="px-4 pb-5 pt-1 md:px-5 border-t border-champagne/10">
           <p className="text-cream/85 text-sm mb-3 font-medium">Historie nachladen (manuell)</p>
           <p className="text-cream/55 text-xs leading-relaxed mb-4 max-w-2xl">
             Backstage hat einen Anchor-Detail-Monatsfilter mit ~30-Tage-Window.
@@ -517,7 +669,8 @@ python backstage_revenue_scraper.py --month 2026-04 --only ${normalized} --push-
             inserted ggf. mit <code>force=true</code> wenn der Monat schon existiert.
             Vergangene Monate sind ansonsten frozen (Auto-Sync ueberschreibt sie nicht).
           </p>
-        </div>
+          </div>
+        </details>
         </MobileBackWrapper>
       </main>
     </>
