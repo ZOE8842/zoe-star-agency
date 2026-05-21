@@ -163,6 +163,20 @@ function comparePct(current: number | null, delta: number | null): number | null
   return Math.round((delta / before) * 1000) / 10;
 }
 
+// Helper · Farb-Klassen für Compare-Werte (signed)
+function compareColor(value: number | null): string {
+  if (value === null) return "text-cream/45";
+  if (value > 0.1) return "text-emerald-400/85";
+  if (value < -0.1) return "text-red-400/85";
+  return "text-cream/55";
+}
+function compareArrow(value: number | null): string {
+  if (value === null) return "—";
+  if (value > 0.1) return "↑";
+  if (value < -0.1) return "↓";
+  return "·";
+}
+
 export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { profile } = await requireAdmin();
   const { loadLocale } = await import("@/lib/i18n");
@@ -750,7 +764,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                   </div>
                   <p className="text-cream/40 text-[10px]">{sotLive.length} Einträge</p>
                 </div>
-                <div className="overflow-x-auto border border-champagne/15">
+                <div className="hidden md:block overflow-x-auto border border-champagne/15">
                   <table className="w-full text-sm">
                     <thead className="bg-champagne/5">
                       <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-cream/55">
@@ -965,9 +979,8 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                     {(() => {
                                       const p = comparePct(c.live_valid_days, expandedDetail.live_days_compare);
                                       return p === null ? null : (
-                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                          {p >= 0 ? "+" : ""}
-                                          {p.toFixed(1).replace(".", ",")} %
+                                        <p className={`text-[10px] mt-0.5 ${compareColor(p)}`}>
+                                          {compareArrow(p)} {p > 0 ? "+" : ""}{p.toFixed(1).replace(".", ",")} %
                                         </p>
                                       );
                                     })()}
@@ -983,9 +996,8 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                     {(() => {
                                       const p = comparePct(c.live_duration_seconds, expandedDetail.live_duration_compare_sec);
                                       return p === null ? null : (
-                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                          {p >= 0 ? "+" : ""}
-                                          {p.toFixed(1).replace(".", ",")} %
+                                        <p className={`text-[10px] mt-0.5 ${compareColor(p)}`}>
+                                          {compareArrow(p)} {p > 0 ? "+" : ""}{p.toFixed(1).replace(".", ",")} %
                                         </p>
                                       );
                                     })()}
@@ -1004,9 +1016,8 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                     {(() => {
                                       const p = comparePct(c.live_streams_count, expandedDetail.live_streams_compare);
                                       return p === null ? null : (
-                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                          {p >= 0 ? "+" : ""}
-                                          {p.toFixed(1).replace(".", ",")} %
+                                        <p className={`text-[10px] mt-0.5 ${compareColor(p)}`}>
+                                          {compareArrow(p)} {p > 0 ? "+" : ""}{p.toFixed(1).replace(".", ",")} %
                                         </p>
                                       );
                                     })()}
@@ -1025,12 +1036,71 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                     {(() => {
                                       const p = comparePct(c.live_new_followers, expandedDetail.live_followers_compare);
                                       return p === null ? null : (
-                                        <p className={`text-[10px] mt-0.5 ${p >= 0 ? "text-champagne/70" : "text-cream/45"}`}>
-                                          {p >= 0 ? "+" : ""}
-                                          {p.toFixed(1).replace(".", ",")} %
+                                        <p className={`text-[10px] mt-0.5 ${compareColor(p)}`}>
+                                          {compareArrow(p)} {p > 0 ? "+" : ""}{p.toFixed(1).replace(".", ",")} %
                                         </p>
                                       );
                                     })()}
+                                  </div>
+                                </div>
+
+                                {/* ═══ 3-Anreiz-Block · konkret was fehlt ═══ */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4">
+                                  {/* Activity-Anreiz */}
+                                  <div className="border border-champagne/15 p-3 md:p-4">
+                                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.2em] mb-1.5">Aktivitätsanreiz</p>
+                                    <p className="text-cream/85 text-sm leading-snug">
+                                      {(() => {
+                                        const lvl = c.ist_activity_level ?? null;
+                                        const next = lvl !== null ? lvl + 1 : null;
+                                        const dn = c.days_to_next_activity_level;
+                                        if (lvl === null) return "Activity-Level unbekannt";
+                                        if (lvl >= 5) return "Level 5 erreicht · Maximum";
+                                        if (dn === null) return `Level ${lvl} · Ziel: Level ${next}`;
+                                        if (dn === 0) return `Schwelle erreicht · wartet auf TikTok-Update`;
+                                        return `Für Level ${next} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}`;
+                                      })()}
+                                    </p>
+                                    {c.ist_activity_ratio !== null && (
+                                      <p className="text-cream/45 text-[10px] mt-1">
+                                        Aktuelles Bonusverhältnis: {(Number(c.ist_activity_ratio) * 100).toFixed(1).replace(".", ",")} %
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {/* Tier-Anreiz */}
+                                  <div className="border border-champagne/15 p-3 md:p-4">
+                                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.2em] mb-1.5">Stufenbasierter Umsatzanreiz</p>
+                                    <p className="text-cream/85 text-sm leading-snug">
+                                      {(() => {
+                                        const stf = c.ist_tier_level ?? null;
+                                        const nx = stf !== null ? stf + 1 : null;
+                                        const dm = c.max_diamonds_to_next_tier;
+                                        if (stf === null) return "Stufe unbekannt";
+                                        if (dm === null || dm === 0) return `Stufe ${stf} erreicht · TikTok-Update wartet`;
+                                        return `Noch ${fmtBigInt(dm)} Diamanten bis Stufe ${nx}`;
+                                      })()}
+                                    </p>
+                                    {expandedDetail.ist_tier_progress !== null && expandedDetail.ist_tier_target !== null && (
+                                      <p className="text-cream/45 text-[10px] mt-1">
+                                        Fortschritt: {fmtBigInt(expandedDetail.ist_tier_progress)} / {fmtBigInt(expandedDetail.ist_tier_target)}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {/* Incremental-Anreiz */}
+                                  <div className="border border-champagne/15 p-3 md:p-4">
+                                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.2em] mb-1.5">Inkrementeller Umsatzanreiz</p>
+                                    <p className="text-cream/85 text-sm leading-snug">
+                                      {(() => {
+                                        const inc = Number(c.ist_incremental_usd ?? 0);
+                                        if (inc > 0) return `Aktiv · ${fmtUsd(c.ist_incremental_usd)} in diesem Monat`;
+                                        return "Aktuell pausiert · Network-Schwelle nicht erreicht";
+                                      })()}
+                                    </p>
+                                    <p className="text-cream/45 text-[10px] mt-1">
+                                      Network-Hebel · TikTok zeigt keinen individuellen Schwellenwert
+                                    </p>
                                   </div>
                                 </div>
 
@@ -1120,6 +1190,73 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile · Card-View statt Tabelle (kein horizontales Scrollen) */}
+                <ul className="md:hidden space-y-2">
+                  {sotLive.map((c, i) => {
+                    const handleKey = c.tiktok_handle_normalized;
+                    const isExpanded = expandHandle === handleKey;
+                    const toggleHref = isExpanded ? `?tab=overview` : `?tab=overview&expand=${encodeURIComponent(handleKey)}`;
+                    const prio = computePriority(c);
+                    const elig = getEligibility(c);
+                    const istZero = (Number(c.ist_estimated_bonus_usd) || 0) === 0;
+                    const hasDiamonds = (Number(c.live_current_diamonds) || 0) > 100_000;
+                    const cardCls = prio === 0
+                      ? "border-champagne/40 bg-champagne/[0.06]"
+                      : prio === 1
+                      ? "border-champagne/30 bg-champagne/[0.04]"
+                      : prio === 2
+                      ? "border-champagne/20 bg-champagne/[0.02]"
+                      : prio === 3
+                      ? "border-champagne/15"
+                      : c.trend_class === "fallend"
+                      ? "border-champagne/8 opacity-80"
+                      : "border-champagne/10";
+                    const trendLabel = c.trend_class === "wachsend" ? "über Schnitt"
+                      : c.trend_class === "fallend" ? "unter Schnitt"
+                      : c.trend_class === "stabil" ? "im Schnitt"
+                      : c.trend_class === "new_creator" ? "neuer Creator"
+                      : "—";
+                    return (
+                      <li key={handleKey} id={`creator-${handleKey}`} className={`scroll-mt-32 border ${cardCls}`}>
+                        <a href={toggleHref} className="block px-4 py-3 active:opacity-70">
+                          <div className="flex items-baseline justify-between gap-3 mb-1">
+                            <p className="text-cream text-sm font-medium truncate">
+                              <span className="text-cream/40 font-display italic text-xs mr-2">#{i + 1}</span>
+                              @{c.tiktok_username}
+                            </p>
+                            <span className="text-champagne/55 text-xs shrink-0">{isExpanded ? "▼" : "▸"}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+                            <div>
+                              <p className="text-cream/45 text-[9px] uppercase tracking-[0.18em]">Aktuell</p>
+                              {istZero && hasDiamonds && !elig.eligible && elig.dataKnown ? (
+                                <p className="text-cream/85 text-sm">
+                                  {fmtUsd(c.ist_estimated_bonus_usd)}
+                                  <span className="block text-[9px] uppercase tracking-[0.18em] text-champagne/70 mt-0.5">Eligibility fehlt</span>
+                                </p>
+                              ) : (
+                                <p className="text-champagne text-sm font-medium">{fmtUsd(c.ist_estimated_bonus_usd)}</p>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-cream/45 text-[9px] uppercase tracking-[0.18em]">Hochrechnung</p>
+                              <p className="text-cream/85 text-sm">{fmtUsd(c.real_projected_bonus_usd_eom)}</p>
+                            </div>
+                            <div>
+                              <p className="text-cream/45 text-[9px] uppercase tracking-[0.18em]">Stufe / Aktiv.</p>
+                              <p className="text-cream/85 text-sm">{c.ist_tier_level ?? "—"} · L{c.ist_activity_level ?? "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-cream/45 text-[9px] uppercase tracking-[0.18em]">vs. Schnitt</p>
+                              <p className={`text-sm ${c.trend_class === "wachsend" ? "text-emerald-400/85" : c.trend_class === "fallend" ? "text-red-400/70" : "text-cream/65"}`}>{trendLabel}</p>
+                            </div>
+                          </div>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </>
           );
