@@ -496,28 +496,27 @@ export default async function AdminPage() {
                 ) : (
                   <ul className="space-y-2">
                     {topPrios.map((p, i) => (
-                      <li
-                        key={p.username + i}
-                        className={`border px-4 py-3 md:px-5 md:py-4 flex items-center justify-between gap-4 transition-colors hover:bg-champagne/[0.04] ${
-                          p.accent === "warm"
-                            ? "border-champagne/40 bg-champagne/[0.04]"
-                            : "border-champagne/20"
-                        }`}
-                      >
+                      <li key={p.username + i}>
                         <Link
-                          href={`/portal/admin/umsatz/creator/${encodeURIComponent(p.username.toLowerCase())}`}
-                          className="min-w-0 flex-1"
+                          href={`/portal/admin/umsatz?tab=overview&expand=${encodeURIComponent(p.username.toLowerCase())}`}
+                          className={`flex items-center justify-between gap-4 border px-4 py-3 md:px-5 md:py-4 transition-colors hover:bg-champagne/[0.04] active:opacity-80 ${
+                            p.accent === "warm"
+                              ? "border-champagne/40 bg-champagne/[0.04]"
+                              : "border-champagne/20"
+                          }`}
                         >
-                          <p className="text-cream text-sm font-medium leading-tight">
-                            <span className="text-champagne/80">@{p.username}</span>
-                            <span className="text-cream/55"> · </span>
-                            {p.primary}
-                          </p>
-                          <p className="text-cream/45 text-xs mt-1">{p.secondary}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-cream text-sm font-medium leading-tight">
+                              <span className="text-champagne/80">@{p.username}</span>
+                              <span className="text-cream/55"> · </span>
+                              {p.primary}
+                            </p>
+                            <p className="text-cream/45 text-xs mt-1">{p.secondary}</p>
+                          </div>
+                          <span className="text-champagne/60 text-[10px] uppercase tracking-[0.2em] shrink-0">
+                            öffnen →
+                          </span>
                         </Link>
-                        <span className="text-champagne/60 text-[10px] uppercase tracking-[0.2em] shrink-0">
-                          öffnen →
-                        </span>
                       </li>
                     ))}
                   </ul>
