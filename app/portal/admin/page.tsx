@@ -402,12 +402,13 @@ export default async function AdminPage() {
             : null;
 
           // ──────────────────────────────────────────────────────────
-          // Top-Prioritäten · operativ, max 7
+          // Top-Prioritäten · 3-Zeilen-Format · operativ konkret
           // ──────────────────────────────────────────────────────────
           type Prio = {
             username: string;
-            primary: string;
-            secondary: string;
+            reason: string;    // Z1 · Hauptgrund kurz
+            missing: string;   // Z2 · konkrete Lücke
+            benefit: string;   // Z3 · Nutzen / nächster Schritt
             weight: number;
             accent?: "warm" | "neutral";
           };
@@ -420,6 +421,7 @@ export default async function AdminPage() {
             const daysMissing = Math.max(0, 7 - days);
             const hoursMissing = Math.ceil(Math.max(0, 15 * 3600 - secs) / 3600);
             const eligible = daysMissing === 0 && hoursMissing === 0;
+
             // 1 · Eligibility fast erreicht (höchste Prio)
             if (istZero && hasDiamonds && !eligible && (daysMissing <= 1 && hoursMissing <= 1)) {
               const parts: string[] = [];
@@ -427,42 +429,50 @@ export default async function AdminPage() {
               if (hoursMissing > 0) parts.push(`${hoursMissing} LIVE-Stunde${hoursMissing === 1 ? "" : "n"}`);
               all.push({
                 username: c.tiktok_username,
-                primary: `Nur noch ${parts.join(" + ")} bis Eligibility`,
-                secondary: `Stufe ${c.ist_tier_level ?? "?"} · TikTok-Forecast greift sofort`,
+                reason: "Eligibility fehlt",
+                missing: `Noch ${parts.join(" + ")}`,
+                benefit: `Tier-Bonus startet danach · aktuell Stufe ${c.ist_tier_level ?? "?"}`,
                 weight: 1,
                 accent: "warm",
               });
               continue;
             }
-            // 2 · Aktivitätsaufstieg jetzt möglich
-            if (c.days_to_next_activity_level === 0 && (c.ist_activity_level ?? 0) < 5) {
+            // 2 · Activity-Level-Up nahe (≤1 LIVE-Tag)
+            const dn = c.days_to_next_activity_level;
+            if (dn !== null && dn <= 1 && (c.ist_activity_level ?? 0) < 5) {
+              const next = (c.ist_activity_level ?? 0) + 1;
               all.push({
                 username: c.tiktok_username,
-                primary: `Aktivitätsaufstieg jetzt möglich`,
-                secondary: `Level ${c.ist_activity_level ?? "?"} → ${(c.ist_activity_level ?? 0) + 1}`,
+                reason: "Activity-Level möglich",
+                missing: dn === 0
+                  ? "Schwelle erreicht · wartet auf TikTok-Update"
+                  : `Noch ${dn} gültiger LIVE-Tag`,
+                benefit: `Level ${c.ist_activity_level ?? "?"} → ${next}`,
                 weight: 2,
                 accent: "warm",
               });
               continue;
             }
-            // 3 · Tier-Aufstieg ≤50k
+            // 3 · Tier-Aufstieg ≤50k Diamanten
             const dm = c.max_diamonds_to_next_tier;
             if (dm !== null && dm > 0 && dm <= 50_000) {
               all.push({
                 username: c.tiktok_username,
-                primary: `Tier-Aufstieg in Reichweite`,
-                secondary: `${fmtBigIntNum(dm)} Diamanten bis Stufe ${(c.ist_tier_level ?? 0) + 1}`,
+                reason: "Tier-Aufstieg nah",
+                missing: `Noch ${fmtBigIntNum(dm)} Diamanten`,
+                benefit: `Stufe ${c.ist_tier_level ?? "?"} → ${(c.ist_tier_level ?? 0) + 1}`,
                 weight: 3,
                 accent: "warm",
               });
               continue;
             }
-            // 4 · Wachsend über Schnitt
+            // 4 · Wachsend über persönlichem Schnitt
             if (c.trend_class === "wachsend") {
               all.push({
                 username: c.tiktok_username,
-                primary: `Wächst über persönlichem Schnitt`,
-                secondary: `Hochrechnung ${fmtUsdNum(c.real_projected_bonus_usd_eom)} bis Monatsende`,
+                reason: "Wächst über Schnitt",
+                missing: `Aktuell ${fmtUsdNum(c.ist_estimated_bonus_usd)}`,
+                benefit: `Hochrechnung ${fmtUsdNum(c.real_projected_bonus_usd_eom)} bis Monatsende`,
                 weight: 4,
                 accent: "neutral",
               });
@@ -495,30 +505,41 @@ export default async function AdminPage() {
                   </p>
                 ) : (
                   <ul className="space-y-2">
-                    {topPrios.map((p, i) => (
-                      <li key={p.username + i}>
-                        <Link
-                          href={`/portal/admin/umsatz?tab=overview&expand=${encodeURIComponent(p.username.toLowerCase())}`}
-                          className={`flex items-center justify-between gap-4 border px-4 py-3 md:px-5 md:py-4 transition-colors hover:bg-champagne/[0.04] active:opacity-80 ${
-                            p.accent === "warm"
-                              ? "border-champagne/40 bg-champagne/[0.04]"
-                              : "border-champagne/20"
-                          }`}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="text-cream text-sm font-medium leading-tight">
-                              <span className="text-champagne/80">@{p.username}</span>
-                              <span className="text-cream/55"> · </span>
-                              {p.primary}
-                            </p>
-                            <p className="text-cream/45 text-xs mt-1">{p.secondary}</p>
-                          </div>
-                          <span className="text-champagne/60 text-[10px] uppercase tracking-[0.2em] shrink-0">
-                            öffnen →
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
+                    {topPrios.map((p, i) => {
+                      const handle = p.username.toLowerCase();
+                      return (
+                        <li key={p.username + i}>
+                          <Link
+                            href={`/portal/admin/umsatz?tab=overview&expand=${encodeURIComponent(handle)}#creator-${encodeURIComponent(handle)}`}
+                            className={`flex items-center justify-between gap-4 border px-4 py-3 md:px-5 md:py-4 transition-colors hover:bg-champagne/[0.04] active:opacity-80 ${
+                              p.accent === "warm"
+                                ? "border-champagne/40 bg-champagne/[0.04]"
+                                : "border-champagne/20"
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              {/* Z1 · @handle + Grund */}
+                              <p className="text-cream text-sm font-medium leading-tight">
+                                <span className="text-champagne/85">@{p.username}</span>
+                                <span className="text-cream/55"> · </span>
+                                {p.reason}
+                              </p>
+                              {/* Z2 · konkrete Lücke */}
+                              <p className="text-cream/75 text-xs mt-1 leading-snug">
+                                {p.missing}
+                              </p>
+                              {/* Z3 · Nutzen */}
+                              <p className="text-cream/45 text-[11px] mt-0.5 leading-snug italic">
+                                {p.benefit}
+                              </p>
+                            </div>
+                            <span className="text-champagne/60 text-[10px] uppercase tracking-[0.2em] shrink-0">
+                              öffnen →
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </AdminSection>

@@ -823,7 +823,11 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                           : `?tab=overview&expand=${encodeURIComponent(handleLower)}`;
                         return (
                           <>
-                          <tr key={c.tiktok_username} className={`${rowCls} cursor-pointer`}>
+                          <tr
+                            key={c.tiktok_username}
+                            id={`creator-${handleLower}`}
+                            className={`${rowCls} cursor-pointer scroll-mt-32`}
+                          >
                             <td className="px-3 py-3 text-cream/40 font-display italic text-base">
                               <a href={toggleHref} className="block w-full">
                                 <span className={isExpanded ? "text-champagne" : ""}>{i + 1}</span>
