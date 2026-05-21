@@ -10,6 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { MobileBackWrapper } from "@/components/mobile/MobileBackWrapper";
+import { CopyButton } from "@/components/admin/CopyButton";
 
 export const dynamic = "force-dynamic";
 
@@ -263,7 +264,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
         isAdmin={true}
         isManager={false}
       />
-      <main className="container-luxe py-6 md:py-16">
+      <main className="container-luxe py-4 md:py-12 max-w-3xl">
         {/* Mobile · großer Back-Button + Edge-Swipe (Wrapper) */}
         <MobileBackWrapper fallbackHref="/portal/admin" label="Zurück zu Master">
         {/* Desktop · klassisches kleines Breadcrumb */}
@@ -272,12 +273,12 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
           ← Master
         </a>
 
-        <div className="mb-8">
+        <div className="mb-5">
           <p className="eyebrow mb-2">Admin · Umsatz · Historie</p>
           <h1 className="heading-display text-cream text-3xl md:text-4xl">
             {displayName || username}
           </h1>
-          <p className="text-cream/45 text-sm mt-2">@{username} · {rows.length} Monate</p>
+          <p className="text-cream/45 text-sm mt-1">@{username} · {rows.length} Monate</p>
         </div>
 
         {/* ═══ V2-A · Top-Block (aktueller Monat) ═══ */}
@@ -285,7 +286,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
           <>
             {/* Eligibility-Warnung */}
             {showEligibilityWarn && (
-              <div className="border border-champagne/40 bg-champagne/[0.04] p-4 md:p-5 mb-5">
+              <div className="border border-champagne/40 bg-champagne/[0.04] p-4 mb-4">
                 <p className="text-champagne text-xs font-medium uppercase tracking-[0.18em] mb-2">▴ Noch nicht teilnahmeberechtigt</p>
                 <p className="text-cream/85 text-sm leading-relaxed mb-2">
                   Aktuell {fmtUsd2(summary.ist_estimated_bonus_usd)} Tier-Bonus, weil die TikTok-Mindestaktivität noch nicht erfüllt ist.
@@ -303,27 +304,27 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
             )}
 
             {/* IST + Hochrechnung */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-5">
-              <div className="border border-champagne/25 p-4 md:p-5">
-                <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-2">Aktuell · {fmtMonthLong(currentMonthIso).split(" ")[0]}</p>
-                <p className="font-display italic text-3xl text-champagne leading-none">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="border border-champagne/25 p-3 md:p-4">
+                <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Aktuell · {fmtMonthLong(currentMonthIso).split(" ")[0]}</p>
+                <p className="font-display italic text-2xl md:text-3xl text-champagne leading-none">
                   {fmtUsd2(summary.ist_estimated_bonus_usd)}
                 </p>
-                <p className="text-cream/40 text-[10px] mt-2">Tag {compute?.month_day ?? "?"} / {compute?.month_days_total ?? "?"}</p>
+                <p className="text-cream/40 text-[10px] mt-1.5">Tag {compute?.month_day ?? "?"} / {compute?.month_days_total ?? "?"}</p>
               </div>
-              <div className="border border-champagne/15 p-4 md:p-5">
-                <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-2">Hochrechnung Monatsende</p>
-                <p className="font-display italic text-3xl text-cream leading-none">
+              <div className="border border-champagne/15 p-3 md:p-4">
+                <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-1.5">Hochrechnung Monatsende</p>
+                <p className="font-display italic text-2xl md:text-3xl text-cream leading-none">
                   {fmtUsd2(compute?.real_projected_bonus_usd_eom)}
                 </p>
-                <p className="text-cream/40 text-[10px] mt-2">bei gleichbleibender Pace</p>
+                <p className="text-cream/40 text-[10px] mt-1.5">bei gleichbleibender Pace</p>
               </div>
             </div>
 
             {/* 3-Anreiz-Block · konkret was fehlt */}
-            <div className="space-y-3 mb-6">
-              <div className="border border-champagne/15 p-4 md:p-5">
-                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Aktivitätsanreiz</p>
+            <div className="space-y-2 mb-4">
+              <div className="border border-champagne/15 p-3 md:p-4">
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Aktivitätsanreiz</p>
                 <p className="text-cream text-base leading-snug font-medium">
                   {(() => {
                     const lvl = summary.ist_activity_level ?? null;
@@ -352,8 +353,8 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 </div>
               </div>
 
-              <div className="border border-champagne/15 p-4 md:p-5">
-                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Stufenbasierter Umsatzanreiz</p>
+              <div className="border border-champagne/15 p-3 md:p-4">
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Stufenbasierter Umsatzanreiz</p>
                 <p className="text-cream text-base leading-snug font-medium">
                   {(() => {
                     const stf = summary.ist_tier_level ?? null;
@@ -384,8 +385,8 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 )}
               </div>
 
-              <div className="border border-champagne/15 p-4 md:p-5">
-                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Inkrementeller Umsatzanreiz</p>
+              <div className="border border-champagne/15 p-3 md:p-4">
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Inkrementeller Umsatzanreiz</p>
                 <p className="text-cream text-base leading-snug font-medium">
                   {(() => {
                     const inc = Number(summary.ist_incremental_usd ?? 0);
@@ -401,7 +402,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
 
             {/* LIVE-Performance Compare */}
             {summary.live_compare_start && (
-              <div className="border border-champagne/15 p-4 md:p-5 mb-6">
+              <div className="border border-champagne/15 p-3 md:p-4 mb-4">
                 <div className="flex items-baseline justify-between mb-3">
                   <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em]">LIVE-Performance</p>
                   <p className="text-cream/40 text-[10px]">
@@ -436,7 +437,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
 
             {/* Trend */}
             {compute?.trend_class && (
-              <div className="border border-champagne/15 p-4 md:p-5 mb-3">
+              <div className="border border-champagne/15 p-3 md:p-4 mb-2">
                 <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Trend vs. 3-Monats-Schnitt</p>
                 <p className={`text-base font-medium ${
                   compute.trend_class === "wachsend" ? "text-emerald-400/85"
@@ -457,28 +458,35 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* V2-A · Empfohlene Nachricht (Admin-Vorschlag, KEIN Auto-Send · R15/R16) */}
-            <div className="border border-champagne/30 bg-champagne/[0.03] p-4 md:p-5 mb-8">
-              <div className="flex items-baseline justify-between mb-3">
-                <p className="text-champagne/85 text-[10px] uppercase tracking-[0.22em]">
-                  ✍ Empfohlene Nachricht
-                </p>
-                <p className="text-cream/35 text-[9px] uppercase tracking-[0.18em]">
-                  Vorschlag · zum Kopieren
-                </p>
-              </div>
-              <pre className="text-cream/85 text-sm leading-relaxed whitespace-pre-wrap font-sans select-all bg-ink/40 border border-champagne/10 p-3 md:p-4">
-{pickRecommendedMessage({
-  activityLevel: summary?.ist_activity_level ?? null,
-  daysToNextActivity: compute?.days_to_next_activity_level ?? null,
-  maxDiamondsToNextTier: compute?.max_diamonds_to_next_tier ?? null,
-})}
-              </pre>
-              <p className="text-cream/40 text-[10px] mt-3 leading-relaxed">
-                Admin-Vorschlag · auf Basis aktueller TikTok-Daten generiert. NICHT automatisch
-                verschickt · vor Versand prüfen + anpassen.
-              </p>
-            </div>
+            {/* V2-A · Empfohlene Nachricht (Admin-Vorschlag · Copy-only · R15/R16) */}
+            {(() => {
+              const msg = pickRecommendedMessage({
+                activityLevel: summary?.ist_activity_level ?? null,
+                daysToNextActivity: compute?.days_to_next_activity_level ?? null,
+                maxDiamondsToNextTier: compute?.max_diamonds_to_next_tier ?? null,
+              });
+              return (
+                <div className="border border-champagne/30 bg-champagne/[0.03] p-4 mb-5">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <p className="text-champagne/85 text-[10px] uppercase tracking-[0.22em]">
+                      ✍ Empfohlene Nachricht
+                    </p>
+                    <p className="text-cream/35 text-[9px] uppercase tracking-[0.18em]">
+                      Vorschlag
+                    </p>
+                  </div>
+                  <pre className="text-cream/85 text-sm leading-relaxed whitespace-pre-wrap font-sans select-all bg-ink/40 border border-champagne/10 p-3 mb-3">
+{msg}
+                  </pre>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-cream/40 text-[10px] leading-snug flex-1 min-w-0">
+                      Vor Versand prüfen + anpassen · kein Auto-Send
+                    </p>
+                    <CopyButton text={msg} label="Nachricht kopieren" />
+                  </div>
+                </div>
+              );
+            })()}
           </>
         )}
 
