@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -91,6 +91,34 @@ export function MobileNavDrawer({
     };
   }, [open]);
 
+  // Swipe-to-close: iOS-PWA-Standalone hat KEINE Back-Geste.
+  // Drawer öffnet von rechts → Wischen nach rechts (oder unten) schließt.
+  const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+    setDragX(0);
+  }, []);
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    const start = touchStart.current;
+    if (!start) return;
+    const dx = e.touches[0].clientX - start.x;
+    if (dx > 0) setDragX(dx);  // nur Right-Swipe (Drawer öffnet von rechts)
+  }, []);
+  const onTouchEnd = useCallback(() => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    const finalDx = dragX;
+    setDragX(0);
+    if (!start) return;
+    const elapsed = Date.now() - start.t;
+    // Swipe-Threshold: >120px ODER schnell (>0.5 px/ms)
+    if (finalDx > 120 || (elapsed > 0 && finalDx / elapsed > 0.5 && finalDx > 50)) {
+      close();
+    }
+  }, [dragX, close]);
+
   const initials = (displayName || tiktokUsername || "")
     .split(/\s+/)
     .map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
@@ -138,20 +166,27 @@ export function MobileNavDrawer({
         }}
       />
 
-      {/* Drawer · echtes solides Panel · z-9999 · keine Transparenz */}
+      {/* Drawer · echtes solides Panel · z-9999 · keine Transparenz
+          Swipe-Right schließt (iOS-PWA-Ersatz für Hardware-Back) */}
       <aside
         id="zoe-mobile-drawer"
         role="dialog" aria-modal="true" aria-label="Hauptmenue"
         aria-hidden={!open}
-        className={`fixed top-0 right-0 h-[100dvh] z-[9999] transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
+        className={`fixed top-0 right-0 h-[100dvh] z-[9999] ${
+          dragX > 0 ? "" : "transition-transform duration-300 ease-out"
+        } ${open ? "translate-x-0" : "translate-x-full"}`}
         style={{
           width: "88%",
           maxWidth: "430px",
           background: SOLID_BLACK,
           borderLeft: "1px solid rgba(212,175,107,0.22)",
           boxShadow: "-20px 0 80px rgba(0,0,0,0.98)",
+          transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
+          touchAction: "pan-y",
         }}
       >
         <div
@@ -178,11 +213,23 @@ export function MobileNavDrawer({
             <button
               onClick={close}
               aria-label="Menue schliessen"
-              className="text-3xl leading-none w-11 h-11 -mr-2 inline-flex items-center justify-center"
+              className="text-3xl leading-none w-12 h-12 -mr-2 inline-flex items-center justify-center"
               style={{ color: GOLD }}
             >
               ×
             </button>
+          </div>
+
+          {/* Swipe-Hint · sehr dezent, nur sichtbar wenn Drawer offen */}
+          <div
+            className="text-center py-1.5 text-[10px] tracking-[0.2em] uppercase"
+            style={{
+              color: "rgba(212,175,107,0.45)",
+              borderBottom: `1px solid ${GOLD_DIVIDER_SOFT}`,
+              background: SOLID_BLACK,
+            }}
+          >
+            ⟶  nach rechts wischen zum schliessen
           </div>
 
           {/* User-Card */}
