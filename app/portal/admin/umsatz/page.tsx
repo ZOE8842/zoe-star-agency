@@ -312,15 +312,15 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
           </div>
         </div>
 
-        {/* SUB-TABS · v1.18: Overview als erster Tab (Default) */}
+        {/* SUB-TABS · v1.20: deutsche Hauptlabels, TikTok-Begriff sekundär */}
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2.5 md:flex md:flex-wrap md:gap-2 mb-6 md:mb-5 border-b border-champagne/15 pb-3">
           {(["overview","current","forecast","missing","creator"] as const).map((t) => {
             const active = t === tab;
-            const label = t === "overview" ? "Overview"
-                        : t === "current"  ? "Current"
-                        : t === "forecast" ? "Forecast"
-                        : t === "missing"  ? "Missing"
-                        : "Creator";
+            const label = t === "overview" ? "Übersicht"
+                        : t === "current"  ? "Aktuell"
+                        : t === "forecast" ? "Prognose"
+                        : t === "missing"  ? "Fehlt"
+                        : "Pro Creator";
             return (
               <a key={t} href={`?tab=${t}`}
                  className={[
@@ -341,12 +341,11 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
           {tab === "overview" && (
             <>
               <p className="text-cream/85 text-sm mb-3">
-                Wo steht das Network heute · wo landet es bis Monatsende · wer ist priorisiert?
+                Wo steht das Netzwerk heute · wie würde es bei aktueller Pace landen · wer ist kurz vor dem Aufstieg?
               </p>
               <p className="text-cream/55 text-xs leading-relaxed">
-                IST · REAL-Pace bis Monatsende · 3M-Trend · Quick-Win-Kandidaten.
-                Werte aus v_creator_incentive_compute (Phase B2), deterministisch berechnet
-                aus den 3 Backstage-Quellen.
+                Aktueller Stand · Hochrechnung bei gleichbleibendem Tempo · Vergleich gegen 3-Monats-Schnitt · Push-Kandidaten.
+                Deterministisch berechnet — keine TikTok-Prognose, sondern operative Schätzung.
               </p>
             </>
           )}
@@ -430,20 +429,45 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
 
           return (
             <>
-              {/* ============ STAT-CARDS (Network-Level) ============ */}
+              {/* ============ STAT-CARDS · deutsche Hauptlabels ============ */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
-                <OverviewCard label="Network IST"        value={fmtUsd(sumIst)}  sub={`${sotLive.length} sot_live · Tag ${monthDay ?? "?"}`} highlight />
-                <OverviewCard label="REAL bis Monatsende" value={fmtUsd(sumReal)} sub={monthRem !== null ? `${monthRem} Tage verbleibend` : "—"} highlight />
-                <OverviewCard label="Trend wachsend / stabil" value={`${cntWachsend} / ${cntStabil}`} sub={`${cntNew} neue Creator`} />
-                <OverviewCard label="Trend fallend"      value={`${cntFallend}`} sub="Mai schwach: Incremental = 0 networkweit" />
+                <OverviewCard
+                  label="Aktueller Netzwerkstand"
+                  hint="bestätigt heute"
+                  value={fmtUsd(sumIst)}
+                  sub={`${sotLive.length} Creator aktuell · Tag ${monthDay ?? "?"} von ${(sotLive[0]?.month_day ?? 0) + (sotLive[0]?.month_days_remaining ?? 0)}`}
+                  highlight
+                />
+                <OverviewCard
+                  label="Hochrechnung Monatsende"
+                  hint="bei gleichbleibender Pace"
+                  value={fmtUsd(sumReal)}
+                  sub={monthRem !== null ? `noch ${monthRem} Tage · keine TikTok-Prognose` : "—"}
+                  highlight
+                />
+                <OverviewCard
+                  label="Über persönlichem Schnitt"
+                  hint="vs. 3-Monats-Durchschnitt"
+                  value={`${cntWachsend} / ${cntStabil}`}
+                  sub={`über / im Schnitt · ${cntNew} neue Creator`}
+                />
+                <OverviewCard
+                  label="Unter persönlichem Schnitt"
+                  hint="vs. 3-Monats-Durchschnitt"
+                  value={`${cntFallend}`}
+                  sub="häufig: Inkrementeller Bonus aktuell pausiert"
+                />
               </div>
 
-              {/* ============ QUICK-WINS ============ */}
+              {/* ============ QUICK-WINS · deutsche Labels ============ */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-8">
                 {/* Activity-Level-Up nahe */}
                 <div className="border border-champagne/20 p-4">
                   <div className="flex items-baseline justify-between mb-3">
-                    <p className="text-cream/55 text-[9px] uppercase tracking-[0.22em]">Activity-Level-Up nahe</p>
+                    <div>
+                      <p className="text-cream/85 text-xs font-medium">Kurz vor Aktivitätsaufstieg</p>
+                      <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em]">Activity-Level</p>
+                    </div>
                     <span className="text-champagne font-display italic text-xl leading-none">{nearActivityUp.length}</span>
                   </div>
                   {nearActivityUp.length === 0 ? (
@@ -469,7 +493,10 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                 {/* Tier-Up nahe (≤100k Diamonds) */}
                 <div className="border border-champagne/20 p-4">
                   <div className="flex items-baseline justify-between mb-3">
-                    <p className="text-cream/55 text-[9px] uppercase tracking-[0.22em]">Tier-Up nahe</p>
+                    <div>
+                      <p className="text-cream/85 text-xs font-medium">Kurz vor nächster Stufe</p>
+                      <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em]">Tier · ≤100k Diamonds</p>
+                    </div>
                     <span className="text-champagne font-display italic text-xl leading-none">{nearTierUp.length}</span>
                   </div>
                   {nearTierUp.length === 0 ? (
@@ -492,14 +519,17 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                   )}
                 </div>
 
-                {/* Trend wachsend */}
+                {/* Über persönlichem Schnitt */}
                 <div className="border border-champagne/20 p-4">
                   <div className="flex items-baseline justify-between mb-3">
-                    <p className="text-cream/55 text-[9px] uppercase tracking-[0.22em]">Wachsend (Trend)</p>
+                    <div>
+                      <p className="text-cream/85 text-xs font-medium">Über persönlichem Schnitt</p>
+                      <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em]">vs. 3-Monats-Avg</p>
+                    </div>
                     <span className="text-champagne font-display italic text-xl leading-none">{wachsendCreators.length}</span>
                   </div>
                   {wachsendCreators.length === 0 ? (
-                    <p className="text-cream/40 text-xs">— (Mai strukturell schwach networkweit)</p>
+                    <p className="text-cream/40 text-xs">— Mai networkweit unter 3M-Schnitt</p>
                   ) : (
                     <ul className="space-y-1.5">
                       {wachsendCreators.slice(0, 6).map((c) => (
@@ -520,16 +550,99 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
 
               {/* ============ Kontext-Hinweis (ruhig, kein Alarm) ============ */}
               {cntFallend > sotLive.length * 0.5 && (
-                <div className="border border-champagne/20 bg-champagne/[0.04] p-4 mb-6 text-xs text-cream/75 leading-relaxed">
-                  <p className="text-champagne/85 uppercase tracking-[0.2em] text-[10px] mb-1.5">Kontext</p>
-                  {cntFallend} Creator zeigen Trend „fallend" gegen 3-Monats-Schnitt.
-                  Hauptgrund networkweit: Inkrementeller Umsatzanreiz ist im aktuellen Monat = 0
-                  (TikTok-Network-Wachstumsschwelle aktuell nicht erreicht).
-                  Das ist KEIN Performance-Problem auf Creator-Ebene — sondern
-                  strukturell aus dem Bonus-System. Die Pace-Projektion bis
-                  Monatsende liegt bei {fmtUsd(sumReal)}.
+                <div className="border border-champagne/20 bg-champagne/[0.04] p-4 mb-8 text-xs text-cream/75 leading-relaxed">
+                  <p className="text-champagne/85 uppercase tracking-[0.2em] text-[10px] mb-1.5">Hinweis · Kontext</p>
+                  {cntFallend} Creator liegen aktuell unter ihrem 3-Monats-Schnitt.
+                  Hauptgrund netzwerkweit: Der inkrementelle Bonus zahlt diesen Monat nicht aus
+                  (TikTok-Schwelle für das Network-Wachstum aktuell nicht erreicht).
+                  Das ist KEIN Performance-Problem einzelner Creator — strukturell aus dem
+                  Bonus-System. Bei aktueller Pace landet das Netzwerk bei {fmtUsd(sumReal)} bis Monatsende.
                 </div>
               )}
+
+              {/* ============ Volle Creator-Liste (alle 53 nach IST sortiert) ============ */}
+              <div className="mb-6">
+                <div className="flex items-baseline justify-between mb-3">
+                  <p className="text-cream/85 text-sm font-medium">Alle Creator · aktueller Monat</p>
+                  <p className="text-cream/40 text-[10px]">sortiert nach aktuellem Bonus · {sotLive.length} Einträge</p>
+                </div>
+                <div className="overflow-x-auto border border-champagne/15">
+                  <table className="w-full text-sm">
+                    <thead className="bg-champagne/5">
+                      <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-cream/55">
+                        <th className="px-3 py-3">#</th>
+                        <th className="px-3 py-3">Creator</th>
+                        <th className="px-3 py-3 text-right">Aktuell</th>
+                        <th className="px-3 py-3 text-right">Hochrechnung EOM</th>
+                        <th className="px-3 py-3 text-center">vs. Schnitt</th>
+                        <th className="px-3 py-3 text-center">Stufe</th>
+                        <th className="px-3 py-3 text-center">Aktiv.</th>
+                        <th className="px-3 py-3 text-right">bis Stufe</th>
+                        <th className="px-3 py-3 text-right">bis Aktiv.</th>
+                        <th className="px-3 py-3">Hinweis</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sotLive.map((c, i) => {
+                        const trendDe = c.trend_class === "wachsend" ? "über Schnitt"
+                                      : c.trend_class === "fallend"  ? "unter Schnitt"
+                                      : c.trend_class === "stabil"   ? "im Schnitt"
+                                      : c.trend_class === "new_creator" ? "neuer Creator"
+                                      : "—";
+                        const trendCls = c.trend_class === "wachsend" ? "text-champagne"
+                                       : c.trend_class === "fallend"  ? "text-cream/50"
+                                       : c.trend_class === "stabil"   ? "text-cream/75"
+                                       : "text-cream/40";
+                        // Quick-Win-Hinweis · Priorität-Vorgriff (Phase B3 wird das ablösen)
+                        const hint = (c.days_to_next_activity_level === 0 && (c.ist_activity_level ?? 0) < 5)
+                          ? "Aktivitätsaufstieg jetzt möglich"
+                          : (c.days_to_next_activity_level !== null && c.days_to_next_activity_level <= 2 && (c.ist_activity_level ?? 0) < 5)
+                          ? `noch ${c.days_to_next_activity_level} LIVE-Tag${c.days_to_next_activity_level === 1 ? "" : "e"}`
+                          : (c.max_diamonds_to_next_tier !== null && c.max_diamonds_to_next_tier <= 100_000 && c.max_diamonds_to_next_tier > 0)
+                          ? `${fmtBigInt(c.max_diamonds_to_next_tier)} bis nächste Stufe`
+                          : c.trend_class === "wachsend"
+                          ? "Über persönlichem Schnitt"
+                          : c.meta_is_new_creator
+                          ? "Neuer Creator"
+                          : "—";
+
+                        return (
+                          <tr key={c.tiktok_username} className="border-t border-champagne/10 hover:bg-champagne/[0.03]">
+                            <td className="px-3 py-3 text-cream/40 font-display italic text-base">{i + 1}</td>
+                            <td className="px-3 py-3">
+                              <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
+                                 className="text-cream hover:text-champagne">
+                                @{c.tiktok_username}
+                              </a>
+                            </td>
+                            <td className="px-3 py-3 text-right text-champagne font-medium">{fmtUsd(c.ist_estimated_bonus_usd)}</td>
+                            <td className="px-3 py-3 text-right text-cream/85">{fmtUsd(c.real_projected_bonus_usd_eom)}</td>
+                            <td className={`px-3 py-3 text-center text-[11px] ${trendCls}`}>{trendDe}</td>
+                            <td className="px-3 py-3 text-center text-cream/75">{c.ist_tier_level ?? "—"}</td>
+                            <td className="px-3 py-3 text-center text-cream/75">
+                              {c.ist_activity_level ?? "—"}
+                              {c.ist_activity_ratio !== null && (
+                                <span className="text-cream/40 text-[10px] ml-1">
+                                  {`${(Number(c.ist_activity_ratio) * 100).toFixed(1).replace(".", ",")} %`}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-3 text-right text-cream/70">
+                              {c.max_diamonds_to_next_tier !== null ? fmtBigInt(c.max_diamonds_to_next_tier) : "—"}
+                            </td>
+                            <td className="px-3 py-3 text-right text-cream/70">
+                              {c.days_to_next_activity_level === null ? "—"
+                                : c.days_to_next_activity_level === 0 ? <span className="text-champagne">jetzt</span>
+                                : `${c.days_to_next_activity_level}d`}
+                            </td>
+                            <td className="px-3 py-3 text-cream/75 text-xs">{hint}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </>
           );
         })()}
@@ -718,17 +831,21 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   );
 }
 
-// Phase B2 · Overview-Stat-Card (kompakt, deterministisch, ruhig)
-function OverviewCard({ label, value, sub, highlight }: {
+// Phase B2 · Overview-Stat-Card (kompakt, deutsch primär, technisch sekundär)
+function OverviewCard({ label, hint, value, sub, highlight }: {
   label: string;
+  hint?: string;
   value: string;
   sub?: string;
   highlight?: boolean;
 }) {
   return (
     <div className={`border p-4 ${highlight ? "border-champagne/40 bg-champagne/5" : "border-champagne/15"}`}>
-      <p className="text-cream/45 text-[9px] uppercase tracking-[0.22em] mb-2">{label}</p>
-      <p className={`font-display italic text-2xl md:text-3xl leading-tight ${highlight ? "text-champagne" : "text-cream"}`}>
+      <p className="text-cream/85 text-xs font-medium leading-tight">{label}</p>
+      {hint && (
+        <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em] mt-0.5 mb-2">{hint}</p>
+      )}
+      <p className={`font-display italic text-2xl md:text-3xl leading-tight mt-2 ${highlight ? "text-champagne" : "text-cream"}`}>
         {value}
       </p>
       {sub && (
