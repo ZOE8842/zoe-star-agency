@@ -11,7 +11,35 @@ import { PortalNav } from "@/components/PortalNav";
 
 export const dynamic = "force-dynamic";
 
-type SubTab = "current" | "forecast" | "missing" | "creator";
+type SubTab = "overview" | "current" | "forecast" | "missing" | "creator";
+
+// Phase B2 · Compute-View-Row · v_creator_incentive_compute
+interface ComputeRow {
+  tiktok_username: string;
+  ist_estimated_bonus_usd: number | null;
+  ist_tier_level: number | null;
+  ist_activity_level: number | null;
+  ist_activity_ratio: number | null;
+  ist_tier_status: string | null;
+  ist_activity_status: string | null;
+  ist_incremental_status: string | null;
+  live_current_diamonds: number | null;
+  live_valid_days: number | null;
+  live_duration_seconds: number | null;
+  data_completeness: "sot_live" | "legacy_only" | "pre_maerz_only" | "empty";
+  drift_pct: number | null;
+  meta_invitation_type: "Regulär" | "Premium" | "Elite" | null;
+  meta_is_new_creator: boolean | null;
+  month_day: number | null;
+  month_days_remaining: number | null;
+  real_projected_bonus_usd_eom: number | null;
+  real_projected_diamonds_eom: number | null;
+  max_diamonds_to_next_tier: number | null;
+  days_to_next_activity_level: number | null;
+  hist_3m_avg_total: number | null;
+  hist_3m_count: number | null;
+  trend_class: "wachsend" | "stabil" | "fallend" | "new_creator" | "unknown" | null;
+}
 
 interface CreatorAggRow {
   tiktok_username: string;
@@ -103,9 +131,11 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { t } = await loadLocale();
   const sp = await searchParams;
   const tab: SubTab =
+    sp.tab === "overview" ? "overview" :
     sp.tab === "forecast" ? "forecast" :
     sp.tab === "missing"  ? "missing"  :
-    sp.tab === "creator"  ? "creator"  : "current";
+    sp.tab === "creator"  ? "creator"  :
+    sp.tab === "current"  ? "current"  : "overview";  // Default ab v1.18: overview
 
   const db = sr();
   const month = currentMonthIso();
@@ -126,6 +156,19 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
         .in("tiktok_handle_normalized", handles)
     : { data: [] };
   const nameByHandle = new Map((profiles ?? []).map((p) => [p.tiktok_handle_normalized, p.display_name]));
+
+  // Phase B2 Compute-View · für overview + creator-Tab-Enhancement.
+  // Lädt aktuellen Monat sot_live-Rows mit Pace / Trend / Quick-Win-Daten.
+  const { data: computeRows } = (tab === "overview" || tab === "creator")
+    ? await db
+        .from("v_creator_incentive_compute")
+        .select("tiktok_username, ist_estimated_bonus_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_status, ist_activity_status, ist_incremental_status, live_current_diamonds, live_valid_days, live_duration_seconds, data_completeness, drift_pct, meta_invitation_type, meta_is_new_creator, month_day, month_days_remaining, real_projected_bonus_usd_eom, real_projected_diamonds_eom, max_diamonds_to_next_tier, days_to_next_activity_level, hist_3m_avg_total, hist_3m_count, trend_class")
+        .eq("period_month", month)
+        .order("ist_estimated_bonus_usd", { ascending: false, nullsFirst: false })
+    : { data: [] };
+  const compute: ComputeRow[] = (computeRows ?? []) as unknown as ComputeRow[];
+  const computeByHandle = new Map<string, ComputeRow>();
+  for (const c of compute) computeByHandle.set(c.tiktok_username.toLowerCase(), c);
 
   const rows: Row[] = (metrics ?? []).map((m) => ({
     profile_id: m.profile_id,
@@ -269,13 +312,14 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
           </div>
         </div>
 
-        {/* SUB-TABS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:flex md:flex-wrap md:gap-2 mb-6 md:mb-5 border-b border-champagne/15 pb-3">
-          {(["current","forecast","missing","creator"] as const).map((t) => {
+        {/* SUB-TABS · v1.18: Overview als erster Tab (Default) */}
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2.5 md:flex md:flex-wrap md:gap-2 mb-6 md:mb-5 border-b border-champagne/15 pb-3">
+          {(["overview","current","forecast","missing","creator"] as const).map((t) => {
             const active = t === tab;
-            const label = t === "current" ? "Current"
+            const label = t === "overview" ? "Overview"
+                        : t === "current"  ? "Current"
                         : t === "forecast" ? "Forecast"
-                        : t === "missing" ? "Missing"
+                        : t === "missing"  ? "Missing"
                         : "Creator";
             return (
               <a key={t} href={`?tab=${t}`}
@@ -294,6 +338,18 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
 
         {/* BESCHREIBUNG */}
         <div className="mb-5 border-l-2 border-champagne/40 pl-4">
+          {tab === "overview" && (
+            <>
+              <p className="text-cream/85 text-sm mb-3">
+                Wo steht das Network heute · wo landet es bis Monatsende · wer ist priorisiert?
+              </p>
+              <p className="text-cream/55 text-xs leading-relaxed">
+                IST · REAL-Pace bis Monatsende · 3M-Trend · Quick-Win-Kandidaten.
+                Werte aus v_creator_incentive_compute (Phase B2), deterministisch berechnet
+                aus den 3 Backstage-Quellen.
+              </p>
+            </>
+          )}
           {tab === "current" && (
             <>
               <p className="text-cream/85 text-sm mb-3">
@@ -337,6 +393,146 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
             </>
           )}
         </div>
+
+        {/* ============= OVERVIEW-TAB (Phase B2 · Compute-View) ============= */}
+        {tab === "overview" && (() => {
+          const sotLive = compute.filter((c) => c.data_completeness === "sot_live");
+          const sumIst   = sotLive.reduce((s, c) => s + (Number(c.ist_estimated_bonus_usd) || 0), 0);
+          const sumReal  = sotLive.reduce((s, c) => s + (Number(c.real_projected_bonus_usd_eom) || 0), 0);
+          const cntWachsend = sotLive.filter((c) => c.trend_class === "wachsend").length;
+          const cntFallend  = sotLive.filter((c) => c.trend_class === "fallend").length;
+          const cntStabil   = sotLive.filter((c) => c.trend_class === "stabil").length;
+          const cntNew      = sotLive.filter((c) => c.trend_class === "new_creator").length;
+          const monthDay   = sotLive[0]?.month_day ?? null;
+          const monthRem   = sotLive[0]?.month_days_remaining ?? null;
+          const nearActivityUp = sotLive
+            .filter((c) => c.days_to_next_activity_level !== null
+                          && c.days_to_next_activity_level <= 3
+                          && (c.ist_activity_level ?? 0) < 5)
+            .sort((a, b) => (a.days_to_next_activity_level ?? 99) - (b.days_to_next_activity_level ?? 99));
+          const nearTierUp = sotLive
+            .filter((c) => c.max_diamonds_to_next_tier !== null
+                          && c.max_diamonds_to_next_tier <= 100_000
+                          && c.max_diamonds_to_next_tier > 0)
+            .sort((a, b) => (a.max_diamonds_to_next_tier ?? 9e9) - (b.max_diamonds_to_next_tier ?? 9e9));
+          const wachsendCreators = sotLive.filter((c) => c.trend_class === "wachsend");
+
+          if (sotLive.length === 0) {
+            return (
+              <div className="border border-champagne/15 p-7 text-center">
+                <p className="text-cream/55 mb-3">Keine sot_live-Daten fuer {monthLabel}.</p>
+                <p className="text-cream/40 text-xs">
+                  Wartet auf Workstation-Scraper-Run (3-Tab-Flow). Solange nur Legacy-Werte vorhanden.
+                </p>
+              </div>
+            );
+          }
+
+          return (
+            <>
+              {/* ============ STAT-CARDS (Network-Level) ============ */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+                <OverviewCard label="Network IST"        value={fmtUsd(sumIst)}  sub={`${sotLive.length} sot_live · Tag ${monthDay ?? "?"}`} highlight />
+                <OverviewCard label="REAL bis Monatsende" value={fmtUsd(sumReal)} sub={monthRem !== null ? `${monthRem} Tage verbleibend` : "—"} highlight />
+                <OverviewCard label="Trend wachsend / stabil" value={`${cntWachsend} / ${cntStabil}`} sub={`${cntNew} neue Creator`} />
+                <OverviewCard label="Trend fallend"      value={`${cntFallend}`} sub="Mai schwach: Incremental = 0 networkweit" />
+              </div>
+
+              {/* ============ QUICK-WINS ============ */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-8">
+                {/* Activity-Level-Up nahe */}
+                <div className="border border-champagne/20 p-4">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <p className="text-cream/55 text-[9px] uppercase tracking-[0.22em]">Activity-Level-Up nahe</p>
+                    <span className="text-champagne font-display italic text-xl leading-none">{nearActivityUp.length}</span>
+                  </div>
+                  {nearActivityUp.length === 0 ? (
+                    <p className="text-cream/40 text-xs">—</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {nearActivityUp.slice(0, 6).map((c) => (
+                        <li key={c.tiktok_username} className="flex items-baseline justify-between text-xs">
+                          <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
+                             className="text-cream hover:text-champagne truncate flex-1 mr-2">
+                            @{c.tiktok_username}
+                          </a>
+                          <span className="text-champagne/85 whitespace-nowrap">
+                            {c.days_to_next_activity_level === 0 ? "jetzt" : `${c.days_to_next_activity_level}d`}
+                          </span>
+                          <span className="text-cream/40 text-[10px] ml-2">L{c.ist_activity_level}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Tier-Up nahe (≤100k Diamonds) */}
+                <div className="border border-champagne/20 p-4">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <p className="text-cream/55 text-[9px] uppercase tracking-[0.22em]">Tier-Up nahe</p>
+                    <span className="text-champagne font-display italic text-xl leading-none">{nearTierUp.length}</span>
+                  </div>
+                  {nearTierUp.length === 0 ? (
+                    <p className="text-cream/40 text-xs">—</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {nearTierUp.slice(0, 6).map((c) => (
+                        <li key={c.tiktok_username} className="flex items-baseline justify-between text-xs">
+                          <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
+                             className="text-cream hover:text-champagne truncate flex-1 mr-2">
+                            @{c.tiktok_username}
+                          </a>
+                          <span className="text-champagne/85 whitespace-nowrap">
+                            {fmtBigInt(c.max_diamonds_to_next_tier)}
+                          </span>
+                          <span className="text-cream/40 text-[10px] ml-2">St{c.ist_tier_level}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Trend wachsend */}
+                <div className="border border-champagne/20 p-4">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <p className="text-cream/55 text-[9px] uppercase tracking-[0.22em]">Wachsend (Trend)</p>
+                    <span className="text-champagne font-display italic text-xl leading-none">{wachsendCreators.length}</span>
+                  </div>
+                  {wachsendCreators.length === 0 ? (
+                    <p className="text-cream/40 text-xs">— (Mai strukturell schwach networkweit)</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {wachsendCreators.slice(0, 6).map((c) => (
+                        <li key={c.tiktok_username} className="flex items-baseline justify-between text-xs">
+                          <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
+                             className="text-cream hover:text-champagne truncate flex-1 mr-2">
+                            @{c.tiktok_username}
+                          </a>
+                          <span className="text-champagne/85 whitespace-nowrap">
+                            {fmtUsd(c.real_projected_bonus_usd_eom)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              {/* ============ Kontext-Hinweis (ruhig, kein Alarm) ============ */}
+              {cntFallend > sotLive.length * 0.5 && (
+                <div className="border border-champagne/20 bg-champagne/[0.04] p-4 mb-6 text-xs text-cream/75 leading-relaxed">
+                  <p className="text-champagne/85 uppercase tracking-[0.2em] text-[10px] mb-1.5">Kontext</p>
+                  {cntFallend} Creator zeigen Trend „fallend" gegen 3-Monats-Schnitt.
+                  Hauptgrund networkweit: Inkrementeller Umsatzanreiz ist im aktuellen Monat = 0
+                  (TikTok-Network-Wachstumsschwelle aktuell nicht erreicht).
+                  Das ist KEIN Performance-Problem auf Creator-Ebene — sondern
+                  strukturell aus dem Bonus-System. Die Pace-Projektion bis
+                  Monatsende liegt bei {fmtUsd(sumReal)}.
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* ============= CREATOR-TAB (aggregiert) ============= */}
         {tab === "creator" && (
@@ -397,7 +593,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
         )}
 
         {/* ============= TABELLE fuer Current/Forecast/Missing ============= */}
-        {tab !== "creator" && (rows.length === 0 ? (
+        {(tab === "current" || tab === "forecast" || tab === "missing") && (rows.length === 0 ? (
           <div className="border border-champagne/15 p-7 text-center">
             <p className="text-cream/55 mb-3">
               Noch keine Backstage-Anreize-Daten fuer {monthLabel}.
@@ -512,12 +708,32 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
         ))}
 
         <p className="text-cream/35 text-xs mt-6 leading-relaxed max-w-3xl">
-          Quelle: TikTok Backstage Anreize-Pages (Desktop-Version, da Mobile
-          den roten Banner ueber Werte legt). Daten fliessen ueber
-          /api/sync/backstage-revenue in creator_revenue_metrics (Migration 0048).
-          Aktualisierung: nach Setup der Workstation-Pipeline taeglich.
+          Quelle: TikTok Backstage Anreize-Pages + LIVE-Leistung + Creator-Karte.
+          Daten fliessen ueber /api/sync/backstage-revenue + live-performance +
+          creator-meta. Migrationen 0048/0049 (revenue) + 0057-0059 (C-Block) +
+          0060 (View v_creator_incentive_summary) + 0061 (Compute v2).
         </p>
       </main>
     </>
+  );
+}
+
+// Phase B2 · Overview-Stat-Card (kompakt, deterministisch, ruhig)
+function OverviewCard({ label, value, sub, highlight }: {
+  label: string;
+  value: string;
+  sub?: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className={`border p-4 ${highlight ? "border-champagne/40 bg-champagne/5" : "border-champagne/15"}`}>
+      <p className="text-cream/45 text-[9px] uppercase tracking-[0.22em] mb-2">{label}</p>
+      <p className={`font-display italic text-2xl md:text-3xl leading-tight ${highlight ? "text-champagne" : "text-cream"}`}>
+        {value}
+      </p>
+      {sub && (
+        <p className="text-cream/40 text-[10px] mt-2 leading-relaxed">{sub}</p>
+      )}
+    </div>
   );
 }
