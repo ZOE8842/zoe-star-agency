@@ -17,6 +17,9 @@ type SubTab = "overview" | "current" | "forecast" | "missing" | "creator";
 interface ComputeRow {
   tiktok_username: string;
   ist_estimated_bonus_usd: number | null;
+  ist_activity_usd: number | null;
+  ist_tier_usd: number | null;
+  ist_incremental_usd: number | null;
   ist_tier_level: number | null;
   ist_activity_level: number | null;
   ist_activity_ratio: number | null;
@@ -31,6 +34,7 @@ interface ComputeRow {
   meta_invitation_type: "Regulär" | "Premium" | "Elite" | null;
   meta_is_new_creator: boolean | null;
   month_day: number | null;
+  month_days_total: number | null;
   month_days_remaining: number | null;
   real_projected_bonus_usd_eom: number | null;
   real_projected_diamonds_eom: number | null;
@@ -162,7 +166,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
   const { data: computeRows } = (tab === "overview" || tab === "creator")
     ? await db
         .from("v_creator_incentive_compute")
-        .select("tiktok_username, ist_estimated_bonus_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_status, ist_activity_status, ist_incremental_status, live_current_diamonds, live_valid_days, live_duration_seconds, data_completeness, drift_pct, meta_invitation_type, meta_is_new_creator, month_day, month_days_remaining, real_projected_bonus_usd_eom, real_projected_diamonds_eom, max_diamonds_to_next_tier, days_to_next_activity_level, hist_3m_avg_total, hist_3m_count, trend_class")
+        .select("tiktok_username, ist_estimated_bonus_usd, ist_activity_usd, ist_tier_usd, ist_incremental_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_status, ist_activity_status, ist_incremental_status, live_current_diamonds, live_valid_days, live_duration_seconds, data_completeness, drift_pct, meta_invitation_type, meta_is_new_creator, month_day, month_days_total, month_days_remaining, real_projected_bonus_usd_eom, real_projected_diamonds_eom, max_diamonds_to_next_tier, days_to_next_activity_level, hist_3m_avg_total, hist_3m_count, trend_class")
         .eq("period_month", month)
         .order("ist_estimated_bonus_usd", { ascending: false, nullsFirst: false })
     : { data: [] };
@@ -427,6 +431,18 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
             );
           }
 
+          // Phase B2.1 · Incremental ist Network-Hebel (R17, Master-Prompt §2.3)
+          const sumDiamonds = sotLive.reduce((s, c) => s + (Number(c.live_current_diamonds) || 0), 0);
+          // Pace-Hochrechnung für Network-Diamonds
+          const realDiamonds = (monthDay && monthDay > 0)
+            ? Math.round(sumDiamonds * (((sotLive[0]?.month_days_total ?? 31)) / monthDay))
+            : null;
+          // Top-Beiträger zum Network-Diamond-Pool
+          const topDiamondContributors = [...sotLive]
+            .filter((c) => c.live_current_diamonds !== null)
+            .sort((a, b) => (Number(b.live_current_diamonds) || 0) - (Number(a.live_current_diamonds) || 0))
+            .slice(0, 6);
+          const incActive = sotLive.filter((c) => c.ist_incremental_usd !== null && Number(c.ist_incremental_usd) > 0).length;
           return (
             <>
               {/* ============ STAT-CARDS · deutsche Hauptlabels ============ */}
@@ -457,6 +473,71 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                   value={`${cntFallend}`}
                   sub="häufig: Inkrementeller Bonus aktuell pausiert"
                 />
+              </div>
+
+              {/* ============ INKREMENTELLER UMSATZANREIZ · Network-Hebel ============ */}
+              <div className="border border-champagne/30 bg-champagne/[0.03] p-5 mb-8">
+                <div className="flex items-baseline justify-between mb-4">
+                  <div>
+                    <p className="text-cream text-base font-medium">Inkrementeller Umsatzanreiz</p>
+                    <p className="text-cream/50 text-[10px] uppercase tracking-[0.2em] mt-0.5">
+                      Network-Hebel · nicht pro Creator · Incremental
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display italic text-2xl text-champagne leading-none">
+                      {incActive > 0 ? "aktiv" : "pausiert"}
+                    </p>
+                    <p className="text-cream/45 text-[10px] mt-1">
+                      {incActive > 0 ? `${incActive}/${sotLive.length} Creator mit Bonus` : "Schwelle nicht erreicht"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-5">
+                  <div className="border border-champagne/15 p-3">
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.2em] mb-1.5">Network-Diamanten aktuell</p>
+                    <p className="font-display italic text-xl text-cream">{fmtBigInt(sumDiamonds)}</p>
+                    <p className="text-cream/40 text-[10px] mt-1">Summe aller Creator · Tag {monthDay}</p>
+                  </div>
+                  <div className="border border-champagne/15 p-3">
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.2em] mb-1.5">Hochrechnung Monatsende</p>
+                    <p className="font-display italic text-xl text-cream">{realDiamonds !== null ? fmtBigInt(realDiamonds) : "—"}</p>
+                    <p className="text-cream/40 text-[10px] mt-1">bei gleichbleibender Pace</p>
+                  </div>
+                  <div className="border border-champagne/15 p-3 col-span-2 md:col-span-1">
+                    <p className="text-cream/55 text-[10px] uppercase tracking-[0.2em] mb-1.5">Diamanten-Bezugswert</p>
+                    <p className="font-display italic text-xl text-cream/50">noch nicht erfasst</p>
+                    <p className="text-cream/40 text-[10px] mt-1">muss aus Backstage-Workspace separat synchronisiert werden</p>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-cream/85 text-xs font-medium mb-2">Größte Beiträger zum Network-Pool</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {topDiamondContributors.map((c) => (
+                      <div key={c.tiktok_username} className="flex items-baseline justify-between text-xs border-l border-champagne/20 pl-2">
+                        <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
+                           className="text-cream hover:text-champagne truncate mr-2">
+                          @{c.tiktok_username}
+                        </a>
+                        <span className="text-champagne/85 whitespace-nowrap">
+                          {fmtBigInt(c.live_current_diamonds)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-cream/55 text-[11px] leading-relaxed border-t border-champagne/10 pt-3">
+                  Der inkrementelle Umsatzanreiz ist ein <strong className="text-cream/75">Network-Ziel</strong>,
+                  kein Creator-Bonus. Erst wenn das gesamte Netzwerk eine
+                  Zielerfüllungsrate von ≥ 70 % gegen den TikTok-Diamanten-Bezugswert
+                  erreicht, zahlt der inkrementelle Bonus aus
+                  ({incActive > 0 ? "aktuell aktiv" : "aktuell pausiert, weil Schwelle nicht erreicht"}).
+                  Stufen 1–13 mit 2 %–15 % Bonus je nach Erfüllungsgrad.
+                  Der Bezugswert ist noch nicht in der Datenbank — kommt in eigener Sync-Phase.
+                </p>
               </div>
 
               {/* ============ QUICK-WINS · deutsche Labels ============ */}
@@ -594,17 +675,25 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                        : c.trend_class === "stabil"   ? "text-cream/75"
                                        : "text-cream/40";
                         // Quick-Win-Hinweis · Priorität-Vorgriff (Phase B3 wird das ablösen)
-                        const hint = (c.days_to_next_activity_level === 0 && (c.ist_activity_level ?? 0) < 5)
-                          ? "Aktivitätsaufstieg jetzt möglich"
-                          : (c.days_to_next_activity_level !== null && c.days_to_next_activity_level <= 2 && (c.ist_activity_level ?? 0) < 5)
-                          ? `noch ${c.days_to_next_activity_level} LIVE-Tag${c.days_to_next_activity_level === 1 ? "" : "e"}`
-                          : (c.max_diamonds_to_next_tier !== null && c.max_diamonds_to_next_tier <= 100_000 && c.max_diamonds_to_next_tier > 0)
-                          ? `${fmtBigInt(c.max_diamonds_to_next_tier)} bis nächste Stufe`
-                          : c.trend_class === "wachsend"
-                          ? "Über persönlichem Schnitt"
-                          : c.meta_is_new_creator
-                          ? "Neuer Creator"
-                          : "—";
+                        // Sammelt bis zu 2 fehlende Schritte (Activity + Tier sind orthogonal)
+                        const hints: string[] = [];
+                        const dn = c.days_to_next_activity_level;
+                        const dm = c.max_diamonds_to_next_tier;
+                        if (dn === 0 && (c.ist_activity_level ?? 0) < 5) {
+                          hints.push("Aktivitätsaufstieg jetzt möglich");
+                        } else if (dn !== null && dn > 0 && dn <= 3 && (c.ist_activity_level ?? 0) < 5) {
+                          hints.push(`noch ${dn} LIVE-Tag${dn === 1 ? "" : "e"}`);
+                        }
+                        if (dm !== null && dm > 0 && dm <= 100_000) {
+                          hints.push(`${fmtBigInt(dm)} Diamanten bis nächste Stufe`);
+                        }
+                        if (hints.length === 0) {
+                          if (c.trend_class === "wachsend") hints.push("Über persönlichem Schnitt");
+                          else if (c.meta_is_new_creator) hints.push("Neuer Creator");
+                          else if (dn !== null && (c.ist_activity_level ?? 0) < 5) hints.push(`${dn}d bis nächstes Aktivitätslevel`);
+                          else if (dm !== null && dm > 0) hints.push(`${fmtBigInt(dm)} bis nächste Stufe`);
+                        }
+                        const hint = hints.length === 0 ? "—" : hints.join(" · ");
 
                         return (
                           <tr key={c.tiktok_username} className="border-t border-champagne/10 hover:bg-champagne/[0.03]">
