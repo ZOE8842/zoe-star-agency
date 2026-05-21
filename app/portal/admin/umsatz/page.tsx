@@ -399,7 +399,24 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
 
         {/* ============= OVERVIEW-TAB (Phase B2 · Compute-View) ============= */}
         {tab === "overview" && (() => {
-          const sotLive = compute.filter((c) => c.data_completeness === "sot_live");
+          // V1.5 · Priority-Sort: 1 = höchste (Activity-Up jetzt), 2 = Tier-≤50k,
+          // 3 = wachsend, 4 = sonst. Innerhalb gleicher Prio: nach REAL_EOM DESC.
+          const computePriority = (c: ComputeRow): number => {
+            const dn = c.days_to_next_activity_level;
+            const dm = c.max_diamonds_to_next_tier;
+            if (dn !== null && dn <= 1 && (c.ist_activity_level ?? 0) < 5) return 1;
+            if (dm !== null && dm > 0 && dm <= 50_000) return 2;
+            if (c.trend_class === "wachsend") return 3;
+            return 4;
+          };
+          const sotLiveAll = compute.filter((c) => c.data_completeness === "sot_live");
+          const sotLive = [...sotLiveAll].sort((a, b) => {
+            const pa = computePriority(a);
+            const pb = computePriority(b);
+            if (pa !== pb) return pa - pb;
+            return (Number(b.real_projected_bonus_usd_eom) || 0)
+                 - (Number(a.real_projected_bonus_usd_eom) || 0);
+          });
           const sumIst   = sotLive.reduce((s, c) => s + (Number(c.ist_estimated_bonus_usd) || 0), 0);
           const sumReal  = sotLive.reduce((s, c) => s + (Number(c.real_projected_bonus_usd_eom) || 0), 0);
           const cntWachsend = sotLive.filter((c) => c.trend_class === "wachsend").length;
@@ -540,10 +557,10 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                 </p>
               </div>
 
-              {/* ============ QUICK-WINS · deutsche Labels ============ */}
+              {/* ============ QUICK-WINS · deutsche Labels + V1.3 Signal ============ */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-8">
                 {/* Activity-Level-Up nahe */}
-                <div className="border border-champagne/20 p-4">
+                <div className={`border p-4 ${nearActivityUp.length > 0 ? "border-champagne/45 bg-champagne/[0.05]" : "border-champagne/15"}`}>
                   <div className="flex items-baseline justify-between mb-3">
                     <div>
                       <p className="text-cream/85 text-xs font-medium">Kurz vor Aktivitätsaufstieg</p>
@@ -572,7 +589,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                 </div>
 
                 {/* Tier-Up nahe (≤100k Diamonds) */}
-                <div className="border border-champagne/20 p-4">
+                <div className={`border p-4 ${nearTierUp.length > 0 ? "border-champagne/45 bg-champagne/[0.05]" : "border-champagne/15"}`}>
                   <div className="flex items-baseline justify-between mb-3">
                     <div>
                       <p className="text-cream/85 text-xs font-medium">Kurz vor nächster Stufe</p>
@@ -601,7 +618,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                 </div>
 
                 {/* Über persönlichem Schnitt */}
-                <div className="border border-champagne/20 p-4">
+                <div className={`border p-4 ${wachsendCreators.length > 0 ? "border-champagne/45 bg-champagne/[0.05]" : "border-champagne/15"}`}>
                   <div className="flex items-baseline justify-between mb-3">
                     <div>
                       <p className="text-cream/85 text-xs font-medium">Über persönlichem Schnitt</p>
@@ -641,11 +658,16 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                 </div>
               )}
 
-              {/* ============ Volle Creator-Liste (alle 53 nach IST sortiert) ============ */}
+              {/* ============ Volle Creator-Liste (alle 53 nach Priorität sortiert) ============ */}
               <div className="mb-6">
                 <div className="flex items-baseline justify-between mb-3">
-                  <p className="text-cream/85 text-sm font-medium">Alle Creator · aktueller Monat</p>
-                  <p className="text-cream/40 text-[10px]">sortiert nach aktuellem Bonus · {sotLive.length} Einträge</p>
+                  <div>
+                    <p className="text-cream/85 text-sm font-medium">Alle Creator · sortiert nach Priorität</p>
+                    <p className="text-cream/40 text-[10px] mt-0.5">
+                      Hebel zuerst · Activity-Aufstieg ≤1d → Tier ≤50k → über Schnitt → Rest
+                    </p>
+                  </div>
+                  <p className="text-cream/40 text-[10px]">{sotLive.length} Einträge</p>
                 </div>
                 <div className="overflow-x-auto border border-champagne/15">
                   <table className="w-full text-sm">
@@ -674,6 +696,17 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                                        : c.trend_class === "fallend"  ? "text-cream/50"
                                        : c.trend_class === "stabil"   ? "text-cream/75"
                                        : "text-cream/40";
+                        // V1.3 · Premium-Signal-System (Champagne-Spektrum, kein rot/grün)
+                        const prio = computePriority(c);
+                        const rowCls = prio === 1
+                          ? "border-t border-champagne/30 bg-champagne/[0.06] hover:bg-champagne/[0.10]"
+                          : prio === 2
+                          ? "border-t border-champagne/20 bg-champagne/[0.03] hover:bg-champagne/[0.07]"
+                          : prio === 3
+                          ? "border-t border-champagne/15 hover:bg-champagne/[0.05]"
+                          : c.trend_class === "fallend"
+                          ? "border-t border-champagne/8 opacity-75 hover:bg-champagne/[0.03] hover:opacity-100"
+                          : "border-t border-champagne/10 hover:bg-champagne/[0.03]";
                         // Quick-Win-Hinweis · Priorität-Vorgriff (Phase B3 wird das ablösen)
                         // Sammelt bis zu 2 fehlende Schritte (Activity + Tier sind orthogonal)
                         const hints: string[] = [];
@@ -696,7 +729,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                         const hint = hints.length === 0 ? "—" : hints.join(" · ");
 
                         return (
-                          <tr key={c.tiktok_username} className="border-t border-champagne/10 hover:bg-champagne/[0.03]">
+                          <tr key={c.tiktok_username} className={rowCls}>
                             <td className="px-3 py-3 text-cream/40 font-display italic text-base">{i + 1}</td>
                             <td className="px-3 py-3">
                               <a href={`/portal/admin/umsatz/creator/${encodeURIComponent(c.tiktok_username.toLowerCase())}`}
