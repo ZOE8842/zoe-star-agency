@@ -218,7 +218,6 @@ export function MobileNavDrawer({
           >
             <Link
               href="/portal"
-              onClick={close}
               className="text-lg font-medium"
               style={{ color: GOLD }}
             >
@@ -293,7 +292,6 @@ export function MobileNavDrawer({
                 <Link
                   key={it.href}
                   href={it.href}
-                  onClick={close}
                   className="block px-6 py-5 text-[17px] active:opacity-70"
                   style={{
                     color: active ? GOLD : GOLD_TEXT,
