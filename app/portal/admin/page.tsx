@@ -515,7 +515,7 @@ export default async function AdminPage() {
                     {topPrios.map((p, i) => (
                       <li key={p.handle + i}>
                           <Link
-                            href={`/portal/admin/umsatz?tab=overview&expand=${encodeURIComponent(p.handle)}#creator-${encodeURIComponent(p.handle)}`}
+                            href={`/portal/admin/umsatz/creator/${encodeURIComponent(p.handle)}`}
                             className={`flex items-center justify-between gap-4 border px-4 py-3 md:px-5 md:py-4 transition-colors hover:bg-champagne/[0.04] active:opacity-80 ${
                               p.accent === "warm"
                                 ? "border-champagne/40 bg-champagne/[0.04]"

@@ -60,6 +60,32 @@ function statusBadge(s: string | null): { label: string; cls: string } {
   return { label: "—", cls: "border border-cream/15 text-cream/35" };
 }
 
+// V2-A · Compare-Helpers
+function comparePct(current: number | null, delta: number | null): number | null {
+  if (current === null || delta === null) return null;
+  const before = current - delta;
+  if (!Number.isFinite(before) || before === 0) return null;
+  return Math.round((delta / before) * 1000) / 10;
+}
+function compareColor(value: number | null): string {
+  if (value === null) return "text-cream/45";
+  if (value > 0.1) return "text-emerald-400/85";
+  if (value < -0.1) return "text-red-400/85";
+  return "text-cream/55";
+}
+function compareArrow(value: number | null): string {
+  if (value === null) return "—";
+  if (value > 0.1) return "↑";
+  if (value < -0.1) return "↓";
+  return "·";
+}
+function fmtUsd2(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "—";
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return `${v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+}
+
 // Pre-Maerz-Cutoff: User-Decision (Backstage hatte vorher andere Metriken).
 const NEW_METRICS_CUTOFF = "2026-03-01";
 
@@ -73,13 +99,36 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
   const normalized = decodeURIComponent(handle).toLowerCase();
 
   const db = sr();
-  const { data: metrics } = await db
-    .from("creator_revenue_metrics")
-    .select(
-      "period_month, activity_revenue_usd, tier_revenue_usd, incremental_revenue_usd, total_revenue_usd, forecast_revenue_usd, forecast_diamonds, missing_diamonds, missing_next_tier_label, missing_status, synced_at, tiktok_username, legacy_revenue_usd, legacy_activity_usd, legacy_incremental_usd, legacy_beginner_bonus_usd, legacy_program_label",
-    )
-    .eq("tiktok_handle_normalized", normalized)
-    .order("period_month", { ascending: false });
+  const currentMonthIso = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  })();
+
+  const [
+    { data: metrics },
+    { data: summary },
+    { data: compute },
+  ] = await Promise.all([
+    db
+      .from("creator_revenue_metrics")
+      .select(
+        "period_month, activity_revenue_usd, tier_revenue_usd, incremental_revenue_usd, total_revenue_usd, forecast_revenue_usd, forecast_diamonds, missing_diamonds, missing_next_tier_label, missing_status, synced_at, tiktok_username, legacy_revenue_usd, legacy_activity_usd, legacy_incremental_usd, legacy_beginner_bonus_usd, legacy_program_label",
+      )
+      .eq("tiktok_handle_normalized", normalized)
+      .order("period_month", { ascending: false }),
+    db
+      .from("v_creator_incentive_summary")
+      .select("ist_estimated_bonus_usd, ist_activity_usd, ist_tier_usd, ist_incremental_usd, ist_tier_level, ist_activity_level, ist_activity_ratio, ist_tier_progress, ist_tier_target, ist_forecast_revenue_usd, live_current_diamonds, live_valid_days, live_duration_seconds, live_streams_count, live_new_followers, live_diamonds_compare, live_days_compare, live_duration_compare_sec, live_streams_compare, live_followers_compare, live_compare_start, live_compare_end, meta_invitation_type, meta_is_new_creator, meta_last_live_at")
+      .eq("tiktok_handle_normalized", normalized)
+      .eq("period_month", currentMonthIso)
+      .maybeSingle(),
+    db
+      .from("v_creator_incentive_compute")
+      .select("days_to_next_activity_level, max_diamonds_to_next_tier, real_projected_bonus_usd_eom, trend_class, hist_3m_avg_total, hist_3m_count, month_day, month_days_total, month_days_remaining")
+      .eq("tiktok_handle_normalized", normalized)
+      .eq("period_month", currentMonthIso)
+      .maybeSingle(),
+  ]);
 
   const rows: MonthRow[] = (metrics ?? []).map((m) => ({
     period_month: m.period_month,
@@ -121,6 +170,17 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
   const currentRow = rows.find((r) => r.period_month === currentIso) ?? null;
   const forecastCurrent = currentRow?.forecast_revenue_usd ?? null;
 
+  // V2-A · Eligibility-Berechnung (TikTok ≥7 LIVE-Tage + ≥15h)
+  const liveDays = Number(summary?.live_valid_days ?? 0);
+  const liveSecs = Number(summary?.live_duration_seconds ?? 0);
+  const daysMissing = Math.max(0, 7 - liveDays);
+  const hoursMissing = Math.ceil(Math.max(0, 15 * 3600 - liveSecs) / 3600);
+  const isEligible = daysMissing === 0 && hoursMissing === 0;
+  const istZero = Number(summary?.ist_estimated_bonus_usd ?? 0) === 0;
+  const showEligibilityWarn = istZero
+    && (Number(summary?.live_current_diamonds ?? 0) > 100_000)
+    && !isEligible;
+
   return (
     <>
       <PortalNav
@@ -133,9 +193,9 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
       />
       <main className="container-luxe py-10 md:py-16">
         {/* Breadcrumb */}
-        <a href="/portal/admin/umsatz?tab=creator"
+        <a href="/portal/admin"
            className="text-cream/55 hover:text-champagne text-[10px] uppercase tracking-[0.25em] inline-block mb-4">
-          ← Umsatz · Creator
+          ← Master
         </a>
 
         <div className="mb-8">
@@ -145,6 +205,185 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
           </h1>
           <p className="text-cream/45 text-sm mt-2">@{username} · {rows.length} Monate</p>
         </div>
+
+        {/* ═══ V2-A · Top-Block (aktueller Monat) ═══ */}
+        {summary && (
+          <>
+            {/* Eligibility-Warnung */}
+            {showEligibilityWarn && (
+              <div className="border border-champagne/40 bg-champagne/[0.04] p-4 md:p-5 mb-5">
+                <p className="text-champagne text-xs font-medium uppercase tracking-[0.18em] mb-2">▴ Noch nicht teilnahmeberechtigt</p>
+                <p className="text-cream/85 text-sm leading-relaxed mb-2">
+                  Aktuell {fmtUsd2(summary.ist_estimated_bonus_usd)} Tier-Bonus, weil die TikTok-Mindestaktivität noch nicht erfüllt ist.
+                  Es fehlen
+                  {daysMissing > 0 && <span className="text-champagne/85"> {daysMissing} gültige LIVE-Tag{daysMissing === 1 ? "" : "e"}</span>}
+                  {daysMissing > 0 && hoursMissing > 0 && " und "}
+                  {hoursMissing > 0 && <span className="text-champagne/85">{hoursMissing} LIVE-Stunde{hoursMissing === 1 ? "" : "n"}</span>}.
+                </p>
+                {summary.ist_forecast_revenue_usd !== null && Number(summary.ist_forecast_revenue_usd) > 0 && (
+                  <p className="text-cream/55 text-xs">
+                    Sobald erreicht: TikTok-Forecast <span className="text-champagne/85">{fmtUsd2(summary.ist_forecast_revenue_usd)}</span>
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* IST + Hochrechnung */}
+            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-5">
+              <div className="border border-champagne/25 p-4 md:p-5">
+                <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-2">Aktuell · {fmtMonthLong(currentMonthIso).split(" ")[0]}</p>
+                <p className="font-display italic text-3xl text-champagne leading-none">
+                  {fmtUsd2(summary.ist_estimated_bonus_usd)}
+                </p>
+                <p className="text-cream/40 text-[10px] mt-2">Tag {compute?.month_day ?? "?"} / {compute?.month_days_total ?? "?"}</p>
+              </div>
+              <div className="border border-champagne/15 p-4 md:p-5">
+                <p className="text-cream/45 text-[10px] uppercase tracking-[0.22em] mb-2">Hochrechnung Monatsende</p>
+                <p className="font-display italic text-3xl text-cream leading-none">
+                  {fmtUsd2(compute?.real_projected_bonus_usd_eom)}
+                </p>
+                <p className="text-cream/40 text-[10px] mt-2">bei gleichbleibender Pace</p>
+              </div>
+            </div>
+
+            {/* 3-Anreiz-Block · konkret was fehlt */}
+            <div className="space-y-3 mb-6">
+              <div className="border border-champagne/15 p-4 md:p-5">
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Aktivitätsanreiz</p>
+                <p className="text-cream text-base leading-snug font-medium">
+                  {(() => {
+                    const lvl = summary.ist_activity_level ?? null;
+                    const next = lvl !== null ? lvl + 1 : null;
+                    const dn = compute?.days_to_next_activity_level ?? null;
+                    if (lvl === null) return "Activity-Level unbekannt";
+                    if (lvl >= 5) return "Level 5 erreicht · Maximum";
+                    if (dn === null) return `Level ${lvl} · Ziel: Level ${next}`;
+                    if (dn === 0) return `Schwelle erreicht · wartet auf TikTok-Update`;
+                    return `Für Level ${next} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}`;
+                  })()}
+                </p>
+                <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
+                  <div>
+                    <p className="text-cream/40 text-[9px] uppercase tracking-[0.18em] mb-1">LIVE-Tage</p>
+                    <p className="text-cream/85">{summary.live_valid_days ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-cream/40 text-[9px] uppercase tracking-[0.18em] mb-1">Bonusverhältnis</p>
+                    <p className="text-cream/85">
+                      {summary.ist_activity_ratio !== null && summary.ist_activity_ratio !== undefined
+                        ? `${(Number(summary.ist_activity_ratio) * 100).toFixed(1).replace(".", ",")} %`
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-champagne/15 p-4 md:p-5">
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Stufenbasierter Umsatzanreiz</p>
+                <p className="text-cream text-base leading-snug font-medium">
+                  {(() => {
+                    const stf = summary.ist_tier_level ?? null;
+                    const nx = stf !== null ? stf + 1 : null;
+                    const dm = compute?.max_diamonds_to_next_tier ?? null;
+                    if (stf === null) return "Stufe unbekannt";
+                    if (dm === null || dm === 0) return `Stufe ${stf} erreicht · TikTok-Update wartet`;
+                    return `Noch ${fmtBigInt(dm)} Diamanten bis Stufe ${nx}`;
+                  })()}
+                </p>
+                {summary.ist_tier_progress !== null && summary.ist_tier_target !== null && (
+                  <>
+                    <div className="flex items-baseline justify-between mt-3 mb-1.5 text-xs">
+                      <p className="text-cream/45">Fortschritt</p>
+                      <p className="text-cream/75">
+                        {fmtBigInt(summary.ist_tier_progress)} / {fmtBigInt(summary.ist_tier_target)}
+                      </p>
+                    </div>
+                    <div className="h-1 bg-champagne/10 overflow-hidden">
+                      <div
+                        className="h-full bg-champagne/60"
+                        style={{
+                          width: `${Math.min(100, Math.max(0, ((Number(summary.ist_tier_progress) || 0) / Math.max(1, Number(summary.ist_tier_target) || 1)) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="border border-champagne/15 p-4 md:p-5">
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Inkrementeller Umsatzanreiz</p>
+                <p className="text-cream text-base leading-snug font-medium">
+                  {(() => {
+                    const inc = Number(summary.ist_incremental_usd ?? 0);
+                    if (inc > 0) return `Aktiv · ${fmtUsd2(inc)} in diesem Monat`;
+                    return "Pausiert · Netzwerkziel aktuell nicht erreicht";
+                  })()}
+                </p>
+                <p className="text-cream/45 text-[10px] mt-2 leading-relaxed">
+                  Netzwerk-Hebel · TikTok zeigt keinen individuellen Schwellenwert
+                </p>
+              </div>
+            </div>
+
+            {/* LIVE-Performance Compare */}
+            {summary.live_compare_start && (
+              <div className="border border-champagne/15 p-4 md:p-5 mb-6">
+                <div className="flex items-baseline justify-between mb-3">
+                  <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em]">LIVE-Performance</p>
+                  <p className="text-cream/40 text-[10px]">
+                    vs. {new Date(summary.live_compare_start).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}
+                    {" – "}
+                    {summary.live_compare_end ? new Date(summary.live_compare_end).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : "?"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { label: "LIVE-Tage", curr: summary.live_valid_days, delta: summary.live_days_compare, fmt: (v: number | null) => v?.toString() ?? "—" },
+                    { label: "LIVE-Dauer", curr: summary.live_duration_seconds, delta: summary.live_duration_compare_sec, fmt: (v: number | null) => v !== null ? `${Math.floor(v / 3600)}h ${Math.floor((v % 3600) / 60)}m` : "—" },
+                    { label: "Streams", curr: summary.live_streams_count, delta: summary.live_streams_compare, fmt: (v: number | null) => v?.toString() ?? "—" },
+                    { label: "Neue Follower", curr: summary.live_new_followers, delta: summary.live_followers_compare, fmt: (v: number | null) => v?.toString() ?? "—" },
+                  ].map((item) => {
+                    const pct = comparePct(item.curr, item.delta);
+                    return (
+                      <div key={item.label}>
+                        <p className="text-cream/40 text-[9px] uppercase tracking-[0.18em] mb-1">{item.label}</p>
+                        <p className="text-cream/85 text-sm">{item.fmt(item.curr)}</p>
+                        {pct !== null && (
+                          <p className={`text-[10px] mt-0.5 ${compareColor(pct)}`}>
+                            {compareArrow(pct)} {pct > 0 ? "+" : ""}{pct.toFixed(1).replace(".", ",")} %
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Trend */}
+            {compute?.trend_class && (
+              <div className="border border-champagne/15 p-4 md:p-5 mb-8">
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">Trend vs. 3-Monats-Schnitt</p>
+                <p className={`text-base font-medium ${
+                  compute.trend_class === "wachsend" ? "text-emerald-400/85"
+                  : compute.trend_class === "fallend" ? "text-red-400/70"
+                  : "text-cream/75"
+                }`}>
+                  {compute.trend_class === "wachsend" ? "↑ über persönlichem Schnitt"
+                    : compute.trend_class === "fallend" ? "↓ unter persönlichem Schnitt"
+                    : compute.trend_class === "stabil" ? "· im persönlichen Schnitt"
+                    : compute.trend_class === "new_creator" ? "Noch zu wenig Historie"
+                    : "—"}
+                </p>
+                {compute.hist_3m_avg_total !== null && compute.hist_3m_count !== null && Number(compute.hist_3m_count) >= 2 && (
+                  <p className="text-cream/45 text-xs mt-1">
+                    3-Monats-Schnitt: {fmtUsd2(compute.hist_3m_avg_total)} ({compute.hist_3m_count} Monate)
+                  </p>
+                )}
+              </div>
+            )}
+          </>
+        )}
 
         {rows.length === 0 ? (
           <div className="border border-champagne/15 p-7 text-center">
