@@ -471,17 +471,28 @@ export default async function AdminPage() {
           }
           const topPrios = all.sort((a, b) => a.weight - b.weight).slice(0, 7);
 
+          // Hint-Zeilen für Summary (sichtbar auch bei collapsed)
+          const warmCount = all.filter((p) => p.accent === "warm").length;
+          const heuteHint = topPrios.length === 0
+            ? "aktuell keine offenen Hebel"
+            : `${topPrios.length} Prioritäten · ${warmCount} kritisch`;
+          const netzHint = `${fmtUsdNum(networkIst)} heute · ${fmtUsdNum(networkReal)} Pace${
+            goalPct !== null ? ` · ${goalPct}%` : ""
+          }`;
+
           return (
-            <section className="mb-12 md:mb-14">
-              {/* HEUTE WICHTIG */}
-              <div className="mb-8">
-                <p className="eyebrow mb-4">Heute wichtig</p>
+            <>
+              {/* HEUTE WICHTIG · default offen, aber zuklappbar */}
+              <AdminSection
+                title="Heute wichtig"
+                hint={heuteHint}
+                badge={topPrios.length > 0 ? topPrios.length : null}
+                defaultOpen={true}
+              >
                 {topPrios.length === 0 ? (
-                  <div className="border border-champagne/15 px-5 py-6">
-                    <p className="text-cream/55 text-sm">
-                      Aktuell keine Hebel-Kandidaten · alle Creator stabil oder ohne unmittelbare Aufstiegs-Chance.
-                    </p>
-                  </div>
+                  <p className="text-cream/55 text-sm py-2">
+                    Aktuell keine Hebel-Kandidaten · alle Creator stabil oder ohne unmittelbare Aufstiegs-Chance.
+                  </p>
                 ) : (
                   <ul className="space-y-2">
                     {topPrios.map((p, i) => (
@@ -511,11 +522,15 @@ export default async function AdminPage() {
                     ))}
                   </ul>
                 )}
-              </div>
+              </AdminSection>
 
-              {/* NETWORK OVERVIEW · KPI + Goal-Ring */}
-              <div className="border border-champagne/25 bg-champagne/[0.02]">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 md:gap-8 p-5 md:p-7 items-center">
+              {/* NETWORK OVERVIEW · default offen, aber zuklappbar */}
+              <AdminSection
+                title="Netzwerk-Übersicht"
+                hint={netzHint}
+                defaultOpen={true}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 md:gap-8 items-center">
                   {/* Linke Spalte · KPIs */}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-5">
                     <div>
@@ -561,8 +576,8 @@ export default async function AdminPage() {
                     </p>
                   </div>
                 </div>
-              </div>
-            </section>
+              </AdminSection>
+            </>
           );
         })()}
 
@@ -582,32 +597,72 @@ export default async function AdminPage() {
           <div className="hero-mark" />
         </section>
 
-        {/* STATS */}
-        <section className={`grid grid-cols-2 ${isAdmin ? "md:grid-cols-5" : "md:grid-cols-3"} gap-3 md:gap-4 mb-12`}>
-          <Stat
-            label={isAdmin ? t("admin.stat_users_total") : t("admin.stat_my_roster")}
-            value={totalUsers}
-            href="/portal/admin/users"
-          />
-          <Stat label={t("admin.stat_active_creators")} value={activeCreators} href="/portal/admin/users" />
-          {isAdmin && (
-            <Stat label={t("admin.stat_open_invites")} value={openInvites} href="/portal/admin/invites" highlight={openInvites > 0} />
-          )}
-          <Stat label={t("admin.stat_events_open")} value={upcomingEvents} href="/portal/admin/events" />
-          {isAdmin && (
-            <Stat label={t("admin.stat_tickets_open")} value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
-          )}
-        </section>
+        {/* STATS · collapsed by default */}
+        <AdminSection
+          title="Netzwerk-Zahlen"
+          hint={`${totalUsers} Users · ${activeCreators} aktive Creator · ${upcomingEvents} Events`}
+          badge={isAdmin && (openInvites + openTickets) > 0 ? openInvites + openTickets : null}
+          warn={isAdmin && openTickets > 0}
+        >
+          <div className={`grid grid-cols-2 ${isAdmin ? "md:grid-cols-5" : "md:grid-cols-3"} gap-3 md:gap-4`}>
+            <Stat
+              label={isAdmin ? t("admin.stat_users_total") : t("admin.stat_my_roster")}
+              value={totalUsers}
+              href="/portal/admin/users"
+            />
+            <Stat label={t("admin.stat_active_creators")} value={activeCreators} href="/portal/admin/users" />
+            {isAdmin && (
+              <Stat label={t("admin.stat_open_invites")} value={openInvites} href="/portal/admin/invites" highlight={openInvites > 0} />
+            )}
+            <Stat label={t("admin.stat_events_open")} value={upcomingEvents} href="/portal/admin/events" />
+            {isAdmin && (
+              <Stat label={t("admin.stat_tickets_open")} value={openTickets} href="/portal/admin/users" highlight={openTickets > 0} />
+            )}
+          </div>
+        </AdminSection>
 
-        {/* WEBSITE-ANALYTICS — admin-only public-site Tracking */}
-        <WebsiteAnalyticsBlock isAdmin={isAdmin} />
-
-        {/* PORTAL-AKTIVITAET — admin-only Tracking-Block */}
-        <PortalActivityBlock isAdmin={isAdmin} />
-
-        {/* CREATOR-ANFRAGEN — admin-only Link */}
+        {/* OPERATIONS-COCKPIT · collapsed by default */}
         {isAdmin && (
-          <section className="mb-12">
+          <AdminSection
+            title="Operations-Cockpit"
+            hint="Pending · Push · Telefon · LIVE-Report · DM-Queue · Inbox-wartet"
+            badge={opsTotal > 0 ? opsTotal : null}
+            warn={ops.dm_failed > 0}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
+              <OpsTile href="/portal/admin/pending" label="Creator pending" count={ops.creators_pending} />
+              <OpsTile href="/portal/admin/services/tiktok-push" label="TikTok-Push" count={ops.tiktok_push} />
+              <OpsTile href="/portal/admin/services/phone-requests" label="Telefon" count={ops.phone_request} />
+              <OpsTile href="/portal/admin/services/live-absences" label="Abmeldung" count={ops.live_absence} />
+              <OpsTile href="/portal/admin/services/content-helper" label="Content-Helfer" count={ops.content_helper} />
+              <OpsTile href="/portal/admin/services/big-match" label="Big Match" count={ops.big_match} />
+              <OpsTile href="/portal/admin/analyse/account" label="Account-Analyse" count={ops.account_analyse} />
+              <OpsTile href="/portal/admin/analyse/live" label="LIVE-Report" count={ops.live_report} />
+              <OpsTile href="/portal/admin/showcase" label="Showcase pending" count={ops.showcase_pending} />
+              <OpsTile href="/portal/admin/notifications-queue" label="DM-Queue" count={ops.dm_queue} />
+              <OpsTile href="/portal/admin/notifications-queue" label="DM-Fail" count={ops.dm_failed} warn={ops.dm_failed > 0} />
+              <OpsTile href="/portal/admin/messages?f=waiting" label="Inbox wartet" count={inboxWaiting} />
+            </div>
+          </AdminSection>
+        )}
+
+        {/* WEBSITE + PORTAL-AKTIVITAET · collapsed by default */}
+        {isAdmin && (
+          <AdminSection
+            title="Website & Portal-Aktivität"
+            hint="Public-Site-Traffic · Portal-Sessions · Events letzte 24h"
+          >
+            <WebsiteAnalyticsBlock isAdmin={isAdmin} />
+            <PortalActivityBlock isAdmin={isAdmin} />
+          </AdminSection>
+        )}
+
+        {/* CREATOR-ANFRAGEN · collapsed by default */}
+        {isAdmin && (
+          <AdminSection
+            title="Creator-Anfragen"
+            hint={t("admin.creator_requests_subtitle")}
+          >
             <Link
               href="/portal/admin/applications"
               className="block border border-champagne/15 hover:border-champagne/40 px-5 py-4 transition-colors"
@@ -624,33 +679,7 @@ export default async function AdminPage() {
                 </span>
               </div>
             </Link>
-          </section>
-        )}
-
-        {/* OPERATIONS-COCKPIT — alle offenen Anfragen auf einen Blick */}
-        {isAdmin && (
-          <section className="mb-12">
-            <div className="flex items-baseline justify-between mb-4">
-              <p className="eyebrow">{t("admin.operations_open")} ({opsTotal})</p>
-              <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-                {t("admin.status_now")}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
-              <OpsTile href="/portal/admin/pending" label="Creator pending" count={ops.creators_pending} />
-              <OpsTile href="/portal/admin/services/tiktok-push" label="TikTok-Push" count={ops.tiktok_push} />
-              <OpsTile href="/portal/admin/services/phone-requests" label="Telefon" count={ops.phone_request} />
-              <OpsTile href="/portal/admin/services/live-absences" label="Abmeldung" count={ops.live_absence} />
-              <OpsTile href="/portal/admin/services/content-helper" label="Content-Helfer" count={ops.content_helper} />
-              <OpsTile href="/portal/admin/services/big-match" label="Big Match" count={ops.big_match} />
-              <OpsTile href="/portal/admin/analyse/account" label="Account-Analyse" count={ops.account_analyse} />
-              <OpsTile href="/portal/admin/analyse/live" label="LIVE-Report" count={ops.live_report} />
-              <OpsTile href="/portal/admin/showcase" label="Showcase pending" count={ops.showcase_pending} />
-              <OpsTile href="/portal/admin/notifications-queue" label="DM-Queue" count={ops.dm_queue} />
-              <OpsTile href="/portal/admin/notifications-queue" label="DM-Fail" count={ops.dm_failed} warn={ops.dm_failed > 0} />
-              <OpsTile href="/portal/admin/messages?f=waiting" label="Inbox wartet" count={inboxWaiting} />
-            </div>
-          </section>
+          </AdminSection>
         )}
 
         {/* CRON-HEALTH — collapsed by default, glow wenn warn/fail */}
@@ -672,8 +701,13 @@ export default async function AdminPage() {
           );
         })()}
 
-        {/* NEWS & INFOS — Birthdays, neue Creator, System-Hinweise */}
-        <NewsFeed supabase={supabase} />
+        {/* NEWS & INFOS · collapsed by default */}
+        <AdminSection
+          title="News & Hinweise"
+          hint="Birthdays · neue Creator · System-Hinweise"
+        >
+          <NewsFeed supabase={supabase} />
+        </AdminSection>
 
         {/* KPI-Block — diese Woche · collapsed by default */}
         {isAdmin && (
@@ -701,9 +735,11 @@ export default async function AdminPage() {
           </AdminSection>
         )}
 
-        {/* QUICK ACTIONS */}
-        <section className="mb-12">
-          <p className="eyebrow mb-4">{t("admin.quick_actions")}</p>
+        {/* QUICK ACTIONS · collapsed by default */}
+        <AdminSection
+          title={t("admin.quick_actions")}
+          hint="Routing zu Admin-Detail-Seiten"
+        >
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             <AdminTile href="/portal/admin/users" title={isAdmin ? "Users" : "Roster"} hint={isAdmin ? "Rollen · Status · Sperren" : "Eigene Creator"} />
             {isAdmin && (
@@ -728,7 +764,7 @@ export default async function AdminPage() {
             )}
             <AdminTile href="/portal/admin/events" title="Events" hint="CRUD + Anmeldungen" />
           </div>
-        </section>
+        </AdminSection>
 
         {/* ACTIVITY FEEDS · collapsed by default */}
         <AdminSection
