@@ -401,18 +401,27 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
     )
     .eq("month", month);
 
-  // V2-A · DOM-Truth Diamond-Override:
-  // creator_monthly_metrics.diamonds_month weicht von TikTok-Backstage-
-  // LIVE-Leistung-Tab ab (andere Aggregation). Die LIVE-Analyse-Page MUSS
-  // exakt dieselben Werte zeigen wie der LIVE-Leistung-Tab in Backstage.
-  // → clpm.current_diamonds (10k-gerundet, identisch zum TikTok-Display).
+  // V2-A · DOM-Truth-Override für ALLE LIVE-Felder:
+  // creator_monthly_metrics (alte Quelle) weicht vom TikTok-Backstage-
+  // LIVE-Leistung-Tab ab. Die LIVE-Analyse-Page MUSS exakt dieselben Werte
+  // zeigen wie das TikTok-Backstage-LIVE-Leistung-Display.
+  // → clpm = Source-of-Truth für alle gemeinsamen Felder.
+  type ClpmRow = {
+    tiktok_handle_normalized: string;
+    current_diamonds: number | null;
+    live_valid_days: number | null;
+    live_duration_seconds: number | null;
+    livestreams_count: number | null;
+    new_followers: number | null;
+    avg_watch_seconds: number | null;
+  };
   const { data: clpmRows } = await db
     .from("creator_live_performance_monthly")
-    .select("tiktok_handle_normalized, current_diamonds")
+    .select("tiktok_handle_normalized, current_diamonds, live_valid_days, live_duration_seconds, livestreams_count, new_followers, avg_watch_seconds")
     .eq("period_month", month);
-  const clpmDiamondMap = new Map<string, number>();
-  for (const r of (clpmRows ?? []) as Array<{ tiktok_handle_normalized: string; current_diamonds: number | null }>) {
-    if (r.current_diamonds !== null) clpmDiamondMap.set(r.tiktok_handle_normalized, Number(r.current_diamonds));
+  const clpmMap = new Map<string, ClpmRow>();
+  for (const r of (clpmRows ?? []) as ClpmRow[]) {
+    clpmMap.set(r.tiktok_handle_normalized, r);
   }
 
   // Letzter Sync fuer Stand-Anzeige (Monatsranking + Footer)
@@ -505,8 +514,17 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
 
   const rows: Row[] = (metrics ?? []).map((m) => {
     const p = profileByHandle.get(m.tiktok_handle_normalized);
-    const days = m.valid_live_days || 0;
+    // V2-A · DOM-Truth-Override pro Feld (siehe clpmMap oben)
+    const clpm = clpmMap.get(m.tiktok_handle_normalized ?? "");
+    const days = clpm?.live_valid_days ?? m.valid_live_days ?? 0;
     const avg = m.average_viewers || 0;
+    // live_duration_seconds aus clpm hat Vorrang
+    const liveMinutesFromClpm = clpm?.live_duration_seconds != null
+      ? Math.round(Number(clpm.live_duration_seconds) / 60)
+      : null;
+    const liveHoursFromClpm = clpm?.live_duration_seconds != null
+      ? (Number(clpm.live_duration_seconds) / 3600).toFixed(1)
+      : null;
     return {
       metric_id: m.id,
       tiktok_username: m.tiktok_username ?? "",
@@ -516,21 +534,19 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
       portal_status: p?.status ?? null,
       onboarding_completed: p?.onboarding_completed ?? null,
       valid_live_days: days,
-      live_minutes_total: m.live_minutes_total,
-      live_hours_display: m.live_hours_display,
+      live_minutes_total: liveMinutesFromClpm ?? m.live_minutes_total,
+      live_hours_display: liveHoursFromClpm ?? m.live_hours_display,
       average_viewers: avg,
       last_live_date: m.last_live_date,
       activity_status: m.activity_status,
-      diamonds_month: clpmDiamondMap.get(m.tiktok_handle_normalized ?? "") ?? m.diamonds_month,
-      // ↑ Override mit clpm.current_diamonds (= TikTok-LIVE-Leistung-Tab-Wert),
-      // Fallback auf monthly_metrics wenn kein clpm-Datensatz vorhanden.
+      diamonds_month: clpm?.current_diamonds ?? m.diamonds_month,
       gift_rate: m.gift_rate,
       impressions: m.impressions ?? null,
       live_views: m.live_views ?? null,
-      followers_gained: m.followers_gained ?? null,
+      followers_gained: clpm?.new_followers ?? m.followers_gained ?? null,
       ctr: m.ctr ?? null,
-      watchtime_avg_seconds: m.watchtime_avg_seconds ?? null,
-      streams_count: m.streams_count ?? null,
+      watchtime_avg_seconds: clpm?.avg_watch_seconds ?? m.watchtime_avg_seconds ?? null,
+      streams_count: clpm?.livestreams_count ?? m.streams_count ?? null,
       gifts_count: m.gifts_count ?? null,
       gifters_count: m.gifters_count ?? null,
       approx_total_viewers: avg * days,
