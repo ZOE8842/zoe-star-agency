@@ -72,9 +72,7 @@ function validate(input: EventInput): string | null {
   if (input.registration_url && !/^https?:\/\//i.test(input.registration_url)) {
     return "Registration-URL muss mit http(s) beginnen.";
   }
-  if (input.source === "tiktok" && !input.registration_url) {
-    return "TikTok-Events brauchen eine Registration-URL.";
-  }
+  // registration_url ist auch für TikTok-Events optional (User-Feedback 22.05).
   if (input.cover_image_url && !/^https?:\/\//i.test(input.cover_image_url)) {
     return "Cover-URL muss mit http(s) beginnen.";
   }

@@ -274,7 +274,7 @@ export function EventForm({
               <img
                 src={coverUrl}
                 alt=""
-                className="w-full max-w-md aspect-[16/7] object-cover border border-champagne/20"
+                className="w-full max-w-md max-h-[60vh] object-contain border border-champagne/20 bg-black/40"
               />
             )}
             <div className="flex flex-wrap items-center gap-3">
@@ -328,15 +328,15 @@ export function EventForm({
         </Field>
 
         {source === "tiktok" && (
-          <Field label="Registration-URL (TikTok-Event)" required full>
+          <Field label="Registration-URL (optional)" full>
             <input
-              type="url" required value={registrationUrl ?? ""}
+              type="url" value={registrationUrl ?? ""}
               onChange={(e) => setRegistrationUrl(e.target.value)}
               placeholder="https://..."
               className={inputCls}
             />
             <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em] mt-2">
-              TikTok-Events brauchen einen externen Anmelde-Link. Pflicht.
+              Falls externer Anmelde-Link vorhanden. Optional.
             </p>
           </Field>
         )}

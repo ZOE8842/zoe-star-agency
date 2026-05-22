@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { SignupButtons } from "./SignupButtons";
+import { EventCoverLightbox } from "@/components/events/EventCoverLightbox";
 
 export const dynamic = "force-dynamic";
 
@@ -139,12 +140,7 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
 
         {event.cover_image_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={event.cover_image_url}
-            alt=""
-            className="w-full aspect-[16/7] object-cover border border-champagne/15 mb-8"
-          />
+          <EventCoverLightbox src={event.cover_image_url} alt={event.title ?? ""} />
         )}
 
         <div className="flex items-baseline justify-between gap-3 mb-3 flex-wrap">
