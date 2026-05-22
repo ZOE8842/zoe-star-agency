@@ -8,6 +8,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
+import { MobileBackWrapper } from "@/components/mobile/MobileBackWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -366,7 +367,8 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
         isAdmin={true}
         isManager={false}
       />
-      <main className="container-luxe py-10 md:py-16">
+      <main className="container-luxe py-6 md:py-16">
+        <MobileBackWrapper fallbackHref="/portal/admin" label="Zurück zu Master">
         <div className="flex items-baseline justify-between gap-4 mb-6">
           <div>
             <p className="eyebrow mb-2">Admin · {t("nav.umsatz")}</p>
@@ -1441,6 +1443,7 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
           creator-meta. Migrationen 0048/0049 (revenue) + 0057-0059 (C-Block) +
           0060 (View v_creator_incentive_summary) + 0061 (Compute v2).
         </p>
+        </MobileBackWrapper>
       </main>
     </>
   );

@@ -88,75 +88,87 @@ function fmtUsd2(n: number | null | undefined): string {
   return `${v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 }
 
-// V2-A · Empfohlene Coaching-Nachricht · momentum-based, KEIN State-Leak.
+// V2-A · Empfohlene Coaching-Nachricht · 4-Block-Struktur
 //
-// HARTE REGELN (User-Korrektur):
-//  ✗ NIE Admin-Daten leaken (Eligibility, Threshold, "Voraussetzungen erfüllt",
-//    "TikTok aktualisiert", "Level X→Y", konkrete Stufen-Zahlen)
-//  ✗ NIE "fertig / erreicht / abgeschlossen" suggerieren
+// HARTE REGELN:
+//  ✗ NIE Admin-Daten (Eligibility, Threshold, Forecast, Diamond-Counts)
+//  ✗ NIE "fertig / erreicht / abgeschlossen"
 //  ✗ NIE Diamond-/Umsatz-Pressure
-//  ✓ IMMER permanenter Progress · nächste Stufe · Momentum
-//  ✓ IMMER Fokus: regelmäßig LIVE · ≥61 Min · TikTok-Ausspielung
-//  ✓ IMMER Coaching-Ton, keine Dashboard-Sprache
+//  ✓ IMMER 4 Blöcke (Block 1+2 dynamisch, Block 3+4 konstant)
 //
-// 4 Fälle:
-//  A · activityFehlt + tierFehlt   → beide pushen
-//  B · activityFehlt, tier ok      → Aktivität + Konstanz
-//  C · activity ok, tierFehlt      → Konstanz halten, Reichweite ausbauen
-//  D · beides stark                → Momentum erhalten
+// Block 1 · Aktueller Stand + was fehlt (konkret LIVE-Tage + LIVE-Dauer)
+// Block 2 · 61-Minuten-Regel
+// Block 3 · Warum (TikTok-Ausspielung · Momentum)
+// Block 4 · Call-to-Action (LIVE-Plan-Angebot)
 function pickRecommendedMessage(args: {
   activityLevel: number | null;
   daysToNextActivity: number | null;
-  maxDiamondsToNextTier: number | null;
+  liveValidDays: number | null;
+  liveDurationSeconds: number | null;
 }): string {
   const lvl = args.activityLevel ?? 0;
   const dn = args.daysToNextActivity;
-  const dm = args.maxDiamondsToNextTier;
+  const days = args.liveValidDays;
+  const secs = args.liveDurationSeconds;
 
-  // activityFehlt · Aktivität nicht maximal (Level < 5 UND noch Tage nötig)
-  // dn === null wird konservativ als "fehlt" interpretiert (= unbekannt)
-  const activityFehlt = lvl < 5 && (dn === null || dn > 0);
-  // tierFehlt · noch Diamanten bis nächste Stufe
-  const tierFehlt = dm !== null && dm > 0;
+  // Aktuell-Werte (formatiert)
+  const aktuellTage = days !== null && days !== undefined ? `${days} LIVE-Tag${days === 1 ? "" : "e"}` : null;
+  const aktuellDauer = (() => {
+    if (secs === null || secs === undefined) return null;
+    const h = Math.floor(Number(secs) / 3600);
+    const m = Math.floor((Number(secs) % 3600) / 60);
+    return `${h}h ${m}m LIVE-Dauer`;
+  })();
 
-  // A · Beides fehlt
-  if (activityFehlt && tierFehlt) {
-    return `Hey 😊
+  // Block 1 · Aktueller Stand + was fehlt
+  let block1: string;
+  if (lvl >= 5) {
+    block1 = `Aktuell hast du:
+${aktuellTage ?? "—"}
+${aktuellDauer ?? "—"}
 
-versuch aktuell wirklich regelmäßig LIVE zu gehen und die LIVEs auch länger laufen zu lassen.
+Du bist auf dem höchsten Aktivitäts-Level — jetzt geht es darum, diese Konstanz zu halten.`;
+  } else if (dn !== null && dn > 0) {
+    const nextLvl = lvl + 1;
+    block1 = `Aktuell hast du:
+${aktuellTage ?? "—"}
+${aktuellDauer ?? "—"}
 
-TikTok pusht aktive Creator momentan deutlich stärker und genau dadurch baut man Reichweite, Momentum und langfristig stärkere Ausspielung auf.
+Für Level ${nextLvl} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}.`;
+  } else if (dn === 0) {
+    const nextLvl = lvl + 1;
+    block1 = `Aktuell hast du:
+${aktuellTage ?? "—"}
+${aktuellDauer ?? "—"}
 
-Wichtig:
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück 😊`;
+Für Level ${nextLvl} noch ein paar weitere gültige LIVE-Tage — die nächsten Tage konstant LIVE gehen.`;
+  } else {
+    block1 = `Aktuell hast du:
+${aktuellTage ?? "—"}
+${aktuellDauer ?? "—"}
+
+Versuch die nächsten Tage konstant LIVE zu gehen, um die nächste Stufe zu erreichen.`;
   }
-  // B · Nur Aktivität fehlt
-  if (activityFehlt) {
-    return `Hey 😊
 
-versuch aktuell wirklich regelmäßig LIVE zu gehen und die Konstanz reinzubekommen.
+  // Block 2 · 61-Min-Regel · konstant
+  const block2 = `Wichtig:
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück als gültiger LIVE-Tag 😊`;
 
-TikTok spielt aktive Creator momentan deutlich stärker aus und genau dadurch baut man langfristig Reichweite und Momentum auf.
+  // Block 3 · Warum · konstant
+  const block3 = `TikTok spielt aktive und regelmäßige Creator aktuell deutlich stärker aus. Genau dadurch baut man langfristig Reichweite, Momentum und stärkere Ausspielung auf.`;
 
-Wichtig ist auch:
-Ein gültiger LIVE-Tag zählt erst ab mindestens 61 Minuten am Stück 😊`;
-  }
-  // C · Nur Stufe fehlt
-  if (tierFehlt) {
-    return `Hey 😊
+  // Block 4 · CTA · konstant
+  const block4 = `Wenn du möchtest, können wir dafür auch gemeinsam einen besseren LIVE-Plan aufbauen 😊`;
 
-du bist aktuell auf einem guten Weg, jetzt heißt es weiter konstant bleiben damit TikTok dich weiter stark ausspielt.
-
-Gerade regelmäßige und längere LIVEs helfen extrem dabei, die nächste Stufe zu erreichen und langfristig mehr Momentum aufzubauen 😊`;
-  }
-  // D · Beides stark
   return `Hey 😊
 
-du bist aktuell wirklich stabil unterwegs 😊
+${block1}
 
-Versuch genau diese Regelmäßigkeit jetzt weiter beizubehalten, weil TikTok aktive Creator momentan deutlich stärker pusht.
+${block2}
 
-Gerade Konstanz sorgt langfristig dafür, dass man immer stärker ausgespielt wird und weiter wachsen kann.`;
+${block3}
+
+${block4}`;
 }
 
 // Pre-Maerz-Cutoff: User-Decision (Backstage hatte vorher andere Metriken).
@@ -332,21 +344,21 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                     const dn = compute?.days_to_next_activity_level ?? null;
                     if (lvl === null) return "Activity-Level unbekannt";
                     if (lvl >= 5) return "Level 5 erreicht · Maximum";
-                    if (dn === null) return `Level ${lvl} · Ziel: Level ${next}`;
-                    if (dn === 0) return `Schwelle erreicht · wartet auf TikTok-Update`;
+                    if (dn === null) return `Für Level ${next} weiter regelmäßig LIVE gehen`;
+                    if (dn === 0) return `Für Level ${next} noch ein paar weitere gültige LIVE-Tage`;
                     return `Für Level ${next} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}`;
                   })()}
                 </p>
                 <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
                   <div>
-                    <p className="text-cream/40 text-[9px] uppercase tracking-[0.18em] mb-1">LIVE-Tage</p>
+                    <p className="text-cream/40 text-[9px] uppercase tracking-[0.18em] mb-1">Aktuell LIVE-Tage</p>
                     <p className="text-cream/85">{summary.live_valid_days ?? "—"}</p>
                   </div>
                   <div>
-                    <p className="text-cream/40 text-[9px] uppercase tracking-[0.18em] mb-1">Bonusverhältnis</p>
+                    <p className="text-cream/40 text-[9px] uppercase tracking-[0.18em] mb-1">Aktuell LIVE-Dauer</p>
                     <p className="text-cream/85">
-                      {summary.ist_activity_ratio !== null && summary.ist_activity_ratio !== undefined
-                        ? `${(Number(summary.ist_activity_ratio) * 100).toFixed(1).replace(".", ",")} %`
+                      {summary.live_duration_seconds !== null && summary.live_duration_seconds !== undefined
+                        ? `${Math.floor(Number(summary.live_duration_seconds) / 3600)}h ${Math.floor((Number(summary.live_duration_seconds) % 3600) / 60)}m`
                         : "—"}
                     </p>
                   </div>
@@ -463,7 +475,8 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
               const msg = pickRecommendedMessage({
                 activityLevel: summary?.ist_activity_level ?? null,
                 daysToNextActivity: compute?.days_to_next_activity_level ?? null,
-                maxDiamondsToNextTier: compute?.max_diamonds_to_next_tier ?? null,
+                liveValidDays: summary?.live_valid_days ?? null,
+                liveDurationSeconds: summary?.live_duration_seconds ?? null,
               });
               return (
                 <div className="border border-champagne/30 bg-champagne/[0.03] p-4 mb-5">
