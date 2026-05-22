@@ -105,11 +105,13 @@ function pickRecommendedMessage(args: {
   daysToNextActivity: number | null;
   liveValidDays: number | null;
   liveDurationSeconds: number | null;
+  trendClass?: string | null;
 }): string {
   const lvl = args.activityLevel ?? 0;
   const dn = args.daysToNextActivity;
   const days = args.liveValidDays;
   const secs = args.liveDurationSeconds;
+  const trend = args.trendClass ?? null;
 
   // Aktuell-Werte (formatiert)
   const aktuellTage = days !== null && days !== undefined ? `${days} LIVE-Tag${days === 1 ? "" : "e"}` : null;
@@ -120,45 +122,61 @@ function pickRecommendedMessage(args: {
     return `${h}h ${m}m LIVE-Dauer`;
   })();
 
-  // Block 1 · Aktueller Stand + was fehlt
+  // Block 1 · Aktueller Stand + was fehlt (konkrete Zahlen, NIE "ein paar weitere")
   let block1: string;
-  if (lvl >= 5) {
-    block1 = `Aktuell hast du:
+  const stand = `Aktuell hast du:
 ${aktuellTage ?? "—"}
-${aktuellDauer ?? "—"}
+${aktuellDauer ?? "—"}`;
+  if (lvl >= 5) {
+    block1 = `${stand}
 
 Du bist auf dem höchsten Aktivitäts-Level — jetzt geht es darum, diese Konstanz zu halten.`;
   } else if (dn !== null && dn > 0) {
     const nextLvl = lvl + 1;
-    block1 = `Aktuell hast du:
-${aktuellTage ?? "—"}
-${aktuellDauer ?? "—"}
+    block1 = `${stand}
 
 Für Level ${nextLvl} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}.`;
   } else if (dn === 0) {
     const nextLvl = lvl + 1;
-    block1 = `Aktuell hast du:
-${aktuellTage ?? "—"}
-${aktuellDauer ?? "—"}
+    block1 = `${stand}
 
-Für Level ${nextLvl} noch ein paar weitere gültige LIVE-Tage — die nächsten Tage konstant LIVE gehen.`;
+Für Level ${nextLvl} fehlt noch 1 gültiger LIVE-Tag.`;
   } else {
-    block1 = `Aktuell hast du:
-${aktuellTage ?? "—"}
-${aktuellDauer ?? "—"}
+    block1 = `${stand}
 
 Versuch die nächsten Tage konstant LIVE zu gehen, um die nächste Stufe zu erreichen.`;
   }
 
   // Block 2 · 61-Min-Regel · konstant
-  const block2 = `Wichtig:
+  const block2 = `Denk daran:
 Ein LIVE zählt erst ab mindestens 61 Minuten am Stück als gültiger LIVE-Tag 😊`;
 
-  // Block 3 · Warum · konstant
-  const block3 = `TikTok spielt aktive und regelmäßige Creator aktuell deutlich stärker aus. Genau dadurch baut man langfristig Reichweite, Momentum und stärkere Ausspielung auf.`;
+  // Block 3 · Warum · variiert nach Situation
+  let block3: string;
+  if (trend === "fallend") {
+    // Inaktiv / unter Schnitt
+    block3 = `Gerade regelmäßige und längere LIVEs helfen extrem dabei, wieder stärker ausgespielt zu werden.`;
+  } else if (trend === "wachsend") {
+    // Wächst
+    block3 = `Man merkt aktuell dass TikTok deinen Account wieder stärker testet und ausspielt 😊`;
+  } else if (dn !== null && dn >= 0 && dn <= 2 && lvl < 5) {
+    // Knapp vor nächster Stufe
+    block3 = `Die nächsten Tage können jetzt extrem wichtig werden damit TikTok dich weiter konstant pusht.`;
+  } else {
+    // Stabil / Default
+    block3 = `Du bist aktuell auf einem guten Weg — genau diese Konstanz hilft TikTok dabei deinen Account langfristig stärker zu pushen.`;
+  }
 
-  // Block 4 · CTA · konstant
-  const block4 = `Wenn du möchtest, können wir dafür auch gemeinsam einen besseren LIVE-Plan aufbauen 😊`;
+  // Block 4 · CTA · variiert deterministisch (basierend auf LIVE-Tagen + Level)
+  // Stabiler Index, damit derselbe Creator beim Refresh denselben CTA bekommt
+  const ctaVariants = [
+    `Wenn du möchtest können wir gemeinsam einen besseren LIVE-Plan aufbauen 😊`,
+    `Solltest du aktuell Probleme haben meld dich einfach 😊`,
+    `Wenn du Unterstützung brauchst planen wir das gemeinsam 😊`,
+    `Falls du Fragen hast oder Hilfe brauchst schreib einfach 😊`,
+  ];
+  const ctaIdx = ((days ?? 0) + lvl) % ctaVariants.length;
+  const block4 = ctaVariants[ctaIdx];
 
   return `Hey 😊
 
@@ -344,9 +362,9 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                     const dn = compute?.days_to_next_activity_level ?? null;
                     if (lvl === null) return "Activity-Level unbekannt";
                     if (lvl >= 5) return "Level 5 erreicht · Maximum";
-                    if (dn === null) return `Für Level ${next} weiter regelmäßig LIVE gehen`;
-                    if (dn === 0) return `Für Level ${next} noch ein paar weitere gültige LIVE-Tage`;
-                    return `Für Level ${next} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}`;
+                    if (dn !== null && dn > 0) return `Für Level ${next} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}`;
+                    if (dn === 0) return `Für Level ${next} fehlt noch 1 gültiger LIVE-Tag`;
+                    return `Für Level ${next} weiter regelmäßig LIVE gehen`;
                   })()}
                 </p>
                 <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
@@ -477,6 +495,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 daysToNextActivity: compute?.days_to_next_activity_level ?? null,
                 liveValidDays: summary?.live_valid_days ?? null,
                 liveDurationSeconds: summary?.live_duration_seconds ?? null,
+                trendClass: compute?.trend_class ?? null,
               });
               return (
                 <div className="border border-champagne/30 bg-champagne/[0.03] p-4 mb-5">

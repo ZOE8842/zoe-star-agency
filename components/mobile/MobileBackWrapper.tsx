@@ -52,8 +52,8 @@ export function MobileBackWrapper({
     const onTouchStart = (e: TouchEvent) => {
       const t = e.touches[0];
       if (!t) return;
-      // Nur Edge-Swipe vom linken Rand zulassen
-      if (t.clientX < 25) {
+      // Edge-Zone erweitert auf 35px (vorher 25)
+      if (t.clientX < 35) {
         startX.current = t.clientX;
         startY.current = t.clientY;
         startT.current = Date.now();
@@ -75,12 +75,12 @@ export function MobileBackWrapper({
       const sx = startX.current;
       startX.current = null;
       startY.current = null;
-      // Swipe-Validierung:
-      //   horizontale Bewegung > 80 px
-      //   horizontal > vertikal (Faktor 2)
-      //   schnell genug (< 800 ms)
-      //   Edge-Start bestätigt (sx < 25)
-      if (dx > 80 && Math.abs(dx) > Math.abs(dy) * 2 && dt < 800 && sx < 25) {
+      // Weichere Thresholds:
+      //   dx > 60 (vorher 80) · schnellere Reaktion
+      //   |dx| > |dy| * 1.2 (vorher × 2) · toleranter bei leicht diagonalen Wischen
+      //   dt < 1200 (vorher 800) · auch langsamere Gesten akzeptieren
+      //   sx < 35 · Edge-Start bestätigt
+      if (sx < 35 && dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.2 && dt < 1200) {
         goBack();
       }
     };
@@ -90,14 +90,15 @@ export function MobileBackWrapper({
       startY.current = null;
     };
 
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-    window.addEventListener("touchcancel", onTouchCancel, { passive: true });
+    // Listener auf document statt window · greift auch in nested scroll containers
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+    document.addEventListener("touchcancel", onTouchCancel, { passive: true });
 
     return () => {
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchend", onTouchEnd);
-      window.removeEventListener("touchcancel", onTouchCancel);
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchCancel);
     };
   }, [goBack]);
 
@@ -113,6 +114,16 @@ export function MobileBackWrapper({
         <span className="text-champagne text-base leading-none">←</span>
         <span className="text-[11px] uppercase tracking-[0.22em]">{label}</span>
       </button>
+
+      {/* Unsichtbare Edge-Detector-Zone · fixed am linken Viewport-Rand
+          Greift auch wenn Page ganz unten gescrollt ist · z-Index hoch
+          aber unter modaler Overlays. touchAction: pan-y damit vertikales
+          Scroll-Through nicht blockiert wird. */}
+      <div
+        aria-hidden
+        className="md:hidden fixed top-0 left-0 h-[100dvh] w-[35px] z-[40] pointer-events-none"
+        style={{ touchAction: "pan-y" }}
+      />
 
       {children}
     </>
