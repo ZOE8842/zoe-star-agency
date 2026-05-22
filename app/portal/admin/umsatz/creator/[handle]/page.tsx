@@ -114,66 +114,73 @@ function pickRecommendedMessage(args: {
   const trend = args.trendClass ?? null;
 
   // Aktuell-Werte (formatiert)
-  const aktuellTage = days !== null && days !== undefined ? `${days} LIVE-Tag${days === 1 ? "" : "e"}` : null;
-  const aktuellDauer = (() => {
-    if (secs === null || secs === undefined) return null;
+  const aktuellTage = days !== null && days !== undefined ? `${days} gültige LIVE-Tage` : "—";
+  const aktuellZeit = (() => {
+    if (secs === null || secs === undefined) return "—";
     const h = Math.floor(Number(secs) / 3600);
     const m = Math.floor((Number(secs) % 3600) / 60);
-    return `${h}h ${m}m LIVE-Dauer`;
+    return `${h}h ${m}m LIVE-Zeit`;
   })();
 
-  // Block 1 · Aktueller Stand + was fehlt (konkrete Zahlen, NIE "ein paar weitere")
-  let block1: string;
-  const stand = `Aktuell hast du:
-${aktuellTage ?? "—"}
-${aktuellDauer ?? "—"}`;
+  // Nächstes Ziel · konkrete Zahlen, KEIN "Level X"
+  // Stunden-Heuristik: 3h pro fehlendem LIVE-Tag (realistic Schnitt)
+  const daysMissing = (dn !== null && dn > 0) ? dn : (dn === 0 ? 1 : 0);
+  const hoursMissing = daysMissing * 3;
+
+  // Block 1 · Stand + Ziel
+  let zielBlock: string;
   if (lvl >= 5) {
-    block1 = `${stand}
-
-Du bist auf dem höchsten Aktivitäts-Level — jetzt geht es darum, diese Konstanz zu halten.`;
-  } else if (dn !== null && dn > 0) {
-    const nextLvl = lvl + 1;
-    block1 = `${stand}
-
-Für Level ${nextLvl} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}.`;
-  } else if (dn === 0) {
-    const nextLvl = lvl + 1;
-    block1 = `${stand}
-
-Für Level ${nextLvl} fehlt noch 1 gültiger LIVE-Tag.`;
+    zielBlock = `Du bist auf dem höchsten Aktivitätsniveau — jetzt geht es darum, diese Konstanz konsequent zu halten.`;
+  } else if (daysMissing > 0) {
+    zielBlock = `Dein nächstes Ziel:
++${daysMissing} gültige LIVE-Tag${daysMissing === 1 ? "" : "e"}
++${hoursMissing}h LIVE-Zeit`;
   } else {
-    block1 = `${stand}
-
-Versuch die nächsten Tage konstant LIVE zu gehen, um die nächste Stufe zu erreichen.`;
+    zielBlock = `Halte das aktuelle Tempo und gehe weiter regelmäßig LIVE.`;
   }
 
-  // Block 2 · 61-Min-Regel · konstant
-  const block2 = `Denk daran:
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück als gültiger LIVE-Tag 😊`;
+  const block1 = `Aktuell hast du:
+${aktuellTage}
+${aktuellZeit}
 
-  // Block 3 · Warum · variiert nach Situation
+${zielBlock}`;
+
+  // Block 2 · 61-Min-Regel (2 Varianten)
+  const block2Variants = [
+    `Denk daran 😊
+Ein LIVE zählt erst ab mindestens 61 Minuten am Stück als gültiger LIVE-Tag.`,
+    `Wichtig 😊
+Erst ab 61 Minuten am Stück zählt ein LIVE als gültiger LIVE-Tag.
+
+Deshalb lieber weniger Unterbrechungen und dafür konstanter LIVE gehen.`,
+  ];
+  const block2 = block2Variants[((days ?? 0) + lvl) % block2Variants.length];
+
+  // Block 3 · Warum (8 Varianten, variiert situationsabhängig + deterministisch)
+  // Erste 4 = situationsbasiert (trend/dn), letzte 4 = neutrale Allgemein-Varianten
   let block3: string;
   if (trend === "fallend") {
-    // Inaktiv / unter Schnitt
-    block3 = `Gerade regelmäßige und längere LIVEs helfen extrem dabei, wieder stärker ausgespielt zu werden.`;
+    block3 = `Gerade regelmäßige und längere LIVEs helfen extrem dabei, wieder stärker ausgespielt zu werden. TikTok belohnt aktuell stark Creator, die zurück in den Rhythmus finden.`;
   } else if (trend === "wachsend") {
-    // Wächst
-    block3 = `Man merkt aktuell dass TikTok deinen Account wieder stärker testet und ausspielt 😊`;
+    block3 = `Man merkt aktuell deutlich, dass TikTok deinen Account wieder stärker testet und ausspielt — genau das passiert bei konstanter Aktivität 😊`;
   } else if (dn !== null && dn >= 0 && dn <= 2 && lvl < 5) {
-    // Knapp vor nächster Stufe
-    block3 = `Die nächsten Tage können jetzt extrem wichtig werden damit TikTok dich weiter konstant pusht.`;
+    block3 = `Die nächsten Tage können jetzt extrem wichtig werden damit TikTok dich weiter konstant pusht. Konstanz in dieser Phase macht oft den größten Unterschied.`;
   } else {
-    // Stabil / Default
-    block3 = `Du bist aktuell auf einem guten Weg — genau diese Konstanz hilft TikTok dabei deinen Account langfristig stärker zu pushen.`;
+    const neutralVariants = [
+      `TikTok hat uns diese Ziele aktuell als wichtige Orientierung für die Ausspielung weitergegeben. Je aktiver und konstanter du LIVE gehst, desto stärker kann dein Account langfristig ausgespielt werden und neue Zuschauer erreichen.`,
+      `Diese LIVE-Ziele kommen direkt aus den TikTok-Vorgaben. Je konsequenter du sie erreichst, desto mehr Reichweite und Momentum baust du langfristig auf.`,
+      `Die TikTok-Ausspielung reagiert aktuell stark auf konstante Aktivität. Je sauberer du diese Ziele erreichst, desto stabiler wird dein Wachstum.`,
+      `Aktive und regelmäßige LIVEs sind genau das, was TikTok aktuell als wichtigstes Signal bewertet. Daraus entsteht langfristig mehr Reichweite und stärkere Ausspielung.`,
+    ];
+    block3 = neutralVariants[((days ?? 0) + lvl + daysMissing) % neutralVariants.length];
   }
 
-  // Block 4 · CTA · variiert deterministisch (basierend auf LIVE-Tagen + Level)
-  // Stabiler Index, damit derselbe Creator beim Refresh denselben CTA bekommt
+  // Block 4 · CTA (4 Varianten · deterministisch)
   const ctaVariants = [
-    `Wenn du möchtest können wir gemeinsam einen besseren LIVE-Plan aufbauen 😊`,
-    `Solltest du aktuell Probleme haben meld dich einfach 😊`,
-    `Wenn du Unterstützung brauchst planen wir das gemeinsam 😊`,
-    `Falls du Fragen hast oder Hilfe brauchst schreib einfach 😊`,
+    `Wenn du Unterstützung brauchst, planen wir das gemeinsam 😊`,
+    `Wenn du aktuell Probleme hast, meld dich einfach 😊`,
+    `Wenn du möchtest, bauen wir zusammen einen besseren LIVE-Plan 😊`,
+    `Wenn du Fragen hast oder Hilfe brauchst, schreib einfach 😊`,
   ];
   const ctaIdx = ((days ?? 0) + lvl) % ctaVariants.length;
   const block4 = ctaVariants[ctaIdx];
@@ -311,6 +318,28 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
           <p className="text-cream/45 text-sm mt-1">@{username} · {rows.length} Monate</p>
         </div>
 
+        {/* ============= Revenue-Stat-Cards · ZUERST oben sichtbar ============= */}
+        {rows.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4">
+            <StatCard label="Gesamt Umsatz" value={fmtUsd(sumTotal)} highlight />
+            <StatCard label="Forecast Umsatz" value={fmtUsd(forecastCurrent)} highlight />
+            <StatCard label="Total Revenue aktueller Monat" value={fmtUsd(currentRow?.total_revenue_usd ?? null)} />
+            <StatCard label="Activity Revenue" value={fmtUsd(currentRow?.activity_revenue_usd ?? null)} />
+            <StatCard label="Tier Revenue" value={fmtUsd(currentRow?.tier_revenue_usd ?? null)} />
+            <StatCard label="Incremental Revenue" value={fmtUsd(currentRow?.incremental_revenue_usd ?? null)} />
+            <StatCard
+              label="Bester Monat"
+              value={bestMonth ? `${fmtUsd(bestMonth.total_revenue_usd)} · ${fmtMonthLong(bestMonth.period_month)}` : "—"}
+            />
+            <StatCard
+              label="Letzter Sync"
+              value={latestMonth?.synced_at
+                ? new Date(latestMonth.synced_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                : "—"}
+            />
+          </div>
+        )}
+
         {/* ═══ V2-A · Top-Block (aktueller Monat) ═══ */}
         {summary && (
           <>
@@ -354,17 +383,19 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
             {/* 3-Anreiz-Block · konkret was fehlt */}
             <div className="space-y-2 mb-4">
               <div className="border border-champagne/15 p-3 md:p-4">
-                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Aktivitätsanreiz</p>
+                <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-1.5">Aktivitätsanreiz · nächstes Ziel</p>
                 <p className="text-cream text-base leading-snug font-medium">
                   {(() => {
                     const lvl = summary.ist_activity_level ?? null;
-                    const next = lvl !== null ? lvl + 1 : null;
                     const dn = compute?.days_to_next_activity_level ?? null;
                     if (lvl === null) return "Activity-Level unbekannt";
-                    if (lvl >= 5) return "Level 5 erreicht · Maximum";
-                    if (dn !== null && dn > 0) return `Für Level ${next} fehlen noch ${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"}`;
-                    if (dn === 0) return `Für Level ${next} fehlt noch 1 gültiger LIVE-Tag`;
-                    return `Für Level ${next} weiter regelmäßig LIVE gehen`;
+                    if (lvl >= 5) return "Höchstes Aktivitätsniveau erreicht · Konstanz halten";
+                    if (dn !== null && dn > 0) {
+                      const hours = dn * 3;
+                      return `+${dn} gültige LIVE-Tag${dn === 1 ? "" : "e"} · +${hours}h LIVE-Zeit`;
+                    }
+                    if (dn === 0) return `+1 gültiger LIVE-Tag · +3h LIVE-Zeit`;
+                    return `Weiter regelmäßig LIVE gehen · Konstanz halten`;
                   })()}
                 </p>
                 <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
@@ -532,34 +563,14 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
               <div className="flex items-baseline gap-3">
                 <span className="inline-block text-champagne/55 group-open:text-champagne transition-transform group-open:rotate-90 text-[11px] leading-none mt-1">▸</span>
                 <div>
-                  <p className="text-cream/85 text-sm font-medium">Monats-Historie · Revenue-Details</p>
+                  <p className="text-cream/85 text-sm font-medium">Monats-Tabelle · Pre-März-Legacy</p>
                   <p className="text-cream/40 text-[10px] uppercase tracking-[0.18em] mt-0.5">
-                    {rows.length} Monate · Stat-Cards + Tabelle + Legacy-Daten
+                    {rows.length} Monate · Activity / Tier / Incremental / Forecast / Missing
                   </p>
                 </div>
               </div>
             </summary>
             <div className="px-4 pb-5 pt-1 md:px-5 border-t border-champagne/10">
-            {/* ============= Stat-Cards · Reihenfolge: Gesamt → Forecast → aktueller Monat ============= */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
-              <StatCard label="Gesamt Umsatz" value={fmtUsd(sumTotal)} highlight />
-              <StatCard label="Forecast Umsatz" value={fmtUsd(forecastCurrent)} highlight />
-              <StatCard label="Total Revenue aktueller Monat" value={fmtUsd(currentRow?.total_revenue_usd ?? null)} />
-              <StatCard label="Activity Revenue" value={fmtUsd(currentRow?.activity_revenue_usd ?? null)} />
-              <StatCard label="Tier Revenue" value={fmtUsd(currentRow?.tier_revenue_usd ?? null)} />
-              <StatCard label="Incremental Revenue" value={fmtUsd(currentRow?.incremental_revenue_usd ?? null)} />
-              <StatCard
-                label="Bester Monat"
-                value={bestMonth ? `${fmtUsd(bestMonth.total_revenue_usd)} · ${fmtMonthLong(bestMonth.period_month)}` : "—"}
-              />
-              <StatCard
-                label="Letzter Sync"
-                value={latestMonth?.synced_at
-                  ? new Date(latestMonth.synced_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
-                  : "—"}
-              />
-            </div>
-
             {/* ============= Pre-Maerz-Disclaimer (V12.8) ============= */}
             {rows.some((r) => r.period_month < NEW_METRICS_CUTOFF) && (
               <div className="border border-champagne/25 bg-champagne/[0.05] p-4 mb-6 text-xs text-cream/75 leading-relaxed">
