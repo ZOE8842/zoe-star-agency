@@ -127,39 +127,40 @@ function pickRecommendedMessage(args: {
     const m = Math.floor((s % 3600) / 60);
     return `${h}h ${m}m`;
   };
-  const cmpLineHours = (deltaSec: number | null): string | null => {
+  // Kompakte Compare-Line · "  ↓ 5 Tage vs. letzter Monat"
+  const arrow = (delta: number): string => (delta > 0 ? "↑" : "↓");
+  const cmpDays = (delta: number | null): string | null => {
+    if (delta === null || delta === undefined || delta === 0) return null;
+    const abs = Math.abs(delta);
+    return `  ${arrow(delta)} ${abs} Tag${abs === 1 ? "" : "e"} vs. letzter Monat`;
+  };
+  const cmpHours = (deltaSec: number | null): string | null => {
     if (deltaSec === null || deltaSec === undefined || deltaSec === 0) return null;
-    const hours = Math.round(Math.abs(deltaSec) / 3600);
-    if (hours === 0) return null;
-    return deltaSec > 0
-      ? `${hours}h mehr LIVE-Zeit als letzten Monat`
-      : `${hours}h weniger LIVE-Zeit als letzten Monat`;
+    const h = Math.round(Math.abs(deltaSec) / 3600);
+    if (h === 0) return null;
+    return `  ${arrow(deltaSec)} ${h}h vs. letzter Monat`;
+  };
+  const cmpCount = (delta: number | null): string | null => {
+    if (delta === null || delta === undefined || delta === 0) return null;
+    return `  ${arrow(delta)} ${Math.abs(delta)} vs. letzter Monat`;
   };
 
-  // ─── LIVE-Performance-Block (WhatsApp-Style mit Bullets) ───
+  // ─── LIVE-Performance-Block · Bullets + Pfeil-Compare ───
   const perfLines: string[] = [];
   if (days !== null && days !== undefined) {
     perfLines.push(`• LIVE-Tage: ${days}`);
-    if (daysCmp !== null && daysCmp !== undefined && daysCmp !== 0) {
-      const abs = Math.abs(daysCmp);
-      perfLines.push(daysCmp > 0
-        ? `${abs} mehr als im gleichen Zeitraum letzten Monat`
-        : `${abs} weniger als im gleichen Zeitraum letzten Monat`);
-    }
+    const c = cmpDays(daysCmp);
+    if (c) perfLines.push(c);
   }
   if (secs !== null && secs !== undefined) {
     perfLines.push(`• LIVE-Dauer: ${fmtDuration(Number(secs))}`);
-    const cmpH = cmpLineHours(durationCmp);
-    if (cmpH) perfLines.push(cmpH);
+    const c = cmpHours(durationCmp);
+    if (c) perfLines.push(c);
   }
   if (followers !== null && followers !== undefined) {
     perfLines.push(`• Neue Follower: ${followers}`);
-    if (followersCmp !== null && followersCmp !== undefined && followersCmp !== 0) {
-      const abs = Math.abs(followersCmp);
-      perfLines.push(followersCmp > 0
-        ? `${abs} mehr als letzten Monat`
-        : `${abs} weniger als letzten Monat`);
-    }
+    const c = cmpCount(followersCmp);
+    if (c) perfLines.push(c);
   }
 
   // ─── Trend-Aussage (1 Zeile) ───
@@ -185,28 +186,28 @@ Konstanz halten`;
 Regelmäßig LIVE gehen`;
   }
 
-  // ─── Mid-Statement (4 Varianten · situationsabhängig) ───
+  // ─── Mid-Statement · 1 Zeile · 4 Varianten ───
   let midStatement: string;
   if (trend === "fallend") {
-    midStatement = `Regelmäßige und längere LIVEs helfen aktuell stark bei der Ausspielung 😊`;
+    midStatement = `Regelmäßige LIVEs helfen aktuell extrem 😊`;
   } else if (trend === "wachsend") {
-    midStatement = `Bleib dran — TikTok testet deinen Account aktuell stärker 😊`;
+    midStatement = `TikTok pusht aktuell starke Regelmäßigkeit 😊`;
   } else if (dn !== null && dn >= 0 && dn <= 2 && lvl < 5) {
-    midStatement = `Die nächsten LIVEs können jetzt extrem wichtig werden 😊`;
+    midStatement = `Konstanz ist aktuell extrem wichtig 😊`;
   } else {
-    midStatement = `Konstante LIVEs helfen aktuell stark bei der Ausspielung 😊`;
+    midStatement = `TikTok achtet aktuell stark auf Aktivität 😊`;
   }
 
-  // ─── 61-Min-Regel (konstant kurz) ───
-  const rule = `Wichtig:
-Ein LIVE zählt erst ab 61 Minuten am Stück als gültiger LIVE-Tag.`;
+  // ─── 61-Min-Regel · visuell getrennt + kompakt ───
+  const rule = `Wichtig 😊
+61 Minuten am Stück = 1 gültiger LIVE-Tag.`;
 
-  // ─── CTA (4 kompakte Varianten · deterministisch) ───
+  // ─── CTA · 4 kompakte Varianten · deterministisch ───
   const ctaVariants = [
-    `Wenn du möchtest, planen wir gemeinsam deine nächsten LIVEs 😊`,
-    `Wenn du Unterstützung brauchst, meld dich 😊`,
-    `Falls du Hilfe brauchst, schreib einfach 😊`,
-    `Wenn du möchtest, machen wir einen LIVE-Plan zusammen 😊`,
+    `Wenn du Hilfe brauchst, meld dich 😊`,
+    `Lass uns gemeinsam einen Plan machen 😊`,
+    `Wenn etwas nicht klappt, schreib einfach 😊`,
+    `Wir können gerne zusammen planen 😊`,
   ];
   const ctaIdx = ((days ?? 0) + lvl) % ctaVariants.length;
   const cta = ctaVariants[ctaIdx];
