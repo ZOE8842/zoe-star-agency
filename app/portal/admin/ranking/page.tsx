@@ -543,7 +543,17 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
       gift_rate: m.gift_rate,
       impressions: m.impressions ?? null,
       live_views: m.live_views ?? null,
-      followers_gained: clpm?.new_followers ?? m.followers_gained ?? null,
+      followers_gained: (() => {
+        // clpm.new_followers hat bei manchen Creators einen Parser-Bug
+        // (zeigt 1 statt echtem Wert). Heuristik: nimm den größeren der
+        // beiden Werte · so wird der Bug bypassed UND stale monthly
+        // korrigiert wo clpm aktuelle Wahrheit ist.
+        const mc = m.followers_gained ?? null;
+        const cc = clpm?.new_followers ?? null;
+        if (mc === null) return cc;
+        if (cc === null) return mc;
+        return Math.max(Number(mc), Number(cc));
+      })(),
       ctr: m.ctr ?? null,
       watchtime_avg_seconds: clpm?.avg_watch_seconds ?? m.watchtime_avg_seconds ?? null,
       streams_count: clpm?.livestreams_count ?? m.streams_count ?? null,
