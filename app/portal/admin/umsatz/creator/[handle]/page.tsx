@@ -105,95 +105,126 @@ function pickRecommendedMessage(args: {
   daysToNextActivity: number | null;
   liveValidDays: number | null;
   liveDurationSeconds: number | null;
+  liveNewFollowers: number | null;
+  liveDaysCompare: number | null;
+  liveDurationCompareSec: number | null;
+  liveFollowersCompare: number | null;
   trendClass?: string | null;
 }): string {
   const lvl = args.activityLevel ?? 0;
   const dn = args.daysToNextActivity;
   const days = args.liveValidDays;
   const secs = args.liveDurationSeconds;
+  const followers = args.liveNewFollowers;
+  const daysCmp = args.liveDaysCompare;
+  const durationCmp = args.liveDurationCompareSec;
+  const followersCmp = args.liveFollowersCompare;
   const trend = args.trendClass ?? null;
 
-  // Aktuell-Werte (formatiert)
-  const aktuellTage = days !== null && days !== undefined ? `${days} gültige LIVE-Tage` : "—";
-  const aktuellZeit = (() => {
-    if (secs === null || secs === undefined) return "—";
-    const h = Math.floor(Number(secs) / 3600);
-    const m = Math.floor((Number(secs) % 3600) / 60);
-    return `${h}h ${m}m LIVE-Zeit`;
-  })();
+  // Format helpers
+  const fmtDuration = (s: number): string => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return `${h}h ${m}m`;
+  };
+  const cmpLineHours = (deltaSec: number | null): string | null => {
+    if (deltaSec === null || deltaSec === undefined || deltaSec === 0) return null;
+    const hours = Math.round(Math.abs(deltaSec) / 3600);
+    if (hours === 0) return null;
+    return deltaSec > 0
+      ? `${hours}h mehr LIVE-Zeit als letzten Monat`
+      : `${hours}h weniger LIVE-Zeit als letzten Monat`;
+  };
 
-  // Nächstes Ziel · konkrete Zahlen, KEIN "Level X"
-  // Stunden-Heuristik: 3h pro fehlendem LIVE-Tag (realistic Schnitt)
+  // ─── LIVE-Performance-Block (WhatsApp-Style mit Bullets) ───
+  const perfLines: string[] = [];
+  if (days !== null && days !== undefined) {
+    perfLines.push(`• LIVE-Tage: ${days}`);
+    if (daysCmp !== null && daysCmp !== undefined && daysCmp !== 0) {
+      const abs = Math.abs(daysCmp);
+      perfLines.push(daysCmp > 0
+        ? `${abs} mehr als im gleichen Zeitraum letzten Monat`
+        : `${abs} weniger als im gleichen Zeitraum letzten Monat`);
+    }
+  }
+  if (secs !== null && secs !== undefined) {
+    perfLines.push(`• LIVE-Dauer: ${fmtDuration(Number(secs))}`);
+    const cmpH = cmpLineHours(durationCmp);
+    if (cmpH) perfLines.push(cmpH);
+  }
+  if (followers !== null && followers !== undefined) {
+    perfLines.push(`• Neue Follower: ${followers}`);
+    if (followersCmp !== null && followersCmp !== undefined && followersCmp !== 0) {
+      const abs = Math.abs(followersCmp);
+      perfLines.push(followersCmp > 0
+        ? `${abs} mehr als letzten Monat`
+        : `${abs} weniger als letzten Monat`);
+    }
+  }
+
+  // ─── Trend-Aussage (1 Zeile) ───
+  let trendLine = "";
+  if (trend === "fallend") trendLine = `\n\nDu liegst aktuell unter deinem normalen Trend.`;
+  else if (trend === "wachsend") trendLine = `\n\nDu liegst aktuell über deinem normalen Trend.`;
+  else if (trend === "stabil") trendLine = `\n\nDu bist aktuell auf deinem normalen Niveau.`;
+  // new_creator / unknown → keine Trend-Zeile
+
+  // ─── Ziel-Block ───
   const daysMissing = (dn !== null && dn > 0) ? dn : (dn === 0 ? 1 : 0);
   const hoursMissing = daysMissing * 3;
-
-  // Block 1 · Stand + Ziel
   let zielBlock: string;
   if (lvl >= 5) {
-    zielBlock = `Du bist auf dem höchsten Aktivitätsniveau — jetzt geht es darum, diese Konstanz konsequent zu halten.`;
+    zielBlock = `Dein Fokus:
+Konstanz halten`;
   } else if (daysMissing > 0) {
     zielBlock = `Dein nächstes Ziel:
 +${daysMissing} gültige LIVE-Tag${daysMissing === 1 ? "" : "e"}
 +${hoursMissing}h LIVE-Zeit`;
   } else {
-    zielBlock = `Halte das aktuelle Tempo und gehe weiter regelmäßig LIVE.`;
+    zielBlock = `Dein Fokus:
+Regelmäßig LIVE gehen`;
   }
 
-  const block1 = `Aktuell hast du:
-${aktuellTage}
-${aktuellZeit}
-
-${zielBlock}`;
-
-  // Block 2 · 61-Min-Regel (2 Varianten)
-  const block2Variants = [
-    `Denk daran 😊
-Ein LIVE zählt erst ab mindestens 61 Minuten am Stück als gültiger LIVE-Tag.`,
-    `Wichtig 😊
-Erst ab 61 Minuten am Stück zählt ein LIVE als gültiger LIVE-Tag.
-
-Deshalb lieber weniger Unterbrechungen und dafür konstanter LIVE gehen.`,
-  ];
-  const block2 = block2Variants[((days ?? 0) + lvl) % block2Variants.length];
-
-  // Block 3 · Warum (8 Varianten, variiert situationsabhängig + deterministisch)
-  // Erste 4 = situationsbasiert (trend/dn), letzte 4 = neutrale Allgemein-Varianten
-  let block3: string;
+  // ─── Mid-Statement (4 Varianten · situationsabhängig) ───
+  let midStatement: string;
   if (trend === "fallend") {
-    block3 = `Gerade regelmäßige und längere LIVEs helfen extrem dabei, wieder stärker ausgespielt zu werden. TikTok belohnt aktuell stark Creator, die zurück in den Rhythmus finden.`;
+    midStatement = `Regelmäßige und längere LIVEs helfen aktuell stark bei der Ausspielung 😊`;
   } else if (trend === "wachsend") {
-    block3 = `Man merkt aktuell deutlich, dass TikTok deinen Account wieder stärker testet und ausspielt — genau das passiert bei konstanter Aktivität 😊`;
+    midStatement = `Bleib dran — TikTok testet deinen Account aktuell stärker 😊`;
   } else if (dn !== null && dn >= 0 && dn <= 2 && lvl < 5) {
-    block3 = `Die nächsten Tage können jetzt extrem wichtig werden damit TikTok dich weiter konstant pusht. Konstanz in dieser Phase macht oft den größten Unterschied.`;
+    midStatement = `Die nächsten LIVEs können jetzt extrem wichtig werden 😊`;
   } else {
-    const neutralVariants = [
-      `TikTok hat uns diese Ziele aktuell als wichtige Orientierung für die Ausspielung weitergegeben. Je aktiver und konstanter du LIVE gehst, desto stärker kann dein Account langfristig ausgespielt werden und neue Zuschauer erreichen.`,
-      `Diese LIVE-Ziele kommen direkt aus den TikTok-Vorgaben. Je konsequenter du sie erreichst, desto mehr Reichweite und Momentum baust du langfristig auf.`,
-      `Die TikTok-Ausspielung reagiert aktuell stark auf konstante Aktivität. Je sauberer du diese Ziele erreichst, desto stabiler wird dein Wachstum.`,
-      `Aktive und regelmäßige LIVEs sind genau das, was TikTok aktuell als wichtigstes Signal bewertet. Daraus entsteht langfristig mehr Reichweite und stärkere Ausspielung.`,
-    ];
-    block3 = neutralVariants[((days ?? 0) + lvl + daysMissing) % neutralVariants.length];
+    midStatement = `Konstante LIVEs helfen aktuell stark bei der Ausspielung 😊`;
   }
 
-  // Block 4 · CTA (4 Varianten · deterministisch)
+  // ─── 61-Min-Regel (konstant kurz) ───
+  const rule = `Wichtig:
+Ein LIVE zählt erst ab 61 Minuten am Stück als gültiger LIVE-Tag.`;
+
+  // ─── CTA (4 kompakte Varianten · deterministisch) ───
   const ctaVariants = [
-    `Wenn du Unterstützung brauchst, planen wir das gemeinsam 😊`,
-    `Wenn du aktuell Probleme hast, meld dich einfach 😊`,
-    `Wenn du möchtest, bauen wir zusammen einen besseren LIVE-Plan 😊`,
-    `Wenn du Fragen hast oder Hilfe brauchst, schreib einfach 😊`,
+    `Wenn du möchtest, planen wir gemeinsam deine nächsten LIVEs 😊`,
+    `Wenn du Unterstützung brauchst, meld dich 😊`,
+    `Falls du Hilfe brauchst, schreib einfach 😊`,
+    `Wenn du möchtest, machen wir einen LIVE-Plan zusammen 😊`,
   ];
   const ctaIdx = ((days ?? 0) + lvl) % ctaVariants.length;
-  const block4 = ctaVariants[ctaIdx];
+  const cta = ctaVariants[ctaIdx];
 
+  // ─── Final-Assembly · WhatsApp-Style ───
   return `Hey 😊
 
-${block1}
+Deine aktuelle LIVE-Performance:
 
-${block2}
+${perfLines.join("\n")}${trendLine}
 
-${block3}
+${zielBlock}
 
-${block4}`;
+${midStatement}
+
+${rule}
+
+${cta}`;
 }
 
 // Pre-Maerz-Cutoff: User-Decision (Backstage hatte vorher andere Metriken).
@@ -526,6 +557,10 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
                 daysToNextActivity: compute?.days_to_next_activity_level ?? null,
                 liveValidDays: summary?.live_valid_days ?? null,
                 liveDurationSeconds: summary?.live_duration_seconds ?? null,
+                liveNewFollowers: summary?.live_new_followers ?? null,
+                liveDaysCompare: summary?.live_days_compare ?? null,
+                liveDurationCompareSec: summary?.live_duration_compare_sec ?? null,
+                liveFollowersCompare: summary?.live_followers_compare ?? null,
                 trendClass: compute?.trend_class ?? null,
               });
               return (
