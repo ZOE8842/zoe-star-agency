@@ -401,6 +401,20 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
     )
     .eq("month", month);
 
+  // V2-A · DOM-Truth Diamond-Override:
+  // creator_monthly_metrics.diamonds_month weicht von TikTok-Backstage-
+  // LIVE-Leistung-Tab ab (andere Aggregation). Die LIVE-Analyse-Page MUSS
+  // exakt dieselben Werte zeigen wie der LIVE-Leistung-Tab in Backstage.
+  // → clpm.current_diamonds (10k-gerundet, identisch zum TikTok-Display).
+  const { data: clpmRows } = await db
+    .from("creator_live_performance_monthly")
+    .select("tiktok_handle_normalized, current_diamonds")
+    .eq("period_month", month);
+  const clpmDiamondMap = new Map<string, number>();
+  for (const r of (clpmRows ?? []) as Array<{ tiktok_handle_normalized: string; current_diamonds: number | null }>) {
+    if (r.current_diamonds !== null) clpmDiamondMap.set(r.tiktok_handle_normalized, Number(r.current_diamonds));
+  }
+
   // Letzter Sync fuer Stand-Anzeige (Monatsranking + Footer)
   const lastSyncIso = (metrics ?? [])
     .map((m) => (m as { synced_at?: string }).synced_at)
@@ -507,7 +521,9 @@ export default async function AdminLiveAnalysePage({ searchParams }: PageProps) 
       average_viewers: avg,
       last_live_date: m.last_live_date,
       activity_status: m.activity_status,
-      diamonds_month: m.diamonds_month,
+      diamonds_month: clpmDiamondMap.get(m.tiktok_handle_normalized ?? "") ?? m.diamonds_month,
+      // ↑ Override mit clpm.current_diamonds (= TikTok-LIVE-Leistung-Tab-Wert),
+      // Fallback auf monthly_metrics wenn kein clpm-Datensatz vorhanden.
       gift_rate: m.gift_rate,
       impressions: m.impressions ?? null,
       live_views: m.live_views ?? null,
