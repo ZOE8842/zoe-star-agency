@@ -204,7 +204,7 @@ export function EventForm({
   }
 
   return (
-    <form onSubmit={submit} className="border border-champagne/15 p-8 space-y-5">
+    <form onSubmit={submit} noValidate className="border border-champagne/15 p-8 space-y-5">
       <p className="eyebrow mb-2">{isEdit ? "Event bearbeiten" : "Event anlegen"}</p>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -329,14 +329,17 @@ export function EventForm({
 
         {source === "tiktok" && (
           <Field label="Registration-URL (optional)" full>
+            {/* type=text statt url · Browser-URL-Validation würde sonst
+                Submit blockieren wenn Wert vorhanden aber kein valider URL-String.
+                Server-Action prüft URL-Format selbst (http(s)-Regex). */}
             <input
-              type="url" value={registrationUrl ?? ""}
+              type="text" inputMode="url" value={registrationUrl ?? ""}
               onChange={(e) => setRegistrationUrl(e.target.value)}
-              placeholder="https://..."
+              placeholder="https://... (optional)"
               className={inputCls}
             />
             <p className="text-cream/40 text-[10px] uppercase tracking-[0.25em] mt-2">
-              Falls externer Anmelde-Link vorhanden. Optional.
+              Optionaler externer TikTok-Link. Leer lassen wenn keine externe Anmeldung.
             </p>
           </Field>
         )}
