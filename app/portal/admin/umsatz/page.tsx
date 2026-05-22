@@ -816,26 +816,29 @@ export default async function AdminUmsatzPage({ searchParams }: PageProps) {
                         const istZero = (Number(c.ist_estimated_bonus_usd) || 0) === 0;
                         const hasDiamonds = (Number(c.live_current_diamonds) || 0) > 100_000;
 
+                        // Konkrete Ziel-Sprache (gleich wie Creator-Detail) · KEIN Admin-Leak
                         if (!elig.eligible && elig.dataKnown && istZero && hasDiamonds) {
                           const parts: string[] = [];
-                          if (elig.daysMissing > 0) parts.push(`${elig.daysMissing} LIVE-Tag${elig.daysMissing === 1 ? "" : "e"}`);
-                          if (elig.hoursMissing > 0) parts.push(`${elig.hoursMissing} LIVE-Stunde${elig.hoursMissing === 1 ? "" : "n"}`);
-                          hints.push(parts.length > 0
-                            ? `Eligibility: noch ${parts.join(" + ")}`
-                            : "Eligibility fehlt");
-                        } else if (dn === 0 && (c.ist_activity_level ?? 0) < 5) {
-                          hints.push("Aktivitätsaufstieg jetzt möglich");
-                        } else if (dn !== null && dn > 0 && dn <= 3 && (c.ist_activity_level ?? 0) < 5) {
-                          hints.push(`noch ${dn} LIVE-Tag${dn === 1 ? "" : "e"}`);
+                          if (elig.daysMissing > 0) parts.push(`+${elig.daysMissing} LIVE-Tag${elig.daysMissing === 1 ? "" : "e"}`);
+                          if (elig.hoursMissing > 0) parts.push(`+${elig.hoursMissing}h LIVE-Zeit`);
+                          if (parts.length > 0) hints.push(`Aktivitätsziel: ${parts.join(" + ")}`);
+                        } else if (dn !== null && dn >= 0 && dn <= 3 && (c.ist_activity_level ?? 0) < 5) {
+                          const daysMiss = dn === 0 ? 1 : dn;
+                          const hoursMiss = daysMiss * 3;
+                          hints.push(`Aktivitätsziel: +${daysMiss} LIVE-Tag${daysMiss === 1 ? "" : "e"} + ${hoursMiss}h`);
                         }
                         if (dm !== null && dm > 0 && dm <= 100_000) {
-                          hints.push(`${fmtBigInt(dm)} Diamanten bis nächste Stufe`);
+                          hints.push(`Stufenziel: +${fmtBigInt(dm)} Diamanten`);
                         }
                         if (hints.length === 0) {
                           if (c.trend_class === "wachsend") hints.push("Über persönlichem Schnitt");
                           else if (c.meta_is_new_creator) hints.push("Neuer Creator");
-                          else if (dn !== null && (c.ist_activity_level ?? 0) < 5) hints.push(`${dn}d bis nächstes Aktivitätslevel`);
-                          else if (dm !== null && dm > 0) hints.push(`${fmtBigInt(dm)} bis nächste Stufe`);
+                          else if (dn !== null && dn > 0 && (c.ist_activity_level ?? 0) < 5) {
+                            const dMiss = dn;
+                            const hMiss = dMiss * 3;
+                            hints.push(`Aktivitätsziel: +${dMiss} LIVE-Tag${dMiss === 1 ? "" : "e"} + ${hMiss}h`);
+                          }
+                          else if (dm !== null && dm > 0) hints.push(`Stufenziel: +${fmtBigInt(dm)} Diamanten`);
                         }
                         const hint = hints.length === 0 ? "—" : hints.join(" · ");
 

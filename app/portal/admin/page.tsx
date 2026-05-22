@@ -425,48 +425,48 @@ export default async function AdminPage() {
             const hoursMissing = Math.ceil(Math.max(0, 15 * 3600 - secs) / 3600);
             const eligible = daysMissing === 0 && hoursMissing === 0;
 
-            // 1 · Eligibility fast erreicht (höchste Prio)
+            // 1 · LIVE-Eligibility-Lücke (≤1 LIVE-Tag/Stunde + Diamonds da + $0)
+            //     · Sprache: konkretes Ziel, KEIN "Eligibility/Threshold"
             if (istZero && hasDiamonds && !eligible && (daysMissing <= 1 && hoursMissing <= 1)) {
               const parts: string[] = [];
-              if (daysMissing > 0) parts.push(`${daysMissing} LIVE-Tag${daysMissing === 1 ? "" : "e"}`);
-              if (hoursMissing > 0) parts.push(`${hoursMissing} LIVE-Stunde${hoursMissing === 1 ? "" : "n"}`);
+              if (daysMissing > 0) parts.push(`+${daysMissing} gültige LIVE-Tag${daysMissing === 1 ? "" : "e"}`);
+              if (hoursMissing > 0) parts.push(`+${hoursMissing}h LIVE-Zeit`);
               all.push({
                 handle: handlePk,
                 username: c.tiktok_username,
-                reason: "Eligibility fehlt",
-                missing: `Noch ${parts.join(" + ")}`,
-                benefit: `Tier-Bonus startet danach · aktuell Stufe ${c.ist_tier_level ?? "?"}`,
+                reason: "Nächstes Aktivitätsziel",
+                missing: parts.join("\n"),
+                benefit: ``,
                 weight: 1,
                 accent: "warm",
               });
               continue;
             }
-            // 2 · Activity-Level-Up nahe (≤1 LIVE-Tag)
+            // 2 · Activity-Level-Up nahe (≤1 LIVE-Tag) · konkrete Ziel-Sprache
             const dn = c.days_to_next_activity_level;
             if (dn !== null && dn <= 1 && (c.ist_activity_level ?? 0) < 5) {
-              const next = (c.ist_activity_level ?? 0) + 1;
+              const daysMiss = dn === 0 ? 1 : dn;
+              const hoursMiss = daysMiss * 3;
               all.push({
                 handle: handlePk,
                 username: c.tiktok_username,
-                reason: "Activity-Level möglich",
-                missing: dn === 0
-                  ? "Schwelle erreicht · wartet auf TikTok-Update"
-                  : `Noch ${dn} gültiger LIVE-Tag`,
-                benefit: `Level ${c.ist_activity_level ?? "?"} → ${next}`,
+                reason: "Nächstes Aktivitätsziel",
+                missing: `+${daysMiss} gültige${daysMiss === 1 ? "r" : ""} LIVE-Tag${daysMiss === 1 ? "" : "e"}\n+${hoursMiss}h LIVE-Zeit`,
+                benefit: ``,
                 weight: 2,
                 accent: "warm",
               });
               continue;
             }
-            // 3 · Tier-Aufstieg ≤50k Diamanten
+            // 3 · Tier-Aufstieg ≤50k Diamanten · konkrete Ziel-Sprache
             const dm = c.max_diamonds_to_next_tier;
             if (dm !== null && dm > 0 && dm <= 50_000) {
               all.push({
                 handle: handlePk,
                 username: c.tiktok_username,
-                reason: "Tier-Aufstieg nah",
-                missing: `Noch ${fmtBigIntNum(dm)} Diamanten`,
-                benefit: `Stufe ${c.ist_tier_level ?? "?"} → ${(c.ist_tier_level ?? 0) + 1}`,
+                reason: "Nächstes Stufenziel",
+                missing: `+${fmtBigIntNum(dm)} Diamanten`,
+                benefit: ``,
                 weight: 3,
                 accent: "warm",
               });
@@ -529,14 +529,16 @@ export default async function AdminPage() {
                                 <span className="text-cream/55"> · </span>
                                 {p.reason}
                               </p>
-                              {/* Z2 · konkrete Lücke */}
-                              <p className="text-cream/75 text-xs mt-1 leading-snug">
+                              {/* Z2 · konkrete Lücke (kann Mehrzeilen via \n haben) */}
+                              <p className="text-cream/75 text-xs mt-1 leading-snug whitespace-pre-line">
                                 {p.missing}
                               </p>
-                              {/* Z3 · Nutzen */}
-                              <p className="text-cream/45 text-[11px] mt-0.5 leading-snug italic">
-                                {p.benefit}
-                              </p>
+                              {/* Z3 · Nutzen (nur wenn vorhanden) */}
+                              {p.benefit && (
+                                <p className="text-cream/45 text-[11px] mt-0.5 leading-snug italic">
+                                  {p.benefit}
+                                </p>
+                              )}
                             </div>
                             <span className="text-champagne/60 text-[10px] uppercase tracking-[0.2em] shrink-0">
                               öffnen →
