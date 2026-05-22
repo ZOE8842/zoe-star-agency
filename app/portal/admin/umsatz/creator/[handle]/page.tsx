@@ -63,11 +63,13 @@ function statusBadge(s: string | null): { label: string; cls: string } {
 }
 
 // V2-A · Compare-Helpers
-function comparePct(current: number | null, delta: number | null): number | null {
-  if (current === null || delta === null) return null;
-  const before = current - delta;
-  if (!Number.isFinite(before) || before === 0) return null;
-  return Math.round((delta / before) * 1000) / 10;
+// WICHTIG: live_*_compare in DB ist der WERT vom Vergleichszeitraum
+// (previous_period_value), NICHT eine delta-Differenz.
+// Real delta = current - compareValue.
+function comparePct(current: number | null, compareValue: number | null): number | null {
+  if (current === null || compareValue === null) return null;
+  if (!Number.isFinite(compareValue) || compareValue === 0) return null;
+  return Math.round(((current - compareValue) / compareValue) * 1000) / 10;
 }
 function compareColor(value: number | null): string {
   if (value === null) return "text-cream/45";
@@ -127,48 +129,74 @@ function pickRecommendedMessage(args: {
     const m = Math.floor((s % 3600) / 60);
     return `${h}h ${m}m`;
   };
-  // Kompakte Compare-Line · "  ↓ 5 Tage vs. letzter Monat"
-  const arrow = (delta: number): string => (delta > 0 ? "↑" : "↓");
-  const cmpDays = (delta: number | null): string | null => {
-    if (delta === null || delta === undefined || delta === 0) return null;
+  // Compare = previous_period_value · delta = current - compareValue
+  const cmpDays = (current: number | null, prev: number | null): { text: string | null; delta: number } => {
+    if (current === null || prev === null || prev === current) return { text: null, delta: 0 };
+    const delta = current - prev;
     const abs = Math.abs(delta);
-    return `  ${arrow(delta)} ${abs} Tag${abs === 1 ? "" : "e"} vs. letzter Monat`;
+    const arrow = delta > 0 ? "↑" : "↓";
+    const word = delta > 0 ? "mehr" : "weniger";
+    return { text: `  ${arrow} ${abs} Tag${abs === 1 ? "" : "e"} ${word} als letzten Monat`, delta };
   };
-  const cmpHours = (deltaSec: number | null): string | null => {
-    if (deltaSec === null || deltaSec === undefined || deltaSec === 0) return null;
-    const h = Math.round(Math.abs(deltaSec) / 3600);
-    if (h === 0) return null;
-    return `  ${arrow(deltaSec)} ${h}h vs. letzter Monat`;
+  const cmpHours = (currentSec: number | null, prevSec: number | null): { text: string | null; delta: number } => {
+    if (currentSec === null || prevSec === null) return { text: null, delta: 0 };
+    const deltaH = Math.round((currentSec - prevSec) / 3600);
+    if (deltaH === 0) return { text: null, delta: 0 };
+    const abs = Math.abs(deltaH);
+    const arrow = deltaH > 0 ? "↑" : "↓";
+    const word = deltaH > 0 ? "mehr" : "weniger";
+    return { text: `  ${arrow} ${abs}h ${word} LIVE-Zeit als letzten Monat`, delta: deltaH };
   };
-  const cmpCount = (delta: number | null): string | null => {
-    if (delta === null || delta === undefined || delta === 0) return null;
-    return `  ${arrow(delta)} ${Math.abs(delta)} vs. letzter Monat`;
+  const cmpCount = (current: number | null, prev: number | null): { text: string | null; delta: number } => {
+    if (current === null || prev === null || prev === current) return { text: null, delta: 0 };
+    const delta = current - prev;
+    const abs = Math.abs(delta);
+    const arrow = delta > 0 ? "↑" : "↓";
+    const word = delta > 0 ? "mehr" : "weniger";
+    return { text: `  ${arrow} ${abs} ${word} als letzten Monat`, delta };
   };
 
-  // ─── LIVE-Performance-Block · Bullets + Pfeil-Compare ───
+  // ─── LIVE-Performance-Block + Trend-Mehrheit ───
   const perfLines: string[] = [];
+  const deltas: number[] = [];
+
   if (days !== null && days !== undefined) {
     perfLines.push(`• LIVE-Tage: ${days}`);
-    const c = cmpDays(daysCmp);
-    if (c) perfLines.push(c);
+    const r = cmpDays(days, daysCmp);
+    if (r.text) perfLines.push(r.text);
+    if (r.delta !== 0) deltas.push(Math.sign(r.delta));
   }
   if (secs !== null && secs !== undefined) {
     perfLines.push(`• LIVE-Dauer: ${fmtDuration(Number(secs))}`);
-    const c = cmpHours(durationCmp);
-    if (c) perfLines.push(c);
+    const r = cmpHours(Number(secs), durationCmp);
+    if (r.text) perfLines.push(r.text);
+    if (r.delta !== 0) deltas.push(Math.sign(r.delta));
   }
   if (followers !== null && followers !== undefined) {
     perfLines.push(`• Neue Follower: ${followers}`);
-    const c = cmpCount(followersCmp);
-    if (c) perfLines.push(c);
+    const r = cmpCount(followers, followersCmp);
+    if (r.text) perfLines.push(r.text);
+    if (r.delta !== 0) deltas.push(Math.sign(r.delta));
   }
 
-  // ─── Trend-Aussage (1 Zeile) ───
+  // ─── Trend-Aussage · basiert auf Mehrheit der LIVE-Compare-Deltas
+  // (statt auf trend_class aus 3M-Hist — sonst inkonsistent zur Performance-Zeilen)
   let trendLine = "";
-  if (trend === "fallend") trendLine = `\n\nDu liegst aktuell unter deinem normalen Trend.`;
-  else if (trend === "wachsend") trendLine = `\n\nDu liegst aktuell über deinem normalen Trend.`;
-  else if (trend === "stabil") trendLine = `\n\nDu bist aktuell auf deinem normalen Niveau.`;
-  // new_creator / unknown → keine Trend-Zeile
+  const pos = deltas.filter((d) => d > 0).length;
+  const neg = deltas.filter((d) => d < 0).length;
+  if (deltas.length > 0) {
+    if (neg > pos) {
+      trendLine = `\n\nDu liegst aktuell unter deinem normalen Trend.`;
+    } else if (pos > neg) {
+      trendLine = `\n\nDu liegst aktuell über deinem normalen Trend 😊`;
+    } else {
+      trendLine = `\n\nDeine Performance entwickelt sich aktuell stabil.`;
+    }
+  } else if (trend === "fallend") {
+    trendLine = `\n\nDu liegst aktuell unter deinem normalen Trend.`;
+  } else if (trend === "wachsend") {
+    trendLine = `\n\nDu liegst aktuell über deinem normalen Trend 😊`;
+  }
 
   // ─── Ziel-Block ───
   const daysMissing = (dn !== null && dn > 0) ? dn : (dn === 0 ? 1 : 0);
@@ -353,18 +381,18 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
         {/* ============= Revenue-Stat-Cards · ZUERST oben sichtbar ============= */}
         {rows.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4">
-            <StatCard label="Gesamt Umsatz" value={fmtUsd(sumTotal)} highlight />
-            <StatCard label="Forecast Umsatz" value={fmtUsd(forecastCurrent)} highlight />
-            <StatCard label="Total Revenue aktueller Monat" value={fmtUsd(currentRow?.total_revenue_usd ?? null)} />
-            <StatCard label="Activity Revenue" value={fmtUsd(currentRow?.activity_revenue_usd ?? null)} />
-            <StatCard label="Tier Revenue" value={fmtUsd(currentRow?.tier_revenue_usd ?? null)} />
-            <StatCard label="Incremental Revenue" value={fmtUsd(currentRow?.incremental_revenue_usd ?? null)} />
+            <StatCard label="Gesamt-Umsatz" value={fmtUsd(sumTotal)} highlight />
+            <StatCard label="Forecast aktueller Monat" value={fmtUsd(forecastCurrent)} highlight />
+            <StatCard label="Umsatz aktueller Monat" value={fmtUsd(currentRow?.total_revenue_usd ?? null)} />
+            <StatCard label="Aktivitäts-Umsatz" value={fmtUsd(currentRow?.activity_revenue_usd ?? null)} />
+            <StatCard label="Stufen-Umsatz" value={fmtUsd(currentRow?.tier_revenue_usd ?? null)} />
+            <StatCard label="Inkrementeller Umsatz" value={fmtUsd(currentRow?.incremental_revenue_usd ?? null)} />
             <StatCard
               label="Bester Monat"
               value={bestMonth ? `${fmtUsd(bestMonth.total_revenue_usd)} · ${fmtMonthLong(bestMonth.period_month)}` : "—"}
             />
             <StatCard
-              label="Letzter Sync"
+              label="Letzte Aktualisierung"
               value={latestMonth?.synced_at
                 ? new Date(latestMonth.synced_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
                 : "—"}

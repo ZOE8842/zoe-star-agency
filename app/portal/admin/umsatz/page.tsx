@@ -157,11 +157,12 @@ interface ExpandedDetail {
 }
 
 // Helper · pct aus current + delta (compare = current - delta)
-function comparePct(current: number | null, delta: number | null): number | null {
-  if (current === null || delta === null) return null;
-  const before = current - delta;
-  if (!Number.isFinite(before) || before === 0) return null;
-  return Math.round((delta / before) * 1000) / 10;
+// WICHTIG: live_*_compare in DB ist der VERGLEICHSZEITRAUM-WERT (previous),
+// NICHT eine Differenz. Real delta = current - compareValue.
+function comparePct(current: number | null, compareValue: number | null): number | null {
+  if (current === null || compareValue === null) return null;
+  if (!Number.isFinite(compareValue) || compareValue === 0) return null;
+  return Math.round(((current - compareValue) / compareValue) * 1000) / 10;
 }
 
 // Helper · Farb-Klassen für Compare-Werte (signed)
