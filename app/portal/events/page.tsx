@@ -157,7 +157,7 @@ export default async function EventsPage({ searchParams }: SearchProps) {
                   <img
                     src={ev.cover_image_url}
                     alt=""
-                    className="w-full aspect-[16/7] object-cover border border-champagne/10 mb-5"
+                    className="w-full max-h-[40vh] object-contain border border-champagne/10 mb-5 bg-black/40"
                   />
                 )}
                 <div className="flex items-baseline justify-between gap-3 mb-2 flex-wrap">

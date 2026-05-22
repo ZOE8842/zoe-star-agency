@@ -37,7 +37,7 @@ export function EventCoverLightbox({ src, alt = "" }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Bild groß öffnen"
-        className="block w-full border border-champagne/15 mb-8 bg-black/40 active:opacity-80 transition-opacity"
+        className="block w-full border border-champagne/15 mb-8 bg-black/40 active:opacity-80 hover:border-champagne/40 transition-all cursor-pointer relative group"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -45,6 +45,10 @@ export function EventCoverLightbox({ src, alt = "" }: Props) {
           alt={alt}
           className="w-full h-auto max-h-[70vh] object-contain mx-auto"
         />
+        {/* Click-Hint Badge · zeigt Tappability */}
+        <span className="absolute top-2 right-2 text-[10px] uppercase tracking-[0.2em] px-2 py-1 bg-black/70 border border-champagne/40 text-champagne/85 group-hover:bg-black/90">
+          🔍 Vollbild
+        </span>
       </button>
 
       {open && (
