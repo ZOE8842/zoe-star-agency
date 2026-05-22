@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { compressImageIfNeeded } from "@/lib/imageCompress";
 
 export interface UploadedAttachment {
   path: string;
@@ -32,8 +33,10 @@ export function AttachmentField({
     setError(null);
     setLoading(true);
 
+    // Client-Side Compression bei Bildern (umgeht Vercel 4.5 MB Body-Limit)
+    const compressed = await compressImageIfNeeded(file);
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", compressed);
     const res = await fetch("/api/messages/upload", {
       method: "POST",
       body: fd,

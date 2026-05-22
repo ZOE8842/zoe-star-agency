@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminCreateEvent, adminUpdateEvent } from "./actions";
+import { compressImageIfNeeded } from "@/lib/imageCompress";
 
 const CATEGORIES = ["live", "battle", "ranking", "special", "announcement"] as const;
 const SOURCES = ["agency", "tiktok"] as const;
@@ -122,8 +123,10 @@ export function EventForm({
     setCoverUploading(true);
     setCoverError(null);
     try {
+      // Client-Side Compression vor Upload (umgeht Vercel 4.5 MB Body-Limit)
+      const compressed = await compressImageIfNeeded(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", compressed);
       const r = await fetch("/api/events/upload-cover", { method: "POST", body: fd });
       // Defensiv: falls Route nicht JSON liefert (z.B. HTML-Redirect),
       // .json() wuerde sonst silent crashen → keine User-Sichtbarkeit.
