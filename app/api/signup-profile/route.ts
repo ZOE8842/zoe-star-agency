@@ -28,11 +28,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { user_id, email, invite_code, tiktok_username, display_name, country, language } = body;
+  const { user_id, email, invite_code: rawInviteCode, tiktok_username, display_name, country, language } = body;
 
-  if (!user_id || !email || !invite_code || !tiktok_username || !display_name) {
+  if (!user_id || !email || !rawInviteCode || !tiktok_username || !display_name) {
     return NextResponse.json({ error: "Pflichtfelder fehlen." }, { status: 400 });
   }
+
+  // Invite-Code normalisieren · gleiche Logik wie /api/check-invite
+  // (sonst können Whitespace / Case-Mismatch Signup fehlschlagen lassen
+  // OBWOHL pre-check ok war → confused User · ghost auth account)
+  const invite_code = String(rawInviteCode).trim().toUpperCase();
 
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

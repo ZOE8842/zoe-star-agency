@@ -110,7 +110,7 @@ function SignupForm() {
       body: JSON.stringify({
         user_id: authData.user.id,
         email: form.email,
-        invite_code: form.invite,
+        invite_code: form.invite.trim().toUpperCase(),
         tiktok_username: tiktokClean,
         display_name: form.display_name,
         country: form.country,
