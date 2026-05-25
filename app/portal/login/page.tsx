@@ -34,7 +34,9 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Error-Param aus URL (z.B. /portal/login?error=... von /auth/confirm)
+  const initialError = searchParams.get("error");
+  const [error, setError] = useState<string | null>(initialError);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

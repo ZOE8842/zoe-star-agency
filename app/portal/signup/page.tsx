@@ -78,10 +78,15 @@ function SignupForm() {
     const supabase = createClient();
 
     // 1. Auth-Account erstellen (sendet Verify-Mail, KEINE Session)
+    // emailRedirectTo führt Confirm-Link zur App-Callback-Route die den
+    // Token gegen eine Session tauscht. Ohne diese URL landet der User
+    // nach Klick nur auf der Hauptseite → "Email not confirmed" beim Login.
+    const callbackUrl = `${window.location.origin}/auth/callback?next=/portal`;
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
+        emailRedirectTo: callbackUrl,
         data: {
           tiktok_username: tiktokClean,
           display_name: form.display_name,
