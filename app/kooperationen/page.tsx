@@ -12,7 +12,7 @@ import {
   type CoopCreatorItem,
   type FilterOption,
 } from "@/components/KooperationenCreatorGrid";
-import { fetchCooperationCreators } from "@/lib/showcase/public";
+import { fetchHomepageCreators } from "@/lib/showcase/public";
 import { loadPublicLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
@@ -83,7 +83,10 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
   const sp = await searchParams;
   const initialCreator = (sp.creator ?? "").trim();
 
-  const all = await fetchCooperationCreators();
+  // V2 · /kooperationen nutzt jetzt den breiteren Public-Web-Pool
+  // (allow_website_showcase_confirmed) statt nur cooperation-confirmed.
+  // So sehen Besucher dort ALLE öffentlich freigegebenen Creator.
+  const all = await fetchHomepageCreators();
   const items: CoopCreatorItem[] = all
     .filter((c) => c.tiktokUsername)
     .map((c) => ({

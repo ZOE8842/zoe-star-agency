@@ -36,13 +36,13 @@ export default async function CreatorIndexPage() {
             <SectionNumber number="01" rotation={3} className="text-[260px] md:text-[520px] lg:text-[680px]" />
           </div>
           <div className="container-luxe relative z-10">
-            <p className="eyebrow mb-4">Creator</p>
+            <p className="eyebrow mb-4">Ausgewählte Creator</p>
             <h1 className="leading-[0.92] tracking-[-0.025em]">
               <span className="block hero-rise mixed-type-line-1 text-cream/90 text-[44px] sm:text-[64px] md:text-[88px] lg:text-[108px]">Unsere</span>
               <span className="block hero-rise mixed-type-line-2 text-champagne -mt-1 text-[52px] sm:text-[72px] md:text-[100px] lg:text-[120px]">Creator-Liste.</span>
             </h1>
             <p className="text-cream/65 text-base md:text-lg leading-relaxed mt-7 max-w-2xl">
-              Sechs Creator pro Besuch — zufaellig gewaehlt aus dem aktiven Roster. Klick eine Karte fuer das Einzelprofil.
+              Sechs Creator pro Besuch — zufaellig gewaehlt aus dem aktiven Roster. Den kompletten Überblick findest du unter „Alle Creator“.
             </p>
           </div>
         </section>
@@ -64,7 +64,7 @@ export default async function CreatorIndexPage() {
 
             <div className="mt-12 text-center">
               <Link href="/kooperationen" className="btn-cta-secondary inline-flex items-center gap-2">
-                Alle Creator fuer Kooperationen ansehen
+                Alle Creator ansehen
                 <span aria-hidden>→</span>
               </Link>
             </div>
