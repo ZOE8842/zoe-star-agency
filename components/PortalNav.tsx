@@ -25,6 +25,7 @@ function buildNavItems(isStaff: boolean, isAdmin: boolean, t: (k: string) => str
       : { href: "/portal", label: t("nav.dashboard") },
     { href: "/portal/inbox", label: t("nav.inbox"), indicator: true as const },
     { href: "/portal/analyse", label: t("nav.analyse") },
+    { href: "/portal/rankings", label: "Rankings" },
     { href: "/portal/events", label: t("nav.events") },
     { href: "/portal/services", label: t("nav.services") },
     { href: "/portal/academy", label: t("nav.academy") },
