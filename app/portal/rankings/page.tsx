@@ -37,17 +37,24 @@ function currentMonthIso(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
-function targetDailyDate(): string {
-  // Berlin-Zeit: vor 12:00 → -2 Tage, sonst -1 Tag (gleiche Logic wie Admin)
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Europe/Berlin", hour: "2-digit", hour12: false,
-  });
-  const berlinHour = parseInt(fmt.format(new Date()), 10);
+// Robust statt fixer -1/-2-Tage-Rechnung: nimm den letzten Tag der
+// tatsächlich Daten hat (Backstage-Scrape läuft verzögert · -1-Tag
+// kann noch leer sein → Empty-Ranking). Fallback auf Datums-Rechnung.
+async function resolveDailyDate(
+  db: ReturnType<typeof sr>,
+): Promise<string> {
+  const { data } = await db
+    .from("creator_daily_metrics")
+    .select("metric_date")
+    .order("metric_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (data?.metric_date) return data.metric_date as string;
+  // Fallback
   const now = new Date();
   const berlin = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
-  const t = new Date(berlin);
-  t.setDate(t.getDate() - (berlinHour < 12 ? 2 : 1));
-  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  berlin.setDate(berlin.getDate() - 1);
+  return `${berlin.getFullYear()}-${String(berlin.getMonth() + 1).padStart(2, "0")}-${String(berlin.getDate()).padStart(2, "0")}`;
 }
 
 function monthLabel(iso: string): string {
@@ -82,7 +89,7 @@ export default async function RankingsPage({ searchParams }: PageProps) {
 
   const db = sr();
   const month = currentMonthIso();
-  const dailyDate = targetDailyDate();
+  const dailyDate = await resolveDailyDate(db);
 
   // ───── MONAT ─────
   // Map handle → username/displayName via profiles
@@ -102,14 +109,34 @@ export default async function RankingsPage({ searchParams }: PageProps) {
   for (const m of (monthly ?? []) as Array<{ tiktok_handle_normalized: string; tiktok_username: string | null }>) {
     if (m.tiktok_username) usernameMap.set(m.tiktok_handle_normalized, m.tiktok_username);
   }
-  // Display-Names + Category aus profiles laden
+  // Display-Names aus profiles (KEINE category-Spalte · existiert dort nicht),
+  // Category separat aus showcase_creators (dort liegt sie).
   const handles = Array.from(usernameMap.keys());
-  const { data: profiles } = handles.length > 0
-    ? await db.from("profiles").select("tiktok_handle_normalized, display_name, category").in("tiktok_handle_normalized", handles)
+  const [{ data: profiles }, { data: shows }] = handles.length > 0
+    ? await Promise.all([
+        db.from("profiles").select("tiktok_handle_normalized, display_name").in("tiktok_handle_normalized", handles),
+        db.from("showcase_creators").select("profile_id, category"),
+      ])
+    : [{ data: [] }, { data: [] }];
+  // showcase_creators ist profile_id-keyed → brauchen profile_id-Map
+  const { data: profIdRows } = handles.length > 0
+    ? await db.from("profiles").select("id, tiktok_handle_normalized").in("tiktok_handle_normalized", handles)
     : { data: [] };
+  const idToHandle = new Map<string, string>();
+  for (const p of (profIdRows ?? []) as Array<{ id: string; tiktok_handle_normalized: string }>) {
+    idToHandle.set(p.id, p.tiktok_handle_normalized);
+  }
+  const categoryMap = new Map<string, string | null>();
+  for (const s of (shows ?? []) as Array<{ profile_id: string; category: string | null }>) {
+    const h = idToHandle.get(s.profile_id);
+    if (h) categoryMap.set(h, s.category);
+  }
   const profMap = new Map<string, { display_name: string | null; category: string | null }>();
-  for (const p of (profiles ?? []) as Array<{ tiktok_handle_normalized: string; display_name: string | null; category: string | null }>) {
-    profMap.set(p.tiktok_handle_normalized, { display_name: p.display_name, category: p.category });
+  for (const p of (profiles ?? []) as Array<{ tiktok_handle_normalized: string; display_name: string | null }>) {
+    profMap.set(p.tiktok_handle_normalized, {
+      display_name: p.display_name,
+      category: categoryMap.get(p.tiktok_handle_normalized) ?? null,
+    });
   }
 
   function nameOf(handle: string): { display_name: string | null; username: string; category: string | null } {
@@ -168,9 +195,12 @@ export default async function RankingsPage({ searchParams }: PageProps) {
   }
   const dailyHandles = Array.from(dailyUsernameMap.keys()).filter((h) => !profMap.has(h));
   if (dailyHandles.length > 0) {
-    const { data: extraProf } = await db.from("profiles").select("tiktok_handle_normalized, display_name, category").in("tiktok_handle_normalized", dailyHandles);
-    for (const p of (extraProf ?? []) as Array<{ tiktok_handle_normalized: string; display_name: string | null; category: string | null }>) {
-      profMap.set(p.tiktok_handle_normalized, { display_name: p.display_name, category: p.category });
+    const { data: extraProf } = await db.from("profiles").select("tiktok_handle_normalized, display_name").in("tiktok_handle_normalized", dailyHandles);
+    for (const p of (extraProf ?? []) as Array<{ tiktok_handle_normalized: string; display_name: string | null }>) {
+      profMap.set(p.tiktok_handle_normalized, {
+        display_name: p.display_name,
+        category: categoryMap.get(p.tiktok_handle_normalized) ?? null,
+      });
     }
   }
   // usernameMap mergen
