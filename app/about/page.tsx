@@ -6,6 +6,7 @@ import { MotionReveal } from "@/components/MotionReveal";
 import { LiveDot } from "@/components/LiveDot";
 import { SectionNumber } from "@/components/SectionNumber";
 import { loadPublicLocale } from "@/lib/i18n";
+import { getPublicAgencyStats, formatStat } from "@/lib/stats/public-stats";
 
 export const metadata: Metadata = {
   title: "Über uns",
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   const { t } = await loadPublicLocale();
+  const stats = await getPublicAgencyStats();
   return (
     <>
       <Header />
@@ -114,10 +116,12 @@ export default async function AboutPage() {
             </MotionReveal>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15">
               {[
-                { value: "53+", label: "Aktive Creator:innen" },
-                { value: "2.797+", label: "LIVE-Std. / Monat" },
-                { value: "1.930+", label: "Livestreams im April" },
-                { value: "52 Std.", label: "Ø LIVE-Zeit" },
+                // aus creator_daily_metrics, letzter voller Monat — bis
+                // 2026-08-06 standen hier April-Werte fest im Code.
+                { value: formatStat(stats.activeCreators), label: "Aktive Creator:innen" },
+                { value: formatStat(stats.liveHours), label: "LIVE-Std. / Monat" },
+                { value: formatStat(stats.liveDays), label: `LIVE-Tage im ${stats.monthLabel.split(" ")[0]}` },
+                { value: `${stats.avgHoursPerCreator} Std.`, label: "Ø LIVE-Zeit" },
               ].map((s) => (
                 <div key={s.label} className="bg-ink p-6 md:p-8">
                   <p className="font-display italic font-black text-champagne text-3xl md:text-4xl lg:text-5xl leading-none mb-3 tracking-[-0.02em]">

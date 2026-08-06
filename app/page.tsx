@@ -17,6 +17,7 @@ import {
   toShowcaseCard,
   randomTake,
 } from "@/lib/showcase/public";
+import { getPublicAgencyStats, formatStat } from "@/lib/stats/public-stats";
 import {
   TikTokIcon,
   InstagramIcon,
@@ -55,6 +56,7 @@ const APPLY_URL = "/join";
 
 export default async function HomePage() {
   const { t } = await loadPublicLocale();
+  const stats = await getPublicAgencyStats();
   const all = await fetchHomepageCreators();
   // Random-Pick max 6 — bei jedem Reload leicht anders.
   const picked = all.length > 0 ? randomTake(all, 6).map(toShowcaseCard) : [];
@@ -162,9 +164,11 @@ export default async function HomePage() {
               style={{ animationDelay: "0.9s" }}
             >
               {[
-                { value: "53+", label: "Aktive Creator" },
-                { value: "2.797+", label: "LIVE-Stunden" },
-                { value: "1.930+", label: "Streams" },
+                // Zahlen kommen aus creator_daily_metrics (letzter voller
+                // Monat) — vorher standen hier April-Werte fest im Code.
+                { value: formatStat(stats.activeCreators), label: "Aktive Creator" },
+                { value: formatStat(stats.liveHours), label: "LIVE-Stunden" },
+                { value: formatStat(stats.liveDays), label: "LIVE-Tage" },
                 { value: "TikTok LIVE", label: "Deutschland" },
               ].map((s) => (
                 <div key={s.label} className="bg-ink p-5 md:p-7">

@@ -14,6 +14,11 @@ import {
 } from "@/components/KooperationenCreatorGrid";
 import { fetchHomepageCreators } from "@/lib/showcase/public";
 import { loadPublicLocale } from "@/lib/i18n";
+import {
+  getPublicAgencyStats,
+  formatStat,
+  type PublicAgencyStats,
+} from "@/lib/stats/public-stats";
 
 export const metadata: Metadata = {
   title: "Kooperationen — TikTok LIVE Reichweite",
@@ -22,14 +27,17 @@ export const metadata: Metadata = {
   alternates: { canonical: "/kooperationen" },
 };
 
-// Echte Backstage-Stats — Stand April 2026, eigene Agency-Daten
-// (KEINE Creator-spezifischen Daten, nur Aggregat-Werte)
-const STATS = [
-  { value: "53+", label: "Aktive Creator:innen", hint: "im Roster" },
-  { value: "2.797+", label: "LIVE-Stunden", hint: "im April 2026" },
-  { value: "1.930+", label: "Livestreams", hint: "im April 2026" },
-  { value: "52 Std.", label: "Ø LIVE-Zeit", hint: "pro Creator/Monat" },
-];
+// Echte Backstage-Stats aus creator_daily_metrics, letzter vollstaendiger
+// Monat — nur Aggregate, KEINE Creator-spezifischen Daten.
+// Bis 2026-08-06 standen hier April-Werte fest im Code (4 Monate alt).
+function buildStats(s: PublicAgencyStats) {
+  return [
+    { value: formatStat(s.activeCreators), label: "Aktive Creator:innen", hint: "im Roster" },
+    { value: formatStat(s.liveHours), label: "LIVE-Stunden", hint: `im ${s.monthLabel}` },
+    { value: formatStat(s.liveDays), label: "LIVE-Tage", hint: `im ${s.monthLabel}` },
+    { value: `${s.avgHoursPerCreator} Std.`, label: "Ø LIVE-Zeit", hint: "pro Creator/Monat" },
+  ];
+}
 
 const SERVICES = [
   { title: "TikTok LIVE Kampagnen", desc: "Direkter Hebel über aktive LIVE-Creator. Tag-Aktionen, Sponsoring, Brand-Slots im Stream." },
@@ -82,6 +90,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
   const { t } = await loadPublicLocale();
   const sp = await searchParams;
   const initialCreator = (sp.creator ?? "").trim();
+  const STATS = buildStats(await getPublicAgencyStats());
 
   // V2 · /kooperationen nutzt jetzt den breiteren Public-Web-Pool
   // (allow_website_showcase_confirmed) statt nur cooperation-confirmed.
