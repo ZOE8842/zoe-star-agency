@@ -3,39 +3,18 @@
 // TikTok-LIVE-Deutschland-Account-Beobachtung und ZOE-Standards.
 // V2: optional in DB-Tabelle migrieren + Admin-Edit-UI.
 
-import type { LessonBlock } from "./blocks";
+import type { Category, Gift, Lesson } from "./types";
+import { EXTRA_LESSONS } from "./data-extra";
 
-export interface Lesson {
-  slug: string;
-  title: string;
-  summary: string;
-  reading_minutes: number;
-  source_label?: string;
-  blocks: LessonBlock[];
-}
-
-export interface Category {
-  slug: string;
-  title: string;
-  intro: string;
-  lessons: Lesson[];
-}
-
-export interface Gift {
-  slug: string;
-  name_de: string;
-  coins: number;
-  category: "standard" | "team" | "exclusive";
-  exclusive: boolean;
-  required_level?: number;
-  whale?: boolean;
-}
+// Typen liegen in types.ts, werden hier aber weiter re-exportiert, damit
+// bestehende Imports aus "@/lib/academy/data" gueltig bleiben.
+export type { Category, Gift, Lesson };
 
 // ============================================================
 //  KATEGORIEN
 // ============================================================
 
-export const CATEGORIES: Category[] = [
+const BASE_CATEGORIES: Category[] = [
   {
     slug: "tiktok-regeln",
     title: "TikTok Regeln",
@@ -611,6 +590,15 @@ export const CATEGORIES: Category[] = [
     ],
   },
 ];
+
+// Zusatz-Lektionen aus data-extra.ts an die passende Kategorie haengen.
+// So bleibt der Basis-Katalog uebersichtlich und neues Material landet an
+// einer Stelle, ohne dass hier jemand zwischen 800 Zeilen sucht.
+export const CATEGORIES: Category[] = BASE_CATEGORIES.map((category) => {
+  const extra = EXTRA_LESSONS[category.slug];
+  if (!extra?.length) return category;
+  return { ...category, lessons: [...category.lessons, ...extra] };
+});
 
 // ============================================================
 //  TIKTOK GESCHENKE

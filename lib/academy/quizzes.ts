@@ -1,6 +1,8 @@
 // Academy Quizzes V1 — echte Multiple-Choice-Fragen.
 // V2: optional in DB migrieren + Admin-Edit.
 
+import { EXTRA_QUIZZES } from "./quizzes-extra";
+
 export interface QuizQuestion {
   q: string;
   options: string[];
@@ -16,7 +18,7 @@ export interface Quiz {
   questions: QuizQuestion[];
 }
 
-export const QUIZZES: Quiz[] = [
+const BASE_QUIZZES: Quiz[] = [
   {
     slug: "tiktok-regeln-basics",
     category_slug: "tiktok-regeln",
@@ -514,6 +516,10 @@ export const QUIZZES: Quiz[] = [
     ],
   },
 ];
+
+// Quizze fuer die spaeter dazugekommenen Kategorien liegen in
+// quizzes-extra.ts. Getrennte Datei, damit dieser Katalog lesbar bleibt.
+export const QUIZZES: Quiz[] = [...BASE_QUIZZES, ...EXTRA_QUIZZES];
 
 export function bestScoreForUser(attempts: Array<{ quiz_slug: string; score: number; max_score: number }>): Map<string, { score: number; max_score: number }> {
   const map = new Map<string, { score: number; max_score: number }>();
