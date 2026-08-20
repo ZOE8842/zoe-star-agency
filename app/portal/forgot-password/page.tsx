@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
+import { authErrorText } from "@/lib/auth/error-messages";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -23,7 +24,7 @@ export default function ForgotPasswordPage() {
     });
 
     if (err) {
-      setError(err.message);
+      setError(authErrorText(err.message));
       setLoading(false);
       return;
     }

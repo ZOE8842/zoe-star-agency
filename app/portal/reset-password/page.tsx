@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
+import { authErrorText } from "@/lib/auth/error-messages";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function ResetPasswordPage() {
     const { error: err } = await supabase.auth.updateUser({ password });
 
     if (err) {
-      setError(err.message);
+      setError(authErrorText(err.message));
       setLoading(false);
       return;
     }

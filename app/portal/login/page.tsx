@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
+import { authErrorText } from "@/lib/auth/error-messages";
 
 // Whitelist: nur relative Portal-Pfade akzeptieren. URL-Normalisierung
 // fängt zusätzlich Path-Traversal (/portal/../external) und Null-Bytes ab.
@@ -35,7 +36,8 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   // Error-Param aus URL (z.B. /portal/login?error=... von /auth/confirm)
-  const initialError = searchParams.get("error");
+  // Auch Fehler aus dem URL-Param (z.B. von /auth/confirm) uebersetzen.
+  const initialError = authErrorText(searchParams.get("error"));
   const [error, setError] = useState<string | null>(initialError);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -47,7 +49,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError(error.message);
+      setError(authErrorText(error.message));
       setLoading(false);
       return;
     }

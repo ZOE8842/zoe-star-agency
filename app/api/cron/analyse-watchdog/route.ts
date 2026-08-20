@@ -80,12 +80,16 @@ export async function GET(req: NextRequest) {
     .select("id");
 
   // 2) content_reviews
+  // Achtung: diese Tabelle hat KEIN completed_at, der Abschluss-Zeitstempel
+  // heisst hier reviewed_at. Bis 2026-08-20 stand hier completed_at, dadurch
+  // lief der Watchdog bei jedem Durchlauf in
+  // "Could not find the 'completed_at' column" und hat nie aufgeraeumt.
   const { data: cr, error: crErr } = await supabase
     .from("content_reviews")
     .update({
       status: "failed",
       error_message: stuckMsg,
-      completed_at: nowIso,
+      reviewed_at: nowIso,
     })
     .eq("status", "processing")
     .lt("processing_started_at", cutoffIso)
