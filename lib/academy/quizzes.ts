@@ -21,7 +21,7 @@ export interface Quiz {
 const BASE_QUIZZES: Quiz[] = [
   {
     slug: "tiktok-regeln-basics",
-    category_slug: "tiktok-regeln",
+    category_slug: "regeln-sicherheit",
     title: "TikTok Regeln · Basics",
     intro: "5 Fragen ueber die wichtigsten Regeln. Schnell — keine Fallen.",
     questions: [
@@ -84,7 +84,7 @@ const BASE_QUIZZES: Quiz[] = [
   },
   {
     slug: "live-grundlagen-basics",
-    category_slug: "live-grundlagen",
+    category_slug: "dein-live",
     title: "LIVE Grundlagen · Basics",
     intro: "5 Fragen ueber Setup + erste 60 Sekunden.",
     questions: [
@@ -147,7 +147,7 @@ const BASE_QUIZZES: Quiz[] = [
   },
   {
     slug: "watchtime-basics",
-    category_slug: "watchtime",
+    category_slug: "watchtime-zahlen",
     title: "Watchtime · Basics",
     intro: "5 Fragen ueber die wichtigste LIVE-Metrik.",
     questions: [
@@ -210,7 +210,7 @@ const BASE_QUIZZES: Quiz[] = [
   },
   {
     slug: "geschenke-basics",
-    category_slug: "tiktok-geschenke",
+    category_slug: "matches-geschenke",
     title: "TikTok Geschenke · Werte",
     intro: "5 Fragen ueber Gift-Werte. Schnell-Check fuer Stream-Praxis.",
     questions: [
@@ -262,7 +262,7 @@ const BASE_QUIZZES: Quiz[] = [
 
   {
     slug: "erste-15-minuten",
-    category_slug: "live-grundlagen",
+    category_slug: "dein-live",
     title: "Die ersten 15 Minuten · Insider",
     intro: "Was Streams in den ersten Minuten kaputt macht — direkt aus echten Lives.",
     questions: [
@@ -326,7 +326,7 @@ const BASE_QUIZZES: Quiz[] = [
 
   {
     slug: "match-fehler",
-    category_slug: "battles-matches",
+    category_slug: "matches-geschenke",
     title: "Match-Fehler · die typischen",
     intro: "Was Matches kaputt macht — Agency-Sicht.",
     questions: [
@@ -390,7 +390,7 @@ const BASE_QUIZZES: Quiz[] = [
 
   {
     slug: "tiktok-strikes",
-    category_slug: "account-sicherheit",
+    category_slug: "regeln-sicherheit",
     title: "Strikes + Risiken · Agency-Wissen",
     intro: "Was im LIVE wirklich gefaehrlich ist — nicht was die Public-Regel sagt.",
     questions: [
@@ -454,7 +454,7 @@ const BASE_QUIZZES: Quiz[] = [
 
   {
     slug: "auszahlung-system",
-    category_slug: "tiktok-geschenke",
+    category_slug: "matches-geschenke",
     title: "Auszahlung · was wirklich zaehlt",
     intro: "TikTok-Auszahlungs-Logik. Insider-Werte.",
     questions: [

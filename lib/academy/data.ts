@@ -5,6 +5,7 @@
 
 import type { Category, Gift, Lesson } from "./types";
 import { EXTRA_LESSONS } from "./data-extra";
+import { GROUPS } from "./groups";
 
 // Typen liegen in types.ts, werden hier aber weiter re-exportiert, damit
 // bestehende Imports aus "@/lib/academy/data" gueltig bleiben.
@@ -591,14 +592,35 @@ const BASE_CATEGORIES: Category[] = [
   },
 ];
 
-// Zusatz-Lektionen aus data-extra.ts an die passende Kategorie haengen.
-// So bleibt der Basis-Katalog uebersichtlich und neues Material landet an
-// einer Stelle, ohne dass hier jemand zwischen 800 Zeilen sucht.
-export const CATEGORIES: Category[] = BASE_CATEGORIES.map((category) => {
-  const extra = EXTRA_LESSONS[category.slug];
-  if (!extra?.length) return category;
-  return { ...category, lessons: [...category.lessons, ...extra] };
-});
+// Alle Lektionen aus beiden Dateien, nach Slug adressierbar.
+const LESSONS_BY_SLUG = new Map<string, Lesson>(
+  [
+    ...BASE_CATEGORIES.flatMap((c) => c.lessons),
+    ...Object.values(EXTRA_LESSONS).flat(),
+  ].map((lesson) => [lesson.slug, lesson]),
+);
+
+// Die sichtbare Struktur kommt aus groups.ts: sieben Themengruppen statt der
+// frueheren 13 Kategorien, in denen teilweise nur eine Lektion stand. Die
+// alten Kategorien in BASE_CATEGORIES dienen nur noch als Ablage der Inhalte.
+export const CATEGORIES: Category[] = GROUPS.map((group) => ({
+  slug: group.slug,
+  title: group.title,
+  intro: group.intro,
+  lessons: group.lessons
+    .map((slug) => LESSONS_BY_SLUG.get(slug))
+    .filter((lesson): lesson is Lesson => Boolean(lesson)),
+}));
+
+// Lektionen, die in keiner Gruppe stehen, waeren im Portal unerreichbar.
+// Beim Entwickeln einmal warnen statt still verschwinden lassen.
+if (process.env.NODE_ENV !== "production") {
+  const zugeordnet = new Set(GROUPS.flatMap((g) => g.lessons));
+  const verwaist = [...LESSONS_BY_SLUG.keys()].filter((slug) => !zugeordnet.has(slug));
+  if (verwaist.length) {
+    console.warn("[academy] Lektionen ohne Themengruppe:", verwaist.join(", "));
+  }
+}
 
 // ============================================================
 //  TIKTOK GESCHENKE

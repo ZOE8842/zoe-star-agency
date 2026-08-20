@@ -7,7 +7,7 @@ import type { Quiz } from "./quizzes";
 export const EXTRA_QUIZZES: Quiz[] = [
   {
     slug: "community-aufbau-basics",
-    category_slug: "community-aufbau",
+    category_slug: "community",
     title: "Community Aufbau · Basics",
     intro: "5 Fragen zu Supportern, Bindung und Erreichbarkeit.",
     questions: [
@@ -70,7 +70,7 @@ export const EXTRA_QUIZZES: Quiz[] = [
   },
   {
     slug: "wachstum-basics",
-    category_slug: "wachstum",
+    category_slug: "reichweite",
     title: "Wachstum · Basics",
     intro: "5 Fragen zu LIVE-Zeiten, Videos, Events und dem Push.",
     questions: [
@@ -133,7 +133,7 @@ export const EXTRA_QUIZZES: Quiz[] = [
   },
   {
     slug: "technik-basics",
-    category_slug: "technik",
+    category_slug: "dein-live",
     title: "Technik · Basics",
     intro: "5 Fragen zu Setup, Bild und Ton.",
     questions: [
@@ -196,7 +196,7 @@ export const EXTRA_QUIZZES: Quiz[] = [
   },
   {
     slug: "agentur-standards-basics",
-    category_slug: "agentur-standards",
+    category_slug: "start",
     title: "Agentur Standards · Basics",
     intro: "5 Fragen zu Mindestwerten, Ablauf und Zusammenarbeit.",
     questions: [
@@ -249,7 +249,7 @@ export const EXTRA_QUIZZES: Quiz[] = [
   },
   {
     slug: "live-psychologie-basics",
-    category_slug: "live-psychologie",
+    category_slug: "dein-live",
     title: "LIVE Psychologie · Basics",
     intro: "5 Fragen zu Energie, Konstanz und Aufbau.",
     questions: [
@@ -312,7 +312,7 @@ export const EXTRA_QUIZZES: Quiz[] = [
   },
   {
     slug: "profil-optimierung-basics",
-    category_slug: "profil-optimierung",
+    category_slug: "reichweite",
     title: "Profil Optimierung · Basics",
     intro: "5 Fragen zu Bild, Bio und Begruessung.",
     questions: [
@@ -375,7 +375,7 @@ export const EXTRA_QUIZZES: Quiz[] = [
   },
   {
     slug: "analyse-verstehen-basics",
-    category_slug: "analyse-verstehen",
+    category_slug: "watchtime-zahlen",
     title: "Analyse verstehen · Basics",
     intro: "5 Fragen zu Kennzahlen und dem, was du daraus machst.",
     questions: [
