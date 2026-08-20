@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { CATEGORIES } from "@/lib/academy/data";
+import { groupSlugForLesson } from "@/lib/academy/groups";
 import { RenderBlocks } from "@/lib/academy/blocks";
 import { LessonCompleteToggle } from "@/components/academy/LessonCompleteToggle";
 
@@ -16,15 +17,25 @@ export default async function AcademyLessonPage({ params }: Props) {
   const { slug, lesson: lessonSlug } = await params;
   const { supabase, profile } = await getAuthedProfile();
   const category = CATEGORIES.find((c) => c.slug === slug);
+  const lesson = category?.lessons.find((l) => l.slug === lessonSlug);
+
+  if (!lesson) {
+    // Die Lektion gibt es, sie steht nur in einer anderen Gruppe als in der
+    // URL. Passiert bei alten Links und wenn eine Lektion umsortiert wird.
+    // Weiterleiten statt 404.
+    const ziel = groupSlugForLesson(lessonSlug);
+    if (ziel && ziel !== slug) {
+      redirect(`/portal/academy/${ziel}/${lessonSlug}`);
+    }
+    notFound();
+  }
   if (!category) notFound();
-  const lesson = category.lessons.find((l) => l.slug === lessonSlug);
-  if (!lesson) notFound();
 
   const { data: progress } = await supabase
     .from("academy_lesson_reads")
     .select("id")
     .eq("profile_id", profile.id)
-    .eq("category_slug", slug)
+    .eq("category_slug", category.slug)
     .eq("lesson_slug", lessonSlug)
     .maybeSingle();
   const isCompleted = !!progress;
@@ -47,11 +58,11 @@ export default async function AcademyLessonPage({ params }: Props) {
       <div className="atelier-atmosphere" />
       <div className="atelier-grain" />
 
-      <main className="container-luxe relative z-10 py-12 md:py-16 max-w-2xl">
+      <main className="container-luxe relative z-10 py-12 md:py-16 pb-28 md:pb-16 max-w-2xl">
         <div className="mb-10">
           <Link
             href={`/portal/academy/${category.slug}`}
-            className="text-cream/45 hover:text-champagne text-[11px] uppercase tracking-[0.25em] inline-flex items-center"
+            className="inline-flex items-center min-h-11 -ml-3 px-3 text-cream/60 hover:text-champagne text-xs uppercase tracking-[0.25em] transition-colors"
           >
             ← {category.title}
           </Link>
@@ -85,7 +96,7 @@ export default async function AcademyLessonPage({ params }: Props) {
           {prev ? (
             <Link
               href={`/portal/academy/${category.slug}/${prev.slug}`}
-              className="text-cream/55 hover:text-champagne text-sm group"
+              className="flex-1 min-h-14 py-3 pr-3 text-cream/60 hover:text-champagne text-sm group"
             >
               <span className="block text-cream/30 text-[10px] uppercase tracking-[0.25em] mb-1">
                 ← Vorher
@@ -98,7 +109,7 @@ export default async function AcademyLessonPage({ params }: Props) {
           {next ? (
             <Link
               href={`/portal/academy/${category.slug}/${next.slug}`}
-              className="text-cream/55 hover:text-champagne text-sm text-right group"
+              className="flex-1 min-h-14 py-3 pl-3 text-cream/60 hover:text-champagne text-sm text-right group"
             >
               <span className="block text-cream/30 text-[10px] uppercase tracking-[0.25em] mb-1">
                 Naechste →

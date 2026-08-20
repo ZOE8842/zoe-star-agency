@@ -29,7 +29,7 @@ export default async function QuizHubPage() {
       <div className="atelier-atmosphere" />
       <div className="atelier-grain" />
 
-      <main className="container-luxe relative z-10 py-12 md:py-16 max-w-3xl">
+      <main className="container-luxe relative z-10 py-12 md:py-16 pb-28 md:pb-16 max-w-3xl">
         <div className="mb-10">
           <Link
             href="/portal/academy"

@@ -87,7 +87,7 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
       <div className="atelier-atmosphere" />
       <div className="atelier-grain" />
 
-      <main className="container-luxe relative z-10 py-12 md:py-16 max-w-3xl">
+      <main className="container-luxe relative z-10 py-12 md:py-16 pb-28 md:pb-16 max-w-3xl">
         <p className="eyebrow mb-3">Academy</p>
         <h1 className="font-display italic text-cream text-4xl md:text-5xl leading-[1.05] tracking-[-0.02em] mb-4">
           Was <span className="text-champagne">LIVE</span> stark macht.

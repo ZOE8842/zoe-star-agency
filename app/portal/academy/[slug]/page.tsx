@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { CATEGORIES } from "@/lib/academy/data";
+import { resolveGroupSlug } from "@/lib/academy/groups";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,14 @@ export default async function AcademyCategoryPage({ params }: Props) {
   const { slug } = await params;
   const { profile } = await getAuthedProfile();
   const category = CATEGORIES.find((c) => c.slug === slug);
-  if (!category) notFound();
+  if (!category) {
+    // Alter Kategorie-Slug aus der Zeit vor den Themengruppen: still
+    // weiterleiten statt 404 zeigen. Betrifft offene Tabs, Lesezeichen und
+    // Links, die schon irgendwo verschickt wurden.
+    const ziel = resolveGroupSlug(slug);
+    if (ziel) redirect(`/portal/academy/${ziel}`);
+    notFound();
+  }
 
   return (
     <>
@@ -30,11 +38,11 @@ export default async function AcademyCategoryPage({ params }: Props) {
       <div className="atelier-atmosphere" />
       <div className="atelier-grain" />
 
-      <main className="container-luxe relative z-10 py-12 md:py-16 max-w-2xl">
+      <main className="container-luxe relative z-10 py-12 md:py-16 pb-28 md:pb-16 max-w-2xl">
         <div className="mb-10">
           <Link
             href="/portal/academy"
-            className="text-cream/45 hover:text-champagne text-[11px] uppercase tracking-[0.25em] inline-flex items-center"
+            className="inline-flex items-center min-h-11 -ml-3 px-3 text-cream/60 hover:text-champagne text-xs uppercase tracking-[0.25em] transition-colors"
           >
             ← Academy
           </Link>

@@ -128,3 +128,42 @@ export const GROUPS: LessonGroup[] = [
     ],
   },
 ];
+
+// ------------------------------------------------------------------
+// Alte Kategorie-Slugs
+//
+// Bis zum Umbau auf Themengruppen liefen die URLs ueber 13 Kategorien.
+// Wer einen alten Link offen hat, im Verlauf findet oder gespeichert hat,
+// wuerde sonst auf einer 404-Seite landen. Deshalb bleibt die Zuordnung
+// hier stehen und die Seiten leiten still weiter.
+export const LEGACY_CATEGORY_SLUGS: Record<string, string> = {
+  "tiktok-regeln": "regeln-sicherheit",
+  "account-sicherheit": "regeln-sicherheit",
+  "live-grundlagen": "dein-live",
+  technik: "dein-live",
+  "live-psychologie": "dein-live",
+  watchtime: "watchtime-zahlen",
+  "analyse-verstehen": "watchtime-zahlen",
+  "community-aufbau": "community",
+  wachstum: "reichweite",
+  "profil-optimierung": "reichweite",
+  "agentur-standards": "start",
+  "tiktok-geschenke": "matches-geschenke",
+  "battles-matches": "matches-geschenke",
+};
+
+/** Gruppe, in der eine Lektion aktuell steht. null, wenn es sie nicht gibt. */
+export function groupSlugForLesson(lessonSlug: string): string | null {
+  const group = GROUPS.find((g) => g.lessons.includes(lessonSlug));
+  return group?.slug ?? null;
+}
+
+/**
+ * Zielgruppe fuer einen angefragten Kategorie-Slug.
+ * Gibt den Slug unveraendert zurueck, wenn es die Gruppe gibt, sonst den
+ * Nachfolger aus der Legacy-Tabelle, sonst null.
+ */
+export function resolveGroupSlug(requested: string): string | null {
+  if (GROUPS.some((g) => g.slug === requested)) return requested;
+  return LEGACY_CATEGORY_SLUGS[requested] ?? null;
+}

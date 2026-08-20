@@ -44,10 +44,10 @@ export default async function AcademyInsiderPage() {
       <div className="atelier-atmosphere" />
       <div className="atelier-grain" />
 
-      <main className="container-luxe relative z-10 py-12 md:py-16 max-w-3xl">
+      <main className="container-luxe relative z-10 py-12 md:py-16 pb-28 md:pb-16 max-w-3xl">
         <Link
           href="/portal/academy"
-          className="text-cream/45 hover:text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors"
+          className="inline-flex items-center min-h-11 -ml-3 px-3 text-cream/60 hover:text-champagne text-xs uppercase tracking-[0.25em] transition-colors"
         >
           ← Academy
         </Link>
@@ -112,7 +112,7 @@ export default async function AcademyInsiderPage() {
           </p>
           <Link
             href="/portal/academy"
-            className="text-champagne text-[10px] uppercase tracking-[0.25em] hover:text-champagne-300"
+            className="inline-flex items-center justify-center min-h-11 px-4 border border-champagne/30 hover:border-champagne hover:bg-champagne/5 text-champagne text-xs uppercase tracking-[0.25em] transition-colors"
           >
             Zu den Themengruppen →
           </Link>

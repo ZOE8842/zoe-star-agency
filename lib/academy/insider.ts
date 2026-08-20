@@ -42,9 +42,15 @@ export const INSIDER_CARDS: InsiderCard[] = [
   },
   {
     tone: "killer",
-    title: "Stream stoppen und neu starten",
-    body: "Jeder Restart = Algo-Reset. Lieber langweilig durchziehen als sauber abbrechen.",
-    why: "Akkumulierte Watchtime nur in einem durchgaengigen Stream",
+    title: "Neu starten, sobald es ruhig wird",
+    body: "Jeder Restart setzt deine aufgebaute Watchtime auf null. Fruehestens nach 70 Minuten neu starten, vorher kostet es mehr als es bringt.",
+    why: "Watchtime zaehlt nur innerhalb eines durchgehenden Streams",
+  },
+  {
+    tone: "tip",
+    title: "Wann ein Neustart wirklich hilft",
+    body: "Nach 70 bis 90 Minuten, wenn die Zuschauerzahl trotz Aktivitaet flach bleibt. Vorher ankuendigen, Story posten, dann sauber neu starten.",
+    why: "Der Algorithmus bewertet den neuen Stream frisch, aber nur wenn der alte lang genug lief",
   },
   {
     tone: "killer",
@@ -54,9 +60,9 @@ export const INSIDER_CARDS: InsiderCard[] = [
   },
   {
     tone: "killer",
-    title: "Tote Zuschauer auflaufen lassen",
-    body: "20 stille Zuschauer killen die Metriken haerter als 5 aktive. Lieber 1 Person ansprechen als 20 ignorieren.",
-    why: "Engagement zaehlt, nicht Anzahl",
+    title: "Stille Zuschauer einfach laufen lassen",
+    body: "Zwanzig Leute, die nur zuschauen, ziehen deine Werte staerker runter als fuenf aktive sie heben. Sprich eine Person direkt an, statt zwanzig zu ignorieren.",
+    why: "TikTok misst Interaktion, nicht Kopfzahl",
   },
 
   // ── MACH DAS NICHT ─────────────────────────────────────────────
