@@ -3,6 +3,7 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { CATEGORIES } from "@/lib/academy/data";
 import { QUIZZES } from "@/lib/academy/quizzes";
+import { searchLessons } from "@/lib/academy/search";
 import {
   INSIDER_CARDS, INSIDER_TONE_LABEL, INSIDER_TONE_STYLE, INSIDER_TONE_LABEL_STYLE,
 } from "@/lib/academy/insider";
@@ -44,14 +45,11 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
       ? 0
       : Math.min(100, Math.round((doneLessons / totalLessons) * 100));
 
-  // Search-Filter
+  // Suche: Volltext ueber alle Lektionen. Ergebnis sind einzelne Lektionen,
+  // nicht nur Gruppen — sonst sieht man nicht, wo der Begriff steht.
+  const searchHits = query ? searchLessons(CATEGORIES, query) : [];
   const filteredCategories = query
-    ? CATEGORIES.filter((c) => {
-        const text = (c.title + " " + c.intro + " " +
-          c.lessons.map((l) => l.title + " " + l.summary).join(" ")
-        ).toLowerCase();
-        return text.includes(query);
-      })
+    ? CATEGORIES.filter((c) => searchHits.some((h) => h.categorySlug === c.slug))
     : CATEGORIES;
 
   // V2: Aktive Weekly Challenge + Leaderboard Top 5
@@ -207,20 +205,66 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
               </Link>
             )}
           </div>
-          {query && (
-            <p className="text-cream/35 text-xs mt-2">
-              {filteredCategories.length} Treffer fuer „{query}"
-            </p>
-          )}
+          <div className="flex items-center justify-between gap-3 mt-2 flex-wrap">
+            {query ? (
+              <p className="text-cream/35 text-xs">
+                {searchHits.length}{" "}
+                {searchHits.length === 1 ? "Lektion" : "Lektionen"} fuer „{query}"
+              </p>
+            ) : (
+              <span />
+            )}
+            <button
+              type="submit"
+              className="px-3 py-1.5 border border-champagne/30 text-champagne text-[10px] uppercase tracking-[0.25em] hover:border-champagne hover:bg-champagne/5 transition-colors"
+            >
+              Suchen
+            </button>
+          </div>
         </form>
+
+        {/* Treffer-Liste: direkt zur Lektion, mit Textstelle */}
+        {query && searchHits.length > 0 && (
+          <section className="mb-10">
+            <p className="eyebrow mb-4">Treffer</p>
+            <ul className="grid gap-2.5">
+              {searchHits.map((hit) => (
+                <li key={`${hit.categorySlug}-${hit.lesson.slug}`}>
+                  <Link
+                    href={`/portal/academy/${hit.categorySlug}/${hit.lesson.slug}`}
+                    className="block border border-champagne/15 hover:border-champagne hover:bg-champagne/5 p-4 transition-colors group"
+                  >
+                    <div className="flex items-baseline justify-between gap-3 mb-1.5 flex-wrap">
+                      <p className="text-cream text-sm md:text-base font-medium leading-snug">
+                        {hit.lesson.title}
+                      </p>
+                      <span className="shrink-0 text-cream/40 text-[10px] uppercase tracking-[0.25em]">
+                        {hit.categoryTitle}
+                      </span>
+                    </div>
+                    <p className="text-cream/55 text-xs md:text-sm leading-relaxed">
+                      {hit.excerpt}
+                    </p>
+                    <p className="mt-2 text-champagne text-[10px] uppercase tracking-[0.25em] group-hover:text-champagne-300">
+                      Lektion oeffnen →
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* INSIDER-CARDS · harte Agency-Wahrheit */}
         <section className="mb-10 md:mb-12">
-          <div className="flex items-baseline justify-between mb-4">
+          <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
             <p className="eyebrow">Insider · harte Wahrheit</p>
-            <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
-              Aus echten Lives
-            </span>
+            <Link
+              href="/portal/academy/insider"
+              className="text-champagne/85 hover:text-champagne text-[10px] uppercase tracking-[0.25em]"
+            >
+              Aus echten Lives · alle {INSIDER_CARDS.length} →
+            </Link>
           </div>
           <ul className="grid gap-2.5 md:grid-cols-2">
             {INSIDER_CARDS.slice(0, 8).map((c, i) => (
@@ -247,9 +291,12 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
               </li>
             ))}
           </ul>
-          <p className="text-cream/35 text-[10px] uppercase tracking-[0.25em] mt-4">
-            {INSIDER_CARDS.length} Karten gesamt — Rest folgt in den Lektionen
-          </p>
+          <Link
+            href="/portal/academy/insider"
+            className="mt-4 inline-block border border-champagne/30 hover:border-champagne hover:bg-champagne/5 px-4 py-2 text-champagne text-[10px] uppercase tracking-[0.25em] transition-colors"
+          >
+            Alle {INSIDER_CARDS.length} Karten ansehen →
+          </Link>
         </section>
 
         <div className="grid gap-3 md:gap-4 md:grid-cols-2 mb-8">
@@ -287,7 +334,8 @@ export default async function AcademyHubPage({ searchParams }: SearchProps) {
               </span>
             </div>
             <p className="text-cream/65 text-sm leading-relaxed">
-              18 TikTok-Geschenke mit Bild, Diamonds, Coins + Bedeutung im LIVE.
+              Alle TikTok-Geschenke mit Coins und Bedeutung im LIVE, dazu
+              Schatztruhe, Portal und Moderation.
             </p>
             <p className="mt-3 text-champagne text-[10px] uppercase tracking-[0.25em] group-hover:text-champagne-300">
               Oeffnen →

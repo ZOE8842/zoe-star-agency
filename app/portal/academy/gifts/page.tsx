@@ -18,6 +18,29 @@ export const dynamic = "force-dynamic";
 
 type StubReason = "soon" | "in-arbeit";
 
+/** Lektionen, die den jeweiligen Bereich schon abdecken. Statt "bald" zu
+ *  zeigen, schicken wir Leute dorthin, wo der Inhalt wirklich steht. */
+const STUB_LINKS: Record<string, { href: string; label: string }[]> = {
+  event: [
+    { href: "/portal/academy/reichweite/events-nutzen", label: "TikTok-Events richtig angehen" },
+    { href: "/portal/academy/matches-geschenke/geschenkegalerie-und-duell", label: "Geschenkegalerie und Galerie-Duell" },
+  ],
+  coins: [
+    { href: "/portal/academy/matches-geschenke/coins-guenstiger-aufladen", label: "Coins guenstiger aufladen" },
+    { href: "/portal/academy/matches-geschenke/auszahlungssystem-missionen", label: "Das Auszahlungssystem und seine Missionen" },
+  ],
+  strategien: [
+    { href: "/portal/academy/dein-live/erste-15-minuten", label: "Die ersten 15 Minuten" },
+    { href: "/portal/academy/dein-live/tagesstruktur-im-stream", label: "Tagesstruktur: was wann funktioniert" },
+    { href: "/portal/academy/watchtime-zahlen/watchtime-hebel-im-alltag", label: "Watchtime im Alltag steigern" },
+  ],
+  battles: [
+    { href: "/portal/academy/matches-geschenke/match-gameplay-5-minuten", label: "Match-Gameplay: die fuenf Minuten im Detail" },
+    { href: "/portal/academy/matches-geschenke/matchpartner-waehlen", label: "Matchpartner richtig waehlen" },
+    { href: "/portal/academy/matches-geschenke/wann-matchen", label: "Wann macht Matchen Sinn" },
+  ],
+};
+
 interface TabDef {
   id: string;
   label: string;
@@ -156,7 +179,11 @@ export default async function AcademyGiftsPage({ searchParams }: PageProps) {
                     {t.label}
                     {t.stub && (
                       <span className="ml-2 text-[8px] opacity-70">
-                        {t.stub === "in-arbeit" ? "in Arbeit" : "bald"}
+                        {STUB_LINKS[t.id]?.length
+                          ? "Lektionen"
+                          : t.stub === "in-arbeit"
+                          ? "in Arbeit"
+                          : "bald"}
                       </span>
                     )}
                   </Link>
@@ -203,7 +230,7 @@ export default async function AcademyGiftsPage({ searchParams }: PageProps) {
           ) : tab.id === "uebersicht" ? (
             <UebersichtSection />
           ) : tab.stub ? (
-            <StubBlock reason={tab.stub} label={tab.label} />
+            <StubBlock reason={tab.stub} label={tab.label} links={STUB_LINKS[tab.id]} />
           ) : (
             <>
               {/* Search */}
@@ -331,7 +358,46 @@ function GiftCard({ gift }: { gift: Gift }) {
   );
 }
 
-function StubBlock({ reason, label }: { reason: StubReason; label: string }) {
+function StubBlock({
+  reason,
+  label,
+  links,
+}: {
+  reason: StubReason;
+  label: string;
+  links?: { href: string; label: string }[];
+}) {
+  // Mit Verweisen ist es kein Platzhalter mehr, sondern eine Weiche zu den
+  // Lektionen, die das Thema abdecken.
+  if (links?.length) {
+    return (
+      <div className="border border-champagne/20 p-6 md:p-7 bg-champagne/[0.02]">
+        <p className="text-cream/70 text-base md:text-lg italic font-display mb-2">
+          {label}
+        </p>
+        <p className="text-cream/50 text-sm leading-relaxed mb-5">
+          Eine eigene Geschenke-Tabelle gibt es dafuer noch nicht. Der Inhalt
+          steht aber schon in diesen Lektionen:
+        </p>
+        <ul className="grid gap-2">
+          {links.map((l) => (
+            <li key={l.href}>
+              <Link
+                href={l.href}
+                className="block border border-champagne/15 hover:border-champagne hover:bg-champagne/5 px-4 py-3 transition-colors group"
+              >
+                <span className="text-cream text-sm">{l.label}</span>
+                <span className="block mt-1 text-champagne text-[10px] uppercase tracking-[0.25em] group-hover:text-champagne-300">
+                  Lektion oeffnen →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
   return (
     <div className="border border-dashed border-champagne/25 p-8 text-center bg-champagne/[0.02]">
       <p className="eyebrow text-champagne/80 mb-3">
