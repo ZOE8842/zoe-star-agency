@@ -425,32 +425,6 @@ const BASE_CATEGORIES: Category[] = [
       "Was ZOE von dir erwartet und was du von uns erwarten kannst. Verbindlich, klar, fair.",
     lessons: [
       {
-        slug: "was-zoe-erwartet",
-        title: "Was ZOE von dir erwartet",
-        summary: "Verbindlichkeit, Kommunikation, Auftritt — kompakt.",
-        reading_minutes: 4,
-        blocks: [
-          { type: "h3", text: "LIVE-Aktivitaet" },
-          { type: "ul", items: [
-            "Mind. 3 LIVE-Tage pro Woche",
-            "Pro Tag mind. 60 Minuten echte Aktivitaet",
-            "Wer pausiert: meldet das via 'LIVE-Abmeldung' im Portal",
-          ] },
-          { type: "h3", text: "Kommunikation" },
-          { type: "ul", items: [
-            "Antwortet auf Inbox-Nachrichten innerhalb 24-48h",
-            "Telefon-Termin-Anfragen kommen ueber Portal — nicht ueber Privat-DM",
-            "Krise/Sperre/Problem → 'Problem melden' Service oder direkt Management",
-          ] },
-          { type: "h3", text: "Auftritt" },
-          { type: "ul", items: [
-            "TikTok-Bio enthaelt: 'ZOE Star Agency Creator' (oder Variante)",
-            "Kein Konflikt mit anderen Agencies parallel",
-            "Showcase-Freigabe optional, aber empfohlen — siehe Profil",
-          ] },
-        ],
-      },
-      {
         slug: "was-zoe-bietet",
         title: "Was ZOE dir bietet",
         summary: "Dienstleistungen, Push, Match-Pool, persoenliches Management.",

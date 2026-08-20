@@ -84,6 +84,40 @@ function parseShowcaseImages(
   return urls;
 }
 
+/**
+ * Tage, die ein Creator ohne LIVE sein darf und trotzdem auf der Webseite
+ * bleibt. 30 Tage decken Urlaub und Krankheit ab, halten die Liste aber frei
+ * von Leuten, die seit Monaten nicht mehr streamen.
+ */
+const AKTIV_TAGE = 30;
+
+/**
+ * TikTok-Namen, die laut Backstage-Daten zuletzt live waren.
+ * Gibt null zurueck, wenn die Abfrage nicht klappt oder gar keine Daten
+ * liefert — dann wird nicht gefiltert. Ein ausgefallener Sync soll nicht
+ * die halbe Webseite leerraeumen.
+ */
+async function aktiveHandles(): Promise<Set<string> | null> {
+  try {
+    const seit = new Date(Date.now() - AKTIV_TAGE * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+    const { data, error } = await admin()
+      .from("creator_daily_metrics")
+      .select("tiktok_username")
+      .gte("metric_date", seit)
+      .gt("live_minutes", 0);
+    if (error || !data || data.length === 0) return null;
+    return new Set(
+      data
+        .map((r) => (r.tiktok_username ?? "").toLowerCase())
+        .filter(Boolean),
+    );
+  } catch {
+    return null;
+  }
+}
+
 // Basis-Query: alle approved+featured+confirmed Creators.
 // 2-Step (showcase → profiles via IN) wegen FK-Embed-Ambiguity.
 async function fetchApprovedConfirmed(
@@ -123,8 +157,16 @@ async function fetchApprovedConfirmed(
     (profiles ?? []).map((p) => [p.id as string, p] as const),
   );
 
+  // Wer seit ueber AKTIV_TAGE nicht mehr live war, verschwindet von der
+  // Webseite. Kommt er zurueck, taucht er beim naechsten Sync von allein
+  // wieder auf — niemand muss ein Haekchen umstellen.
+  const aktiv = await aktiveHandles();
+  const istAktiv = (username: string | null | undefined) =>
+    !aktiv || (username ? aktiv.has(username.toLowerCase()) : false);
+
   return shows
     .filter((s) => s.profile_id && byId.has(s.profile_id))
+    .filter((s) => istAktiv(byId.get(s.profile_id!)?.tiktok_username as string | null))
     .map((s) => {
       const p = byId.get(s.profile_id)!;
       const images = parseShowcaseImages(s.showcase_images, s.showcase_image);

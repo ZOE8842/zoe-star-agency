@@ -26,7 +26,6 @@ export const GROUPS: LessonGroup[] = [
       "Die ersten Tage: was wir voneinander erwarten, welche Mindestwerte gelten und wie dein Profil aussehen sollte, bevor du loslegst.",
     lessons: [
       "start-bei-zoe",
-      "was-zoe-erwartet",
       "was-zoe-bietet",
       "mindestanforderungen",
       "profil-als-visitenkarte",
