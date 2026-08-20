@@ -74,6 +74,34 @@ const BodySchema = z.object({
   company:             z.string().max(200).optional(), // Honeypot
 });
 
+// Fehlgeschlagene Benachrichtigungs-Mails protokollieren. Ohne das bleibt ein
+// kaputter Resend-Key unbemerkt, weil der Bewerber trotzdem "Danke" sieht.
+async function logMailFailure(message: string): Promise<void> {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return;
+    await fetch(`${url}/rest/v1/data_source_health`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        source: "creator_applications",
+        kind: "application_mail",
+        ok: false,
+        count_items: 0,
+        error_message: message,
+      }),
+    });
+  } catch {
+    // Logging darf den Request nicht gefaehrden.
+  }
+}
+
 // In-memory rate limit: 5 inserts pro IP pro Stunde
 const rateMap = new Map<string, { count: number; reset: number }>();
 const HOUR = 60 * 60 * 1000;
@@ -252,7 +280,7 @@ export async function POST(req: NextRequest) {
         ${insertRow.message ? `<hr style="border:none;border-top:1px solid #ddd;margin:14px 0;" /><p style="white-space:pre-wrap;font-family:Arial,sans-serif;">${escapeHtml(insertRow.message)}</p>` : ""}
         <p style="color:#888;font-size:11px;margin-top:18px;">Admin: /portal/admin/applications</p>
       `;
-      await fetch("https://api.resend.com/emails", {
+      const mail = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,7 +288,18 @@ export async function POST(req: NextRequest) {
           subject: `[Creator-Anfrage] @${username}`, html,
         }),
       });
-    } catch { /* fail-silent */ }
+      // Die Bewerbung selbst ist gespeichert, der Mail-Versand darf die Antwort
+      // an den Bewerber nicht kippen. Aber er darf auch nicht spurlos scheitern:
+      // sonst liegt eine Anfrage in der DB und niemand erfaehrt davon. Deshalb
+      // landet ein Fehlversuch in data_source_health (sichtbar unter
+      // /portal/admin/analyse/health).
+      if (!mail.ok) {
+        const detail = await mail.text().catch(() => "");
+        await logMailFailure(`resend ${mail.status}: ${detail.slice(0, 300)}`);
+      }
+    } catch (e) {
+      await logMailFailure(e instanceof Error ? e.message : String(e));
+    }
   }
 
   return NextResponse.json({ success: true });
