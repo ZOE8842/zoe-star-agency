@@ -128,7 +128,7 @@ async function fetchApprovedConfirmed(
   const { data: shows, error: showErr } = await c
     .from("showcase_creators")
     .select(
-      "profile_id, display_name, category, showcase_image, showcase_images, tiktok_url, instagram_url, approved_at, sort_order",
+      "profile_id, display_name, category, showcase_image, showcase_images, tiktok_url, instagram_url, approved_at, sort_order, always_visible",
     )
     .eq("is_approved", true)
     .eq("is_featured", true)
@@ -166,7 +166,13 @@ async function fetchApprovedConfirmed(
 
   return shows
     .filter((s) => s.profile_id && byId.has(s.profile_id))
-    .filter((s) => istAktiv(byId.get(s.profile_id!)?.tiktok_username as string | null))
+    // always_visible sticht den Aktivitaetsfilter: gedacht fuer Creator in
+    // Pause oder kurz vor der Rueckkehr, die trotzdem auf der Seite bleiben.
+    .filter(
+      (s) =>
+        s.always_visible === true ||
+        istAktiv(byId.get(s.profile_id!)?.tiktok_username as string | null),
+    )
     .map((s) => {
       const p = byId.get(s.profile_id)!;
       const images = parseShowcaseImages(s.showcase_images, s.showcase_image);

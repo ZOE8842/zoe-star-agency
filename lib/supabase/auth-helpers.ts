@@ -12,9 +12,11 @@ import { createClient } from "./server";
 
 const ONBOARDING_PATH = "/portal/onboarding";
 const PENDING_PATH = "/portal/pending";
+const BEENDET_PATH = "/portal/beendet";
 const GATE_WHITELIST = [
   ONBOARDING_PATH,
   PENDING_PATH,
+  BEENDET_PATH,
   "/portal/logout",
   "/portal/profile/security",
 ];
@@ -68,6 +70,11 @@ export async function getAuthedProfile() {
     // 2. Pending-Approval danach
     if (profile.status === "pending") {
       redirect(PENDING_PATH);
+    }
+    // 3. Beendete Zusammenarbeit: Zugang gesperrt. Der Account bleibt
+    //    bestehen (Daten, Verlauf), das Portal ist aber zu.
+    if (profile.status === "inactive") {
+      redirect(BEENDET_PATH);
     }
   }
 
