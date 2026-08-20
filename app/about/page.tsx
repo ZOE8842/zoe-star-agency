@@ -13,6 +13,16 @@ export const metadata: Metadata = {
   description:
     "ZOE⭐ STAR AGENCY — Teil des TikTok Elite Agency Club Deutschland. Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung.",
   alternates: { canonical: "/about" },
+  openGraph: {
+    title: "Über uns · ZOE Star Agency",
+    description: "ZOE⭐ STAR AGENCY — Teil des TikTok Elite Agency Club Deutschland. Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung.",
+    url: "/about",
+  },
+  twitter: {
+    title: "Über uns · ZOE Star Agency",
+    description: "ZOE⭐ STAR AGENCY — Teil des TikTok Elite Agency Club Deutschland. Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung.",
+  },
+
 };
 
 export default async function AboutPage() {
@@ -112,7 +122,7 @@ export default async function AboutPage() {
         <section className="relative bg-ink-mesh py-16 md:py-24 overflow-hidden border-b border-champagne/10">
           <div className="container-luxe">
             <MotionReveal>
-              <p className="eyebrow mb-8 md:mb-10">{t("about.eyebrow_aktivitaet")}</p>
+              <p className="eyebrow mb-8 md:mb-10">{t("about.eyebrow_aktivitaet")} · {stats.monthLabel}</p>
             </MotionReveal>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15">
               {[

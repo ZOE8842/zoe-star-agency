@@ -4,6 +4,16 @@ export const metadata: Metadata = {
   title: "Zusammenarbeit & Standards",
   description: "Hinweise zur Zusammenarbeit im ZOE-Portal — partnerschaftlich, vertraulich, professionell.",
   alternates: { canonical: "/legal/portal-regeln" },
+  openGraph: {
+    title: "Zusammenarbeit & Standards · ZOE Star Agency",
+    description: "Hinweise zur Zusammenarbeit im ZOE-Portal — partnerschaftlich, vertraulich, professionell.",
+    url: "/legal/portal-regeln",
+  },
+  twitter: {
+    title: "Zusammenarbeit & Standards · ZOE Star Agency",
+    description: "Hinweise zur Zusammenarbeit im ZOE-Portal — partnerschaftlich, vertraulich, professionell.",
+  },
+
 };
 
 export default function PortalRegelnPage() {

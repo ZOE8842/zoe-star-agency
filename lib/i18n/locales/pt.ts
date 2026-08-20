@@ -305,11 +305,11 @@ export const pt = {
   },
   about: {
     eyebrow_was_uns_ausmacht: "O que nos define",
-    eyebrow_aktivitaet: "Atividade · abril 2026",
+    eyebrow_aktivitaet: "Atividade",
     eyebrow_wir_waehlen: "Escolhemos com cuidado",
   },
   koop: {
-    eyebrow_zahlen: "Números · abril 2026",
+    eyebrow_zahlen: "Números",
     eyebrow_was_wir_machen: "O que fazemos",
     eyebrow_creator_auswahl: "Seleção de criadores",
     eyebrow_kooperation_anfragen: "Solicitar cooperação",

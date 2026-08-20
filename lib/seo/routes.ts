@@ -11,25 +11,38 @@ export interface PublicRoute {
   priority: number;
   /** Sitemap-changeFrequency */
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+  /**
+   * true = Seite existiert, hat aber noch keinen echten Inhalt (Teaser-Text).
+   * Solche Seiten bleiben erreichbar, werden aber weder in die Sitemap
+   * geschrieben noch in robots.txt beworben — sonst indexiert Google
+   * fuenf fast leere Seiten und die Domain sieht duenner aus als sie ist.
+   * Sobald echter Inhalt drin ist: Flag entfernen.
+   */
+  placeholder?: boolean;
 }
 
 export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "",                       priority: 1.0,  changeFrequency: "weekly" },
   { path: "agency",                 priority: 0.9,  changeFrequency: "monthly" },
   { path: "kooperationen",          priority: 0.85, changeFrequency: "monthly" },
-  { path: "events",                 priority: 0.8,  changeFrequency: "weekly" },
+  { path: "events",                 priority: 0.8,  changeFrequency: "weekly", placeholder: true },
   { path: "join",                   priority: 0.8,  changeFrequency: "monthly" },
   { path: "contact",                priority: 0.7,  changeFrequency: "yearly" },
-  { path: "press",                  priority: 0.6,  changeFrequency: "monthly" },
-  { path: "studio",                 priority: 0.6,  changeFrequency: "monthly" },
-  { path: "media",                  priority: 0.5,  changeFrequency: "monthly" },
-  { path: "journal",                priority: 0.5,  changeFrequency: "monthly" },
+  { path: "press",                  priority: 0.6,  changeFrequency: "monthly", placeholder: true },
+  { path: "studio",                 priority: 0.6,  changeFrequency: "monthly", placeholder: true },
+  { path: "media",                  priority: 0.5,  changeFrequency: "monthly", placeholder: true },
+  { path: "journal",                priority: 0.5,  changeFrequency: "monthly", placeholder: true },
   { path: "about",                  priority: 0.4,  changeFrequency: "yearly" },
   { path: "legal/agb",              priority: 0.3,  changeFrequency: "yearly" },
   { path: "legal/datenschutz",      priority: 0.3,  changeFrequency: "yearly" },
   { path: "legal/impressum",        priority: 0.3,  changeFrequency: "yearly" },
   { path: "legal/portal-regeln",    priority: 0.3,  changeFrequency: "yearly" },
 ];
+
+/** Nur Routen mit echtem Inhalt — Basis fuer Sitemap und robots.txt. */
+export const INDEXABLE_ROUTES: PublicRoute[] = PUBLIC_ROUTES.filter(
+  (r) => !r.placeholder,
+);
 
 // Hostname-Normalisierung: NEXT_PUBLIC_SITE_URL ist Single-Source. Wenn
 // kein env gesetzt → Fallback https://www.zoe-star.de (canonical primary).

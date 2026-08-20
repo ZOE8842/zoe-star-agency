@@ -10,6 +10,16 @@ export const metadata: Metadata = {
   description:
     "Bewirb dich bei ZOE Star Agency. Wir suchen Creator mit eigener Stimme und Lust auf langfristiges Wachstum.",
   alternates: { canonical: "/join" },
+  openGraph: {
+    title: "Creator werden · ZOE Star Agency",
+    description: "Bewirb dich bei ZOE Star Agency. Wir suchen Creator mit eigener Stimme und Lust auf langfristiges Wachstum.",
+    url: "/join",
+  },
+  twitter: {
+    title: "Creator werden · ZOE Star Agency",
+    description: "Bewirb dich bei ZOE Star Agency. Wir suchen Creator mit eigener Stimme und Lust auf langfristiges Wachstum.",
+  },
+
 };
 
 export default async function JoinPage() {

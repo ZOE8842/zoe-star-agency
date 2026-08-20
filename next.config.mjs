@@ -13,9 +13,12 @@ const supabaseHost = (() => {
 })();
 
 // HTTP-Security-Header-Pack (Phase-4 Security-Pass).
-// CSP startet als report-only damit kein bestehender 3rd-party-Script bricht.
-// Wenn nach 1-2 Wochen Browser-Reports clean sind, in echtes
-// Content-Security-Policy umstellen.
+// CSP lief seit dem Security-Pass im Report-Only-Modus. Am 2026-08-20 scharf
+// geschaltet: Report-Phase ohne Verstoesse, und im Code gibt es weder iframes
+// noch externe Scripts oder Client-Fetches auf fremde Hosts — die Policy
+// beschreibt also genau das, was die App ohnehin tut.
+// Einziges Inline-Script ist das JSON-LD aus components/JsonLd.tsx, das
+// 'unsafe-inline' in script-src abdeckt.
 const SECURITY_HEADERS = [
   { key: "X-Frame-Options",        value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -25,7 +28,7 @@ const SECURITY_HEADERS = [
     value: "camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=()",
   },
   {
-    key: "Content-Security-Policy-Report-Only",
+    key: "Content-Security-Policy",
     // Erlaubt: self + inline (Next + Tailwind) + Vercel-Insights + Supabase + Sentry-Tunnel + Google-Fonts.
     // images: self + data: + Supabase-Storage. fonts: self + data: + Google-Fonts.
     value: [
@@ -38,6 +41,7 @@ const SECURITY_HEADERS = [
       `connect-src 'self' https://${supabaseHost} https://*.sentry.io https://*.ingest.sentry.io https://*.vercel-insights.com`,
       "worker-src 'self' blob:",
       "manifest-src 'self'",
+      "frame-src 'none'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

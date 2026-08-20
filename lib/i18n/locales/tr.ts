@@ -305,11 +305,11 @@ export const tr = {
   },
   about: {
     eyebrow_was_uns_ausmacht: "Bizi tanımlayan şey",
-    eyebrow_aktivitaet: "Aktivite · Nisan 2026",
+    eyebrow_aktivitaet: "Aktivite",
     eyebrow_wir_waehlen: "Bilinçli seçiyoruz",
   },
   koop: {
-    eyebrow_zahlen: "Rakamlar · Nisan 2026",
+    eyebrow_zahlen: "Rakamlar",
     eyebrow_was_wir_machen: "Ne yaparız",
     eyebrow_creator_auswahl: "Creator seçimi",
     eyebrow_kooperation_anfragen: "İşbirliği talebi",

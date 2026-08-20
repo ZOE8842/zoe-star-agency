@@ -4,6 +4,16 @@ export const metadata: Metadata = {
   title: "Datenschutz",
   description: "Datenschutzerklärung gemäß DSGVO und TDDDG",
   alternates: { canonical: "/legal/datenschutz" },
+  openGraph: {
+    title: "Datenschutz · ZOE Star Agency",
+    description: "Datenschutzerklärung gemäß DSGVO und TDDDG",
+    url: "/legal/datenschutz",
+  },
+  twitter: {
+    title: "Datenschutz · ZOE Star Agency",
+    description: "Datenschutzerklärung gemäß DSGVO und TDDDG",
+  },
+
 };
 
 export default function DatenschutzPage() {

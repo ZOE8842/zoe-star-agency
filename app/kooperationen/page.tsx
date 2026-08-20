@@ -25,6 +25,16 @@ export const metadata: Metadata = {
   description:
     "ZOE⭐ STAR AGENCY · TikTok Elite Agency Club Deutschland. Echte LIVE-Zahlen, aktive Creator, langfristige Brand-Kooperationen.",
   alternates: { canonical: "/kooperationen" },
+  openGraph: {
+    title: "Kooperationen — TikTok LIVE Reichweite · ZOE Star Agency",
+    description: "ZOE⭐ STAR AGENCY · TikTok Elite Agency Club Deutschland. Echte LIVE-Zahlen, aktive Creator, langfristige Brand-Kooperationen.",
+    url: "/kooperationen",
+  },
+  twitter: {
+    title: "Kooperationen — TikTok LIVE Reichweite · ZOE Star Agency",
+    description: "ZOE⭐ STAR AGENCY · TikTok Elite Agency Club Deutschland. Echte LIVE-Zahlen, aktive Creator, langfristige Brand-Kooperationen.",
+  },
+
 };
 
 // Echte Backstage-Stats aus creator_daily_metrics, letzter vollstaendiger
@@ -90,7 +100,8 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
   const { t } = await loadPublicLocale();
   const sp = await searchParams;
   const initialCreator = (sp.creator ?? "").trim();
-  const STATS = buildStats(await getPublicAgencyStats());
+  const stats = await getPublicAgencyStats();
+  const STATS = buildStats(stats);
 
   // V2 · /kooperationen nutzt jetzt den breiteren Public-Web-Pool
   // (allow_website_showcase_confirmed) statt nur cooperation-confirmed.
@@ -173,10 +184,10 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
           <div className="relative z-10 border-t border-champagne/15 py-4 bg-ink/70 backdrop-blur-sm">
             <Marquee
               items={[
-                <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">53+ aktive Creator:innen</span>,
-                <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">2.797+ LIVE-Stunden / Monat</span>,
-                <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">1.930+ Livestreams im April</span>,
-                <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">52 Std. Ø LIVE-Zeit</span>,
+                <span key="a" className="font-display italic text-cream/85 text-lg md:text-2xl">{formatStat(stats.activeCreators)} aktive Creator:innen</span>,
+                <span key="b" className="text-champagne text-[11px] uppercase tracking-[0.32em]">{formatStat(stats.liveHours)} LIVE-Stunden / Monat</span>,
+                <span key="c" className="font-display italic text-cream/85 text-lg md:text-2xl">{formatStat(stats.liveDays)} LIVE-Tage im {stats.monthLabel.split(" ")[0]}</span>,
+                <span key="d" className="text-champagne text-[11px] uppercase tracking-[0.32em]">{stats.avgHoursPerCreator} Std. Ø LIVE-Zeit</span>,
                 <span key="e" className="font-display italic text-cream/85 text-lg md:text-2xl">TikTok Elite Agency Club</span>,
                 <span key="f" className="text-champagne text-[11px] uppercase tracking-[0.32em]">Deutschland · Aktiv</span>,
               ]}
@@ -197,7 +208,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
             <div className="grid md:grid-cols-12 gap-10 md:gap-14 mb-14 md:mb-20 items-end">
               <div className="md:col-span-7">
                 <MotionReveal>
-                  <p className="eyebrow mb-5">{t("koop.eyebrow_zahlen")}</p>
+                  <p className="eyebrow mb-5">{t("koop.eyebrow_zahlen")} · {stats.monthLabel}</p>
                 </MotionReveal>
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
@@ -209,7 +220,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
               <div className="md:col-span-5">
                 <MotionReveal delay={0.15}>
                   <p className="text-cream/65 text-base md:text-lg leading-relaxed">
-                    Nicht nur Headcount oder Follower-Zahlen — sondern reale LIVE-Stunden, echte Streams und kontinuierliche Aktivität. Stand April 2026, direkt aus unserem Backstage.
+                    Nicht nur Headcount oder Follower-Zahlen — sondern reale LIVE-Stunden, echte Streams und kontinuierliche Aktivität. Stand {stats.monthLabel}, direkt aus unserem Backstage.
                   </p>
                 </MotionReveal>
               </div>
@@ -236,7 +247,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
 
             <MotionReveal delay={0.4}>
               <p className="text-cream/40 text-xs md:text-sm mt-8 max-w-2xl italic">
-                Aggregate LIVE-Daten aus TikTok Backstage · April 2026. Detaillierte Insights und Reporting pro Kampagne auf Anfrage.
+                Aggregate LIVE-Daten aus TikTok Backstage · {stats.monthLabel}. Detaillierte Insights und Reporting pro Kampagne auf Anfrage.
               </p>
             </MotionReveal>
           </div>

@@ -18,13 +18,25 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const c = await fetchCreatorByUsername(username);
   if (!c) return { title: "Creator nicht gefunden" };
   const name = c.displayName || `@${c.tiktokUsername}`;
+  // Kein Brand-Suffix im title: das Root-Template haengt " · ZOE Star Agency"
+  // ohnehin an, sonst steht die Marke dreimal im Tab.
+  const desc = c.bio || `Creator-Profil von ${name} bei ZOE⭐ Star Agency. TikTok LIVE Creator Network.`;
+  const canonical = `/creator/${encodeURIComponent(c.tiktokUsername ?? username)}`;
   return {
-    title: `${name} — ZOE⭐ Star Agency`,
-    description: c.bio || `Creator-Profil von ${name} bei ZOE⭐ Star Agency. TikTok LIVE Creator Network.`,
-    openGraph: c.showcaseImage
-      ? { images: [{ url: c.showcaseImage }] }
-      : undefined,
-    alternates: { canonical: `/creator/${encodeURIComponent(c.tiktokUsername ?? username)}` },
+    title: name,
+    description: desc,
+    openGraph: {
+      title: `${name} · ZOE Star Agency`,
+      description: desc,
+      url: canonical,
+      ...(c.showcaseImage ? { images: [{ url: c.showcaseImage }] } : {}),
+    },
+    twitter: {
+      title: `${name} · ZOE Star Agency`,
+      description: desc,
+      ...(c.showcaseImage ? { images: [c.showcaseImage] } : {}),
+    },
+    alternates: { canonical },
   };
 }
 
@@ -110,8 +122,7 @@ export default async function CreatorDetailPage({ params }: Params) {
                       <div key={i} className="relative aspect-square overflow-hidden border border-champagne/15">
                         <Image
                           src={src}
-                          alt=""
-                          aria-hidden
+                          alt={`${name} — weiteres Creator-Foto ${i + 2}`}
                           fill
                           sizes="(max-width: 768px) 50vw, 30vw"
                           className="object-cover"

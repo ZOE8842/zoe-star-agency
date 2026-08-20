@@ -311,11 +311,11 @@ export const de = {
   },
   about: {
     eyebrow_was_uns_ausmacht: "Was uns ausmacht",
-    eyebrow_aktivitaet: "Aktivität · April 2026",
+    eyebrow_aktivitaet: "Aktivität",
     eyebrow_wir_waehlen: "Wir wählen bewusst",
   },
   koop: {
-    eyebrow_zahlen: "Zahlen · April 2026",
+    eyebrow_zahlen: "Zahlen",
     eyebrow_was_wir_machen: "Was wir machen",
     eyebrow_creator_auswahl: "Creator-Auswahl",
     eyebrow_kooperation_anfragen: "Kooperation anfragen",

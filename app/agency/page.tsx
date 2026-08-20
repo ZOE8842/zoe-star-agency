@@ -10,10 +10,20 @@ import { loadPublicLocale } from "@/lib/i18n";
 const APPLY_URL = "/join";
 
 export const metadata: Metadata = {
-  title: "Creator",
+  title: "Agency",
   description:
     "ZOE⭐ STAR AGENCY — TikTok LIVE Creator Management. Match-/Battle-Strategien, Ranking-Aufbau, Community-Wachstum, Brand-Deals.",
   alternates: { canonical: "/agency" },
+  openGraph: {
+    title: "Agency · ZOE Star Agency",
+    description: "ZOE⭐ STAR AGENCY — TikTok LIVE Creator Management. Match-/Battle-Strategien, Ranking-Aufbau, Community-Wachstum, Brand-Deals.",
+    url: "/agency",
+  },
+  twitter: {
+    title: "Agency · ZOE Star Agency",
+    description: "ZOE⭐ STAR AGENCY — TikTok LIVE Creator Management. Match-/Battle-Strategien, Ranking-Aufbau, Community-Wachstum, Brand-Deals.",
+  },
+
 };
 
 const SERVICES = [

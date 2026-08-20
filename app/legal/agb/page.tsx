@@ -4,6 +4,16 @@ export const metadata: Metadata = {
   title: "AGB",
   description: "Allgemeine Geschäftsbedingungen ZOE Star Agency",
   alternates: { canonical: "/legal/agb" },
+  openGraph: {
+    title: "AGB · ZOE Star Agency",
+    description: "Allgemeine Geschäftsbedingungen ZOE Star Agency",
+    url: "/legal/agb",
+  },
+  twitter: {
+    title: "AGB · ZOE Star Agency",
+    description: "Allgemeine Geschäftsbedingungen ZOE Star Agency",
+  },
+
 };
 
 export default function AGBPage() {

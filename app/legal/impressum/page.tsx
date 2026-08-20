@@ -4,6 +4,16 @@ export const metadata: Metadata = {
   title: "Impressum",
   description: "Anbieterkennzeichnung gemäß § 5 DDG",
   alternates: { canonical: "/legal/impressum" },
+  openGraph: {
+    title: "Impressum · ZOE Star Agency",
+    description: "Anbieterkennzeichnung gemäß § 5 DDG",
+    url: "/legal/impressum",
+  },
+  twitter: {
+    title: "Impressum · ZOE Star Agency",
+    description: "Anbieterkennzeichnung gemäß § 5 DDG",
+  },
+
 };
 
 export default function ImpressumPage() {

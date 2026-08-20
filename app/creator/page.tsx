@@ -12,9 +12,21 @@ import {
 } from "@/lib/showcase/public";
 
 export const metadata: Metadata = {
-  title: "Creator — ZOE⭐ Star Agency",
+  title: "Creator",
   description:
     "Unsere TikTok-LIVE-Creator. Pro Reload eine andere Auswahl aus dem aktiven Roster.",
+  alternates: { canonical: "/creator" },
+  openGraph: {
+    title: "Creator · ZOE Star Agency",
+    description:
+      "Unsere TikTok-LIVE-Creator. Pro Reload eine andere Auswahl aus dem aktiven Roster.",
+    url: "/creator",
+  },
+  twitter: {
+    title: "Creator · ZOE Star Agency",
+    description:
+      "Unsere TikTok-LIVE-Creator. Pro Reload eine andere Auswahl aus dem aktiven Roster.",
+  },
 };
 
 // ISR statt force-dynamic: Listing wird alle 5 Min revalidiert,

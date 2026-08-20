@@ -9,6 +9,16 @@ export const metadata: Metadata = {
   description:
     "Nimm Kontakt mit ZOE Star Agency auf — für Creator-Anfragen, Brand-Kooperationen oder allgemeine Fragen.",
   alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Kontakt · ZOE Star Agency",
+    description: "Nimm Kontakt mit ZOE Star Agency auf — für Creator-Anfragen, Brand-Kooperationen oder allgemeine Fragen.",
+    url: "/contact",
+  },
+  twitter: {
+    title: "Kontakt · ZOE Star Agency",
+    description: "Nimm Kontakt mit ZOE Star Agency auf — für Creator-Anfragen, Brand-Kooperationen oder allgemeine Fragen.",
+  },
+
 };
 
 export default async function ContactPage() {

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { baseUrl, PUBLIC_ROUTES } from "@/lib/seo/routes";
+import { baseUrl, INDEXABLE_ROUTES } from "@/lib/seo/routes";
 import { fetchCooperationCreators } from "@/lib/showcase/public";
 
 // Sitemap-Refresh stuendlich. Verhindert Latenzspike bei wachsendem
@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = baseUrl();
   const now = new Date();
 
-  const staticEntries: MetadataRoute.Sitemap = PUBLIC_ROUTES.map((r) => ({
+  const staticEntries: MetadataRoute.Sitemap = INDEXABLE_ROUTES.map((r) => ({
     url: r.path ? `${base}/${r.path}` : base,
     lastModified: now,
     changeFrequency: r.changeFrequency,
