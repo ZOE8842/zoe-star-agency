@@ -29,6 +29,16 @@ export default async function CreatorDetailPage({
     notFound();
   }
 
+  // Was hat die Person im Portal gemacht? Kommt aus admin_analytics_events,
+  // das ohnehin jeden Seitenaufruf mitschreibt. Nur die letzten Ereignisse,
+  // damit die Seite uebersichtlich bleibt.
+  const { data: aktivitaet } = await supabase
+    .from("admin_analytics_events")
+    .select("event_type, path, created_at, device_type")
+    .eq("profile_id", id)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
   // Stats parallel
   const now = new Date().toISOString();
   const [slotsRes, eventsRes, messagesRes, ticketsRes, managerRes, managersRes] = await Promise.all([
@@ -225,6 +235,48 @@ export default async function CreatorDetailPage({
             />
           </section>
         )}
+
+        {/* Portal-Aktivitaet — woher wir wissen, ob jemand reingeschaut hat */}
+        <section className="border-t border-cream/[0.05] pt-12 mt-16">
+          <div className="flex items-baseline justify-between gap-3 mb-6 flex-wrap">
+            <p className="eyebrow">Zuletzt im Portal</p>
+            <span className="text-cream/35 text-[10px] uppercase tracking-[0.25em]">
+              {aktivitaet?.length ?? 0} Ereignisse
+            </span>
+          </div>
+
+          {!aktivitaet?.length ? (
+            <p className="text-cream/45 text-sm italic">
+              Noch keine Aktivität aufgezeichnet.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {aktivitaet.map((e, i) => {
+                const zeit = new Date(e.created_at as string);
+                return (
+                  <li
+                    key={i}
+                    className="flex items-baseline justify-between gap-4 border-b border-cream/[0.04] pb-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-cream/85 text-sm truncate">
+                        {e.path || (e.event_type as string)}
+                      </p>
+                      <p className="text-cream/35 text-[10px] uppercase tracking-[0.22em]">
+                        {e.event_type as string}
+                        {e.device_type ? ` · ${e.device_type}` : ""}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-cream/50 font-mono text-xs">
+                      {zeit.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}{" "}
+                      {zeit.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         {/* Akte — interne Manager-Notes */}
         <section className="border-t border-cream/[0.05] pt-12 mt-16">
