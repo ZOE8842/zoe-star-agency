@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   // 2. Invite holen + validieren · cleanup bei jedem reject
   const { data: invite, error: inviteErr } = await admin
     .from("invites")
-    .select("id, intended_role, expires_at, used_at")
+    .select("id, intended_role, expires_at, used_at, skip_onboarding")
     .eq("code", invite_code)
     .maybeSingle();
 
@@ -99,7 +99,13 @@ export async function POST(req: NextRequest) {
   // V2-A: Creator starten in 'pending' — Admin muss nach Onboarding approven.
   // Admin/Manager-Invites werden sofort 'active' (Operations-Rollen).
   // Email wird lowercased gespeichert (konsistent mit auth.users).
-  const initialStatus = invite.intended_role === "creator" ? "pending" : "active";
+  //
+  // Ausnahme: Invites mit skip_onboarding. Gedacht fuer Partner- und
+  // Gastzugaenge (z.B. TikTok-Ansprechpartner), die das Portal ansehen
+  // sollen, ohne Onboarding-Strecke und ohne dass jemand erst freigibt.
+  const sofortAktiv =
+    invite.skip_onboarding === true || invite.intended_role !== "creator";
+  const initialStatus = sofortAktiv ? "active" : "pending";
   const { error: profErr } = await admin.from("profiles").insert({
     id: user_id,
     email: email.toLowerCase(),
@@ -109,6 +115,12 @@ export async function POST(req: NextRequest) {
     status: initialStatus,
     country,
     language,
+    ...(invite.skip_onboarding === true
+      ? {
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+        }
+      : {}),
   });
 
   if (profErr) {
@@ -124,7 +136,7 @@ export async function POST(req: NextRequest) {
     .eq("id", invite.id);
 
   // 6. Dashboard-News fuer creator_joined (14 Tage sichtbar) — best-effort
-  if (invite.intended_role === "creator") {
+  if (invite.intended_role === "creator" && invite.skip_onboarding !== true) {
     const tiktokUrl = `https://www.tiktok.com/@${tiktok_username.replace(/^@/, "")}`;
     const visibleUntil = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
     await admin.from("dashboard_news").insert({
