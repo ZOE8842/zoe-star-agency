@@ -33,7 +33,11 @@ export async function Footer() {
           <div className="md:col-span-3">
             <p className="eyebrow mb-4">{t("footer.col_agency")}</p>
             <ul className="space-y-2 text-cream/70 text-sm">
-              <li><Link href="/agency" className="hover:text-champagne transition-colors">{t("footer.nav_creator")}</Link></li>
+              {/* "Creator" zeigte bis 06.09.2026 auf /agency (Leistungsseite
+                  ohne einen einzigen Creator). Seitdem hat jeder Bereich
+                  seinen eigenen Eintrag. */}
+              <li><Link href="/creator" className="hover:text-champagne transition-colors">{t("footer.nav_creator")}</Link></li>
+              <li><Link href="/agency" className="hover:text-champagne transition-colors">{t("footer.nav_agency")}</Link></li>
               <li><Link href="/kooperationen" className="hover:text-champagne transition-colors">{t("footer.nav_koop")}</Link></li>
               <li><Link href="/about" className="hover:text-champagne transition-colors">{t("footer.nav_about")}</Link></li>
               <li><Link href="/join" className="hover:text-champagne transition-colors">{t("footer.nav_join")}</Link></li>

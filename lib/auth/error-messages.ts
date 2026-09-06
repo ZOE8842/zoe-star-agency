@@ -27,6 +27,12 @@ const MESSAGES: Record<string, string> = {
   "user already registered": "Für diese E-Mail gibt es schon einen Zugang.",
   "signups not allowed for this instance":
     "Registrierung ist deaktiviert. Melde dich bei deinem Manager.",
+  // Kein Supabase-Text, sondern unser eigener Code aus auth-helpers.ts:55
+  // und portal/pending/page.tsx:18: Login geklappt, aber zur Auth-ID gibt es
+  // keine profiles-Zeile. Ohne Eintrag hier landete der Fall im neutralen
+  // Fallback — der Betroffene loggt sich neu ein und steht wieder da.
+  profile_missing:
+    "Zu deinem Zugang fehlt ein Profil. Melde dich bei deinem Manager.",
 };
 
 /** Uebersetzt eine Supabase-Auth-Fehlermeldung ins Deutsche. */

@@ -37,8 +37,13 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   // Error-Param aus URL (z.B. /portal/login?error=... von /auth/confirm)
   // Auch Fehler aus dem URL-Param (z.B. von /auth/confirm) uebersetzen.
-  const initialError = authErrorText(searchParams.get("error"));
-  const [error, setError] = useState<string | null>(initialError);
+  // WICHTIG: nur uebersetzen wenn der Param wirklich da ist. authErrorText
+  // gibt fuer null seinen Fallback-Satz zurueck — dadurch stand die rote
+  // Fehlerbox bis 06.09.2026 bei JEDEM Aufruf der Login-Seite.
+  const rawError = searchParams.get("error");
+  const [error, setError] = useState<string | null>(
+    rawError ? authErrorText(rawError) : null,
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

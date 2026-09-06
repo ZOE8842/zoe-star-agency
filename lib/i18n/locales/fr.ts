@@ -297,6 +297,7 @@ export const fr = {
     col_social: "Social",
     col_legal: "Mentions légales",
     nav_creator: "Créateurs",
+    nav_agency: "Agence",
     nav_koop: "Coopérations",
     nav_about: "À propos",
     nav_join: "Candidature",

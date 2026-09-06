@@ -303,6 +303,7 @@ export const de = {
     col_social: "Social",
     col_legal: "Rechtliches",
     nav_creator: "Creator",
+    nav_agency: "Agency",
     nav_koop: "Kooperationen",
     nav_about: "Über uns",
     nav_join: "Bewerbung",

@@ -297,6 +297,7 @@ export const ar = {
     col_social: "اجتماعي",
     col_legal: "قانوني",
     nav_creator: "صانعو المحتوى",
+    nav_agency: "الوكالة",
     nav_koop: "التعاونات",
     nav_about: "من نحن",
     nav_join: "التقديم",

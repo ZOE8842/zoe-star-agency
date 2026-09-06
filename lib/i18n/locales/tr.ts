@@ -297,6 +297,7 @@ export const tr = {
     col_social: "Sosyal",
     col_legal: "Yasal",
     nav_creator: "Creator'lar",
+    nav_agency: "Ajans",
     nav_koop: "İşbirlikleri",
     nav_about: "Hakkımızda",
     nav_join: "Başvuru",

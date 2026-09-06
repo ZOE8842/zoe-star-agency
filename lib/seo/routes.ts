@@ -24,6 +24,10 @@ export interface PublicRoute {
 export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "",                       priority: 1.0,  changeFrequency: "weekly" },
   { path: "agency",                 priority: 0.9,  changeFrequency: "monthly" },
+  // Roster-Uebersicht. Stand bis 06.09.2026 nicht in der Registry — sie war
+  // damit weder in der Sitemap noch aus der Navigation erreichbar, obwohl
+  // robots.ts /creator ausdruecklich erlaubt.
+  { path: "creator",                priority: 0.88, changeFrequency: "weekly" },
   { path: "kooperationen",          priority: 0.85, changeFrequency: "monthly" },
   { path: "events",                 priority: 0.8,  changeFrequency: "weekly", placeholder: true },
   { path: "join",                   priority: 0.8,  changeFrequency: "monthly" },

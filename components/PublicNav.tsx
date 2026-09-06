@@ -6,9 +6,14 @@ import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitch } from "./LanguageSwitch";
 
+// "Creator" zeigte bis 06.09.2026 auf /agency — das ist die Leistungsseite
+// und enthaelt keinen einzigen Creator. Die Roster-Seite /creator war dadurch
+// ueber keine Navigation erreichbar. Jetzt hat jeder Bereich seinen eigenen
+// Eintrag: Agency = was wir machen, Creator = wer bei uns ist.
 const NAV_ITEMS = [
   { href: "/", label: "Startseite" },
-  { href: "/agency", label: "Creator" },
+  { href: "/creator", label: "Creator" },
+  { href: "/agency", label: "Agency" },
   { href: "/kooperationen", label: "Kooperationen" },
   { href: "/about", label: "Über uns" },
   { href: "/join", label: "Bewerbung" },
@@ -44,13 +49,15 @@ export function PublicNav() {
             <Logo variant="horizontal" className="h-10 md:h-11" />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-8">
+          {/* Desktop Nav — gap etwas enger und nowrap, seit der sechste
+              Eintrag dazukam: bei 1024px stapelte "Über uns" sonst auf
+              zwei Zeilen. */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
             {NAV_ITEMS.map((it) => (
               <Link
                 key={it.href}
                 href={it.href}
-                className="link-underline text-cream/80 hover:text-champagne text-[11px] uppercase tracking-[0.25em] transition-colors py-3"
+                className="link-underline whitespace-nowrap text-cream/80 hover:text-champagne text-[11px] uppercase tracking-[0.25em] transition-colors py-3"
               >
                 {it.label}
               </Link>
