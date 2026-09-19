@@ -19,6 +19,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createNotification } from "@/lib/notifications/center";
+import { checkCronAuth } from "@/lib/security/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,13 +74,9 @@ async function recordHealth(
 }
 
 async function trigger(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return NextResponse.json({ error: "not_configured" }, { status: 503 });
-
-  const auth = req.headers.get("authorization") || "";
-  if (auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  // Gleicher Guard wie alle anderen Cron-Routen (fail-closed, timingSafeEqual).
+  const denied = checkCronAuth(req);
+  if (denied) return denied;
 
   const db = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

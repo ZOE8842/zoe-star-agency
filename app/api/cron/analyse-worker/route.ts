@@ -1,6 +1,8 @@
 // V2 Worker · Cron-Endpoint
-// Wird von Vercel-Cron alle 5 min angepingt. Holt pending Account-Analysen
-// und LIVE-Performance-Reports und arbeitet sie ab.
+// Wird von Vercel-Cron einmal taeglich um 09:15 UTC angepingt (vercel.json).
+// Holt pending Account-Analysen und LIVE-Performance-Reports und arbeitet
+// sie ab. Der 5-Minuten-Takt gehoert dem analyse-watchdog, nicht diesem
+// Worker — eine neue Analyse wartet also bis zu 24 h auf den naechsten Lauf.
 //
 // Manuell triggerbar via:
 //   curl -H "Authorization: Bearer $CRON_SECRET" https://www.zoe-star.de/api/cron/analyse-worker

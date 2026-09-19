@@ -2,7 +2,7 @@
 
 Premium-Brand-Website + Creator-Portal unter `www.zoe-star.de` (canonical · Apex `zoe-star.de` redirected 308).
 
-**Stack:** Next.js 14 (App Router) · Tailwind · Framer Motion · Supabase (Auth/DB/Storage) · Resend · Vercel · Dogado-DNS.
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind · Framer Motion · Supabase (Auth/DB/Storage) · Resend · Vercel · Dogado-DNS.
 
 ---
 
