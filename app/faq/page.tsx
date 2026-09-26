@@ -58,7 +58,7 @@ const FRAGEN: Frage[] = [
           <span key={z.key}>
             {i > 0 && (i === MONATSZIELE.length - 1 ? " und " : ", ")}
             <strong className="text-cream">
-              {z.ziel} {z.label.toLowerCase()}
+              {z.ziel} {z.labelImSatz}
             </strong>
           </span>
         ))}
@@ -68,7 +68,7 @@ const FRAGEN: Frage[] = [
       </>
     ),
     antwortText: `Pro Kalendermonat: ${MONATSZIELE.map(
-      (z) => `${z.ziel} ${z.label.toLowerCase()}`,
+      (z) => `${z.ziel} ${z.labelImSatz}`,
     ).join(", ")}. Die Stunden kannst du frei über deine Tage verteilen. Deinen Stand siehst du auf der Portal-Startseite.`,
   },
   {

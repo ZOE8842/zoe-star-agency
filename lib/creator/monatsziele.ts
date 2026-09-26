@@ -7,8 +7,14 @@
 export interface Monatsziel {
   /** Technischer Schluessel */
   key: "live_tage" | "live_stunden" | "portal_tage";
-  /** Wie es im Portal und auf der Webseite heisst */
+  /** Wie es im Portal und auf der Webseite als Ueberschrift heisst */
   label: string;
+  /**
+   * Dieselbe Angabe, wie sie mitten im Satz steht ("mindestens 8 gültige
+   * LIVE-Tage"). Braucht ein eigenes Feld, weil toLowerCase() aus
+   * "LIVE-Tage" ein falsch geschriebenes "live-tage" macht.
+   */
+  labelImSatz: string;
   /** Zu erreichender Wert im Kalendermonat */
   ziel: number;
   /** Einheit fuer die Anzeige, z. B. "Tage" */
@@ -21,6 +27,7 @@ export const MONATSZIELE: Monatsziel[] = [
   {
     key: "live_tage",
     label: "Gültige LIVE-Tage",
+    labelImSatz: "gültige LIVE-Tage",
     ziel: 8,
     einheit: "Tage",
     beschreibung:
@@ -29,6 +36,7 @@ export const MONATSZIELE: Monatsziel[] = [
   {
     key: "live_stunden",
     label: "LIVE-Stunden",
+    labelImSatz: "LIVE-Stunden",
     ziel: 20,
     einheit: "Std",
     beschreibung:
@@ -37,6 +45,7 @@ export const MONATSZIELE: Monatsziel[] = [
   {
     key: "portal_tage",
     label: "Tage im Portal",
+    labelImSatz: "Tage im Portal",
     ziel: 8,
     einheit: "Tage",
     beschreibung:
