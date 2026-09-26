@@ -36,10 +36,23 @@ interface Frage {
 
 const FRAGEN: Frage[] = [
   {
+    frage: "Was kostet es, bei ZOE zu sein?",
+    antwort: (
+      <>
+        Nichts. Die Mitgliedschaft ist für dich komplett kostenlos — keine
+        Gebühr, keine Beteiligung an deinen Einnahmen, keine versteckten
+        Kosten. Was du über TikTok LIVE verdienst, bleibt deins.
+      </>
+    ),
+    antwortText:
+      "Nichts. Die Mitgliedschaft ist komplett kostenlos — keine Gebühr, keine Beteiligung an deinen Einnahmen, keine versteckten Kosten. Was du über TikTok LIVE verdienst, bleibt deins.",
+  },
+  {
     frage: "Wer kann sich bei ZOE bewerben?",
     antwort: (
       <>
-        Creator, die auf TikTok LIVE gehen und regelmäßig senden wollen. Wir
+        Creator ab 18 Jahren aus Deutschland, Österreich, der Schweiz und
+        Luxemburg, die auf TikTok LIVE gehen und regelmäßig senden wollen. Wir
         schauen weniger auf die Followerzahl als auf Beständigkeit: eine klare
         Richtung, ein wiedererkennbares Profil und die Bereitschaft, über Monate
         hinweg dranzubleiben. Wer heute klein anfängt, aber liefert, ist uns
@@ -47,7 +60,19 @@ const FRAGEN: Frage[] = [
       </>
     ),
     antwortText:
-      "Creator, die auf TikTok LIVE gehen und regelmäßig senden wollen. Wir schauen weniger auf die Followerzahl als auf Beständigkeit: eine klare Richtung, ein wiedererkennbares Profil und die Bereitschaft, über Monate hinweg dranzubleiben.",
+      "Creator ab 18 Jahren aus Deutschland, Österreich, der Schweiz und Luxemburg, die auf TikTok LIVE gehen und regelmäßig senden wollen. Wir schauen weniger auf die Followerzahl als auf Beständigkeit: eine klare Richtung, ein wiedererkennbares Profil und die Bereitschaft, über Monate hinweg dranzubleiben.",
+  },
+  {
+    frage: "Binde ich mich langfristig?",
+    antwort: (
+      <>
+        Nein. Du kannst jederzeit kündigen — es gibt keine Mindestlaufzeit und
+        keine Frist, die dich festhält. Wir halten Creator über die Arbeit, die
+        wir leisten, nicht über Verträge.
+      </>
+    ),
+    antwortText:
+      "Nein. Du kannst jederzeit kündigen — es gibt keine Mindestlaufzeit und keine Frist. Wir halten Creator über die Arbeit, die wir leisten, nicht über Verträge.",
   },
   {
     frage: "Welche Mindestwerte muss ich erfüllen?",
@@ -154,6 +179,19 @@ const FRAGEN: Frage[] = [
     ),
     antwortText:
       "Nein. Dein Inhalt bleibt deine Entscheidung. Wir beraten zu Format, Sendezeiten, Matches und Aufbau. Nur bei Marken-Kampagnen gibt es Vorgaben zu Logo, Hashtags und Tonalität.",
+  },
+  {
+    frage: "Was passiert, wenn mein Account oder LIVE-Zugang gesperrt wird?",
+    antwort: (
+      <>
+        Melde dich sofort bei deinem Manager. Wir melden den Fall über unseren
+        Agentur-Zugang direkt bei TikTok und bleiben dran, bis er bearbeitet
+        ist. Das ist einer der Gründe, warum eine Agentur im Rücken zu haben
+        einen Unterschied macht — allein kommst du an diesen Weg nicht heran.
+      </>
+    ),
+    antwortText:
+      "Melde dich sofort bei deinem Manager. Wir melden den Fall über unseren Agentur-Zugang direkt bei TikTok und bleiben dran, bis er bearbeitet ist. Allein kommt man an diesen Weg nicht heran.",
   },
   {
     frage: "Wie läuft die Kommunikation im Alltag?",

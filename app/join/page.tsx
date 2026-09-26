@@ -117,6 +117,39 @@ export default async function JoinPage() {
               Abwesenheitsmeldung im Portal.
             </p>
           </MotionReveal>
+
+          {/* Voraussetzungen · die harten Ja-Nein-Punkte, damit niemand erst
+              im Gespraech erfaehrt, dass es nicht passt. */}
+          <MotionReveal delay={0.35}>
+            <div className="border border-champagne/15 mt-10 p-7 md:p-9">
+              <p className="eyebrow mb-6">Voraussetzungen</p>
+              <ul className="grid sm:grid-cols-2 gap-x-10 gap-y-4">
+                {[
+                  ["Alter", "18 Jahre oder älter"],
+                  ["Wohnsitz", "Deutschland, Österreich, Schweiz oder Luxemburg"],
+                  ["TikTok-Account", "ohne laufende Verstöße, LIVE freigeschaltet"],
+                  ["Netzwerk", "aktuell in keiner anderen Agentur"],
+                ].map(([titel, text]) => (
+                  <li key={titel} className="flex gap-4 items-baseline">
+                    <span
+                      aria-hidden
+                      className="text-champagne text-xs shrink-0 translate-y-[-1px]"
+                    >
+                      —
+                    </span>
+                    <span className="text-cream/70 text-sm md:text-base leading-relaxed">
+                      <span className="text-cream">{titel}:</span> {text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-champagne text-sm md:text-base leading-relaxed mt-7 pt-6 border-t border-champagne/15">
+                Die Mitgliedschaft ist kostenlos. Keine Gebühr, keine
+                Beteiligung an deinen Einnahmen — und du kannst jederzeit
+                kündigen.
+              </p>
+            </div>
+          </MotionReveal>
         </section>
 
         <section id="apply" className="container-luxe pb-20 scroll-mt-24">
