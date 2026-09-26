@@ -31,6 +31,9 @@ export const PUBLIC_ROUTES: PublicRoute[] = [
   { path: "kooperationen",          priority: 0.85, changeFrequency: "monthly" },
   { path: "events",                 priority: 0.8,  changeFrequency: "weekly", placeholder: true },
   { path: "join",                   priority: 0.8,  changeFrequency: "monthly" },
+  // FAQ: beantwortet die Fragen, die Creator vor der Bewerbung stellen.
+  // Traegt FAQPage-Schema und taucht damit direkt in den Suchergebnissen auf.
+  { path: "faq",                    priority: 0.75, changeFrequency: "monthly" },
   { path: "contact",                priority: 0.7,  changeFrequency: "yearly" },
   { path: "press",                  priority: 0.6,  changeFrequency: "monthly", placeholder: true },
   { path: "studio",                 priority: 0.6,  changeFrequency: "monthly", placeholder: true },

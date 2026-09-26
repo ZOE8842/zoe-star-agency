@@ -42,6 +42,8 @@ export async function Footer() {
               <li><Link href="/about" className="hover:text-champagne transition-colors">{t("footer.nav_about")}</Link></li>
               <li><Link href="/join" className="hover:text-champagne transition-colors">{t("footer.nav_join")}</Link></li>
               <li><Link href="/contact" className="hover:text-champagne transition-colors">{t("footer.nav_contact")}</Link></li>
+              {/* "FAQ" ist in beiden Sprachen gleich, daher ohne i18n-Key. */}
+              <li><Link href="/faq" className="hover:text-champagne transition-colors">FAQ</Link></li>
             </ul>
           </div>
 

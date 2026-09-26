@@ -4,6 +4,7 @@ import { getAuthedProfile } from "@/lib/supabase/auth-helpers";
 import { PortalNav } from "@/components/PortalNav";
 import { AvatarStack } from "@/components/AvatarStack";
 import { MonthlyMetricsBlock } from "@/components/dashboard/MonthlyMetricsBlock";
+import { MonthlyGoalBlock } from "@/components/dashboard/MonthlyGoalBlock";
 // PerformanceInsightBlock ist umgezogen nach /portal/analyse (User-Decision
 // 2026-05-16). Dashboard bleibt nur Zahlen + Schnellzugriff.
 import { FollowPromptCard } from "@/components/dashboard/FollowPromptCard";
@@ -234,6 +235,11 @@ export default async function DashboardPage() {
 
         {/* RECOMMENDATIONS — leise, unter der Action-Queue */}
         <RecommendationsBlock items={dashboard.recommendations} />
+
+        {/* MONATSZIEL — Stand gegen die drei Mindestwerte, die seit
+            25.09.2026 oeffentlich auf /join stehen. Bewusst VOR den nackten
+            Zahlen: erst "wo stehe ich", dann die Details. */}
+        <MonthlyGoalBlock supabase={supabase} profileId={profile.id} />
 
         {/* MONTHLY METRICS — Empty-State bis Sync laeuft */}
         <MonthlyMetricsBlock supabase={supabase} profileId={profile.id} />

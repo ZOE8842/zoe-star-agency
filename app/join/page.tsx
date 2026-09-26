@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MotionReveal } from "@/components/MotionReveal";
 import { CreatorApplicationForm } from "@/components/forms/CreatorApplicationForm";
+import { MONATSZIELE } from "@/lib/creator/monatsziele";
 import { loadPublicLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
@@ -73,6 +74,49 @@ export default async function JoinPage() {
               </MotionReveal>
             ))}
           </div>
+        </section>
+
+        {/* Aufnahmekriterien · harte Zahlen vor dem Formular, damit sich
+            niemand bewirbt, der die LIVE-Mindestwerte nicht erfuellen will. */}
+        <section className="container-luxe pb-20">
+          <MotionReveal>
+            <p className="eyebrow mb-4">Aufnahmekriterien</p>
+          </MotionReveal>
+          <MotionReveal delay={0.05}>
+            <h2 className="heading-display text-2xl md:text-4xl text-cream mb-4 leading-tight max-w-3xl">
+              Das erwarten wir <span className="text-champagne">pro Monat</span>.
+            </h2>
+          </MotionReveal>
+          <MotionReveal delay={0.1}>
+            <p className="text-cream/65 text-sm md:text-base leading-relaxed max-w-2xl mb-10">
+              Wir arbeiten mit festen Mindestwerten statt mit vagen Versprechen.
+              Wer sie erfüllt, bekommt volle Betreuung, Kampagnen und Ranking-Aufbau.
+            </p>
+          </MotionReveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MONATSZIELE.map((k, i) => (
+              <MotionReveal key={k.key} delay={i * 0.08}>
+                <div className="border border-champagne/15 p-7 md:p-8 h-full">
+                  <p className="font-display italic font-black text-5xl md:text-6xl text-champagne leading-none mb-3">
+                    {k.ziel}
+                  </p>
+                  <h3 className="text-cream text-[11px] uppercase tracking-[0.25em] mb-4">
+                    {k.label}
+                  </h3>
+                  <p className="text-cream/60 text-sm md:text-base leading-relaxed">
+                    {k.beschreibung}
+                  </p>
+                </div>
+              </MotionReveal>
+            ))}
+          </div>
+          <MotionReveal delay={0.3}>
+            <p className="text-cream/50 text-xs md:text-sm leading-relaxed max-w-2xl mt-7">
+              Die Werte gelten je Kalendermonat. Urlaub, Krankheit und Pausen
+              sprichst du vorher mit deinem Manager ab — dafür gibt es die
+              Abwesenheitsmeldung im Portal.
+            </p>
+          </MotionReveal>
         </section>
 
         <section id="apply" className="container-luxe pb-20 scroll-mt-24">
