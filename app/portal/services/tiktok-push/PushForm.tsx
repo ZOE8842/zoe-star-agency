@@ -41,8 +41,8 @@ export interface HistoryRow {
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Eingereicht",
   reviewed: "Geprueft",
-  selected: "Ausgewaehlt",
-  not_selected: "Nicht ausgewaehlt",
+  selected: "Ausgewählt",
+  not_selected: "Nicht ausgewählt",
   cancelled: "Storniert",
 };
 
@@ -168,7 +168,7 @@ export function PushForm({ weekRange, weekKey, weekDays, existing, history }: Pr
                   disabled={!editable}
                   className="w-full bg-transparent border-b border-champagne/20 focus:border-champagne text-cream py-2.5 focus:outline-none disabled:opacity-50"
                 >
-                  <option value="" className="bg-ink">— Tag waehlen —</option>
+                  <option value="" className="bg-ink">— Tag wählen —</option>
                   {weekDays.map((d) => (
                     <option key={d.date} value={d.date} className="bg-ink">{d.label}</option>
                   ))}

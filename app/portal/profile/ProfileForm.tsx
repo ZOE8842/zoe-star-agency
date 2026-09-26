@@ -177,7 +177,7 @@ export function ProfileForm({ profile }: { profile: ProfileShape }) {
 
       {/* BIRTHDAY · DSGVO: nur Tag + Monat */}
       <div className="pt-3 border-t border-champagne/10">
-        <p className="eyebrow mb-3">Geburtstag <span className="text-cream/35 normal-case tracking-normal">— Damit wir dir gratulieren koennen</span></p>
+        <p className="eyebrow mb-3">Geburtstag <span className="text-cream/35 normal-case tracking-normal">— Damit wir dir gratulieren können</span></p>
         <p className="text-cream/45 text-xs mb-4">Tag + Monat reichen, kein Jahr. Bleibt intern.</p>
         <div className="grid grid-cols-2 gap-3">
           <select value={bday} onChange={(e) => setBday(e.target.value)} className={selectCls}>

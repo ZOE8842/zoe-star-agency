@@ -41,18 +41,21 @@ const MONTHS_DE = [
   "Juli", "August", "September", "Oktober", "November", "Dezember",
 ];
 
-// Letzter bekannter Stand (Juli 2026, aus creator_daily_metrics).
+// Letzter bekannter Stand (August 2026, aus creator_daily_metrics).
 // Greift nur, wenn die DB nicht erreichbar ist — die Seite zeigt dann
 // echte, wenn auch evtl. nicht taggenaue Zahlen statt Nullen oder Platzhalter.
-const FALLBACK: PublicAgencyStats = {
-  activeCreators: 60,
+//
+// Beim Pflegen nur die Zahlen anfassen: month und monthLabel setzt
+// getPublicAgencyStats unten auf den tatsaechlich letzten vollstaendigen
+// Monat. Bis 26.09.2026 stand hier ein fester Juli-Stand drin — die Seite
+// behauptete dadurch Ende September noch "Stand Juli 2026", und weil der
+// DB-Fehler still verschluckt wurde, fiel es niemandem auf.
+const FALLBACK_ZAHLEN = {
+  activeCreators: 57,
   liveHours: 2988,
-  liveDays: 932,
-  avgHoursPerCreator: 50,
-  month: "2026-07",
-  monthLabel: "Juli 2026",
-  isLive: false,
-};
+  liveDays: 893,
+  avgHoursPerCreator: 52,
+} as const;
 
 function admin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -94,7 +97,12 @@ export async function getPublicAgencyStats(): Promise<PublicAgencyStats> {
       .gt("live_minutes", 0);
 
     if (error) throw error;
-    if (!data || data.length === 0) return FALLBACK;
+    if (!data || data.length === 0) {
+      console.error(
+        `[public-stats] Keine Daten fuer ${key} (${from} bis ${to}) — es greifen die Ersatzzahlen.`,
+      );
+      return { ...FALLBACK_ZAHLEN, month: key, monthLabel: label, isLive: false };
+    }
 
     const creators = new Set<string>();
     let minutes = 0;
@@ -115,9 +123,12 @@ export async function getPublicAgencyStats(): Promise<PublicAgencyStats> {
       monthLabel: label,
       isLive: true,
     };
-  } catch {
-    // Bewusst still: eine kaputte Kennzahl darf keine Public-Seite umwerfen.
-    return FALLBACK;
+  } catch (err) {
+    // Die Seite bleibt stehen — eine kaputte Kennzahl darf die Startseite
+    // nicht umwerfen. Aber nicht mehr lautlos: ohne diese Zeile lief die
+    // Seite monatelang mit Ersatzzahlen, ohne dass es jemand merkte.
+    console.error("[public-stats] Abfrage fehlgeschlagen, Ersatzzahlen aktiv:", err);
+    return { ...FALLBACK_ZAHLEN, month: key, monthLabel: label, isLive: false };
   }
 }
 

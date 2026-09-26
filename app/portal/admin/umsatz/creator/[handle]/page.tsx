@@ -619,7 +619,7 @@ export default async function CreatorRevenueHistoryPage({ params }: PageProps) {
 
         {rows.length === 0 ? (
           <div className="border border-champagne/15 p-7 text-center">
-            <p className="text-cream/55">Noch keine Umsatz-Daten fuer diesen Creator.</p>
+            <p className="text-cream/55">Noch keine Umsatz-Daten für diesen Creator.</p>
           </div>
         ) : (
           <details className="group border border-champagne/15 mb-4">

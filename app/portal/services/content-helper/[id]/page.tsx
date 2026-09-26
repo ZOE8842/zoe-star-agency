@@ -336,7 +336,7 @@ export default async function ContentHelperDetailPage({ params }: Props) {
 
             {/* Creator-CTA: neue Analyse starten */}
             <div className="border border-champagne/15 p-4 md:p-5 mb-6 flex items-center justify-between gap-3 flex-wrap">
-              <p className="text-cream/65 text-sm">Bereit fuer den naechsten Content?</p>
+              <p className="text-cream/65 text-sm">Bereit für den nächsten Content?</p>
               <Link
                 href="/portal/services/content-helper/new"
                 className="text-champagne hover:text-champagne-300 text-[10px] uppercase tracking-[0.25em]"

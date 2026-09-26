@@ -57,7 +57,7 @@ export function ShowcaseInterestBanner({ showcasePending, coopPending }: Props) 
       <ul className="space-y-1.5 text-cream/65 text-sm leading-relaxed mb-6 max-w-2xl">
         <li>· Mehr Sichtbarkeit auf der ZOE-Webseite</li>
         <li>· Professioneller Creator-Auftritt</li>
-        <li>· Kooperationen laufen ueber die Agency</li>
+        <li>· Kooperationen laufen über die Agency</li>
         <li>· Du entscheidest, ob du teilnehmen moechtest</li>
         <li>· Keine Pflicht und keine Nachteile, wenn du ablehnst</li>
       </ul>

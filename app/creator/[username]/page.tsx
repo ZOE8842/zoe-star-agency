@@ -15,7 +15,15 @@ interface Params {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { username } = await params;
-  const c = await fetchCreatorByUsername(username);
+  // Ein DB-Fehler darf hier nicht die ganze Seite kippen — ob 404 oder
+  // Stoerung, entscheidet unten die Page-Komponente. Hier reichen neutrale
+  // Metadaten, und noindex verhindert, dass eine Fehlerausgabe indexiert wird.
+  let c: Awaited<ReturnType<typeof fetchCreatorByUsername>> = null;
+  try {
+    c = await fetchCreatorByUsername(username);
+  } catch {
+    return { title: `@${username}`, robots: { index: false, follow: true } };
+  }
   if (!c) return { title: "Creator nicht gefunden" };
   const name = c.displayName || `@${c.tiktokUsername}`;
   // Kein Brand-Suffix im title: das Root-Template haengt " · ZOE Star Agency"

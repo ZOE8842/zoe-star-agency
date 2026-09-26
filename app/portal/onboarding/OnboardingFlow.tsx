@@ -614,7 +614,7 @@ function Step4Goals({
           ? (i18n.s3_subtitle_zero ?? "Such dir aus was passt.")
           : count === 1
           ? (i18n.s3_subtitle_one ?? "1 ausgewaehlt.")
-          : (i18n.s3_subtitle_more ?? "{n} ausgewaehlt.").replace("{n}", String(count))}
+          : (i18n.s3_subtitle_more ?? "{n} ausgewählt.").replace("{n}", String(count))}
       </p>
 
       <div className="flex flex-wrap gap-2.5 mb-10">

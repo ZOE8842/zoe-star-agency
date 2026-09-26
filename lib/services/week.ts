@@ -93,7 +93,7 @@ export function validateSlots(
 export const PUSH_STATUS_LABEL: Record<string, string> = {
   submitted: "Eingereicht",
   reviewed: "Geprueft",
-  selected: "Ausgewaehlt",
+  selected: "Ausgewählt",
   not_selected: "Nicht ausgewaehlt",
   cancelled: "Storniert",
 };

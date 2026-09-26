@@ -54,7 +54,7 @@ export default async function CreatorIndexPage() {
               <span className="block hero-rise mixed-type-line-2 text-champagne -mt-1 text-[52px] sm:text-[72px] md:text-[100px] lg:text-[120px]">Creator-Liste.</span>
             </h1>
             <p className="text-cream/65 text-base md:text-lg leading-relaxed mt-7 max-w-2xl">
-              Sechs Creator pro Besuch — zufaellig gewaehlt aus dem aktiven Roster. Den kompletten Überblick findest du unter „Alle Creator“.
+              Sechs Creator pro Besuch — zufällig gewählt aus dem aktiven Roster. Den kompletten Überblick findest du unter „Alle Creator“.
             </p>
           </div>
         </section>

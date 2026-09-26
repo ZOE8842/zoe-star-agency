@@ -243,7 +243,7 @@ export function ApplicationsTable({ applications }: { applications: Application[
                 >
                   <p className="text-cream/40 text-[10px] uppercase tracking-[0.2em] mb-1">Notiz</p>
                   <p className="text-cream/70 text-sm">
-                    {a.admin_note ?? <span className="text-cream/30 italic">+ Notiz hinzufuegen</span>}
+                    {a.admin_note ?? <span className="text-cream/30 italic">+ Notiz hinzufügen</span>}
                   </p>
                 </button>
               )}

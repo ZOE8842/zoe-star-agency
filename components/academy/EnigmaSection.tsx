@@ -121,7 +121,7 @@ export function EnigmaSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <div className="border border-champagne/25 bg-champagne/[0.04] p-5">
-          <p className="eyebrow mb-3 text-champagne">Was Enigmen koennen</p>
+          <p className="eyebrow mb-3 text-champagne">Was Enigmen können</p>
           <ul className="space-y-2">
             {CAN_DO.map((item) => (
               <li key={item} className="text-cream/80 text-sm leading-relaxed flex gap-2">
@@ -132,7 +132,7 @@ export function EnigmaSection() {
           </ul>
         </div>
         <div className="border border-red-400/30 bg-red-400/5 p-5">
-          <p className="eyebrow mb-3 text-red-400/90">Was Enigmen NICHT koennen</p>
+          <p className="eyebrow mb-3 text-red-400/90">Was Enigmen NICHT können</p>
           <ul className="space-y-2">
             {CANT_DO.map((item) => (
               <li key={item} className="text-cream/80 text-sm leading-relaxed flex gap-2">
@@ -159,7 +159,7 @@ export function EnigmaSection() {
       </div>
 
       <div className="border border-champagne/15 p-5 md:p-6 bg-champagne/[0.02]">
-        <p className="eyebrow mb-3">Wichtig fuer Creator</p>
+        <p className="eyebrow mb-3">Wichtig für Creator</p>
         <p className="text-cream/70 text-sm md:text-base leading-relaxed mb-2">
           Enigmen sind oft die staerksten Supporter — Battle-Spieler, grosse Gifters, High-Level-Zuschauer. Erkennen kannst du sie an grossen Geschenken, geheimen Matchpunkten und anonymen Kommentaren.
         </p>

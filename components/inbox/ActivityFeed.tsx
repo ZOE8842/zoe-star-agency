@@ -122,7 +122,7 @@ export async function ActivityFeed({ supabase }: Props) {
                 <p className="text-cream text-sm md:text-base">
                   Academy-Highlight: {l.title}
                 </p>
-                <p className="text-cream/45 text-xs mt-0.5">Frische Lektion verfuegbar</p>
+                <p className="text-cream/45 text-xs mt-0.5">Frische Lektion verfügbar</p>
               </div>
             </li>
           ))}

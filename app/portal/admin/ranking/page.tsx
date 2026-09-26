@@ -146,7 +146,7 @@ const TABS: TabDef[] = [
     beschreibung: "Sortiert nach gesamten Diamanten im aktuellen Monat.",
     legende: [
       { term: "Diamanten", def: "Gesamt-Diamanten aus LIVEs im aktuellen Monat" },
-      { term: "LIVE-Tage", def: "Gueltige LIVE-Tage (Backstage-Definition)" },
+      { term: "LIVE-Tage", def: "Gültige LIVE-Tage (Backstage-Definition)" },
       { term: "Ø Zuschauer/Tag", def: "Tagesmittel der Zuschauer-Zahl an LIVE-Tagen" },
     ],
     sortKey: (r) => r.diamonds_month ?? 0,

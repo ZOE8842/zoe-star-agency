@@ -212,6 +212,21 @@ export async function fetchCooperationCreators(): Promise<PublicCreator[]> {
   return fetchApprovedConfirmed("cooperation");
 }
 
+/**
+ * Wird geworfen, wenn die Datenbank nicht antwortet oder einen Fehler
+ * liefert. Der Aufrufer darf das NICHT als notFound() behandeln:
+ * "Datenbank gerade gestoert" und "Creator existiert nicht" sind zwei
+ * verschiedene Dinge. Bis 26.09.2026 waren sie es nicht — ein Timeout
+ * fuehrte zu 404, und weil alle Creator-Profile in der Sitemap stehen,
+ * konnte Google sie im falschen Moment als geloescht sehen.
+ */
+export class CreatorLookupError extends Error {
+  constructor(ursache: string) {
+    super(`Creator-Abfrage fehlgeschlagen: ${ursache}`);
+    this.name = "CreatorLookupError";
+  }
+}
+
 export async function fetchCreatorByUsername(
   username: string,
 ): Promise<PublicCreator | null> {
@@ -220,7 +235,7 @@ export async function fetchCreatorByUsername(
   if (!u) return null;
 
   // Profile via tiktok_username case-insensitive
-  const { data: profile } = await c
+  const { data: profile, error: profileErr } = await c
     .from("profiles")
     .select(
       `id, tiktok_username, language, region, bio, allow_website_showcase_confirmed, allow_partner_cooperations_confirmed`,
@@ -228,10 +243,11 @@ export async function fetchCreatorByUsername(
     .ilike("tiktok_username", u)
     .maybeSingle();
 
+  if (profileErr) throw new CreatorLookupError(profileErr.message);
   if (!profile) return null;
   if (!profile.allow_website_showcase_confirmed) return null;
 
-  const { data: s } = await c
+  const { data: s, error: showErr } = await c
     .from("showcase_creators")
     .select(
       "profile_id, display_name, category, showcase_image, showcase_images, tiktok_url, instagram_url, approved_at, sort_order",
@@ -241,6 +257,7 @@ export async function fetchCreatorByUsername(
     .eq("is_featured", true)
     .maybeSingle();
 
+  if (showErr) throw new CreatorLookupError(showErr.message);
   if (!s) return null;
 
   const images = parseShowcaseImages(s.showcase_images, s.showcase_image);

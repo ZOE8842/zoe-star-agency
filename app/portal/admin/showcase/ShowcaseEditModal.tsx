@@ -170,7 +170,7 @@ export function ShowcaseEditModal({ row, onClose }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, brand_safe: e.target.checked }))}
                 className="w-4 h-4 accent-champagne"
               />
-              <span className="text-cream/75 text-sm">Geprueft + freigegeben fuer Brand-Kooperationen</span>
+              <span className="text-cream/75 text-sm">Geprüft + freigegeben für Brand-Kooperationen</span>
             </label>
           </Field>
 

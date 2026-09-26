@@ -361,7 +361,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
                 <MotionReveal delay={0.08}>
                   <h2 className="leading-[0.92] tracking-[-0.02em]">
                     <span className="block mixed-type-line-1 text-cream/90 text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px]">Alle Creator</span>
-                    <span className="block mixed-type-line-2 text-champagne -mt-1 text-[48px] sm:text-[68px] md:text-[88px]">fuer Kooperationen.</span>
+                    <span className="block mixed-type-line-2 text-champagne -mt-1 text-[48px] sm:text-[68px] md:text-[88px]">für Kooperationen.</span>
                   </h2>
                 </MotionReveal>
               </div>

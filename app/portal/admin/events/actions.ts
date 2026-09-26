@@ -97,7 +97,7 @@ export async function adminCreateEvent(
       ? (input.allowed_profile_ids ?? []).filter((id) => typeof id === "string" && id.length > 0)
       : [];
     if (visibility === "selected" && allowedIds.length === 0) {
-      return { ok: false, error: "Bei 'Ausgewaehlte Creator' mindestens 1 Profil waehlen." };
+      return { ok: false, error: "Bei 'Ausgewählte Creator' mindestens 1 Profil wählen." };
     }
 
     const sb = admin();

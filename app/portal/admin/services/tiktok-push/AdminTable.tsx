@@ -24,8 +24,8 @@ interface Row {
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Eingereicht",
   reviewed: "Geprueft",
-  selected: "Ausgewaehlt",
-  not_selected: "Nicht ausgewaehlt",
+  selected: "Ausgewählt",
+  not_selected: "Nicht ausgewählt",
   cancelled: "Storniert",
 };
 
@@ -40,7 +40,7 @@ const STATUS_TONE: Record<string, string> = {
 const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "submitted", label: "Eingereicht" },
   { value: "reviewed", label: "Geprueft" },
-  { value: "selected", label: "Ausgewaehlt" },
+  { value: "selected", label: "Ausgewählt" },
   { value: "not_selected", label: "Nicht ausgewaehlt" },
   { value: "cancelled", label: "Storniert" },
 ];

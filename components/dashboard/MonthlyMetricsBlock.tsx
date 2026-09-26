@@ -85,7 +85,7 @@ function rangeLabel(monthIso: string, upperBound: string | null): string {
 
 const STATUS_LABEL: Record<NonNullable<Metric["activity_status"]>, string> = {
   aktiv: "Aktiv",
-  unregelmaessig: "Unregelmaessig",
+  unregelmaessig: "Unregelmäßig",
   inaktiv: "Inaktiv",
 };
 
@@ -128,7 +128,7 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
       {data ? (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-champagne/15">
-            <Cell value={String(data.valid_live_days)} label="Gueltige LIVE-Tage" />
+            <Cell value={String(data.valid_live_days)} label="Gültige LIVE-Tage" />
             <Cell value={formatHours(data.live_minutes_total, data.live_hours_display)} label="LIVE-Stunden" />
             <Cell value={String(data.average_viewers)} label="Ø Zuschauer" />
             <Cell value={formatDate(data.last_live_date)} label="Letzter LIVE-Tag" />
@@ -150,7 +150,7 @@ export async function MonthlyMetricsBlock({ supabase, profileId }: Props) {
           </p>
           <p className="text-cream/55 text-sm md:text-base leading-relaxed mb-4 max-w-[44ch]">
             Sobald der Daten-Sync aktiv ist, siehst du hier deine laufenden
-            LIVE-Zahlen fuer den aktuellen Monat — gueltige LIVE-Tage,
+            LIVE-Zahlen für den aktuellen Monat — gültige LIVE-Tage,
             LIVE-Stunden, durchschnittliche Zuschauer und letzter LIVE-Tag.
           </p>
           <p className="text-cream/40 text-xs">

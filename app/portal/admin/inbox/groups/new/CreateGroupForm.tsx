@@ -102,7 +102,7 @@ export function CreateGroupForm({ members }: { members: MemberOption[] }) {
 
       <div>
         <label className="block text-[10px] uppercase tracking-[0.3em] text-cream/35 mb-3">
-          Mitglieder ({selected.length} ausgewaehlt)
+          Mitglieder ({selected.length} ausgewählt)
         </label>
         <input
           type="search"

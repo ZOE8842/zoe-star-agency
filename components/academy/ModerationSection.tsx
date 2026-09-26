@@ -107,7 +107,7 @@ export function ModerationSection() {
       </div>
 
       <div>
-        <p className="eyebrow mb-4">Geschenksteuerung · Schutz fuer Zuschauer</p>
+        <p className="eyebrow mb-4">Geschenksteuerung · Schutz für Zuschauer</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
           {GIFT_CONTROL.map((m) => (
             <FeatureBox key={m.title} f={m} />

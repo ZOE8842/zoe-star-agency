@@ -133,7 +133,7 @@ export function TreasureSection() {
           <li>Befuellung pro Truhe: <span className="text-champagne">max 10.000 Muenzen</span></li>
           <li>Befuellung pro Tag: <span className="text-champagne">max 20.000 Muenzen</span></li>
           <li>Sammel-Phase: <span className="text-champagne">10 Minuten</span></li>
-          <li>Rueckerstattung: <span className="text-champagne">automatisch fuer nicht eingesammelte Muenzen</span></li>
+          <li>Rueckerstattung: <span className="text-champagne">automatisch für nicht eingesammelte Münzen</span></li>
           <li>Verlauf: <span className="text-champagne">chronologisch im LIVE-Protokoll</span></li>
         </ul>
       </div>

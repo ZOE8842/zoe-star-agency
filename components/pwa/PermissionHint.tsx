@@ -93,7 +93,7 @@ export function PermissionHint({ loggedIn }: Props) {
           <p className="font-display italic text-sm text-champagne mb-1">
             Bleib auf dem Laufenden
           </p>
-          <p>Push aktivieren fuer Nachrichten, Ranking + Analyse.</p>
+          <p>Push aktivieren für Nachrichten, Ranking + Analyse.</p>
         </div>
         <div className="flex flex-col gap-1.5 shrink-0">
           <button

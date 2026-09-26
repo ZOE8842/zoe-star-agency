@@ -383,14 +383,14 @@ export function EventForm({
                     : "border-champagne/30 text-cream/55 hover:border-champagne/60 hover:text-cream"
                 }`}
               >
-                {m === "all" ? "Alle Creator" : "Ausgewaehlte Creator"}
+                {m === "all" ? "Alle Creator" : "Ausgewählte Creator"}
               </button>
             ))}
           </div>
           {visibilityMode === "selected" && (
             <div className="border border-champagne/15 p-3 space-y-2">
               <p className="text-cream/45 text-[10px] uppercase tracking-[0.25em]">
-                {allowedIds.length} ausgewaehlt
+                {allowedIds.length} ausgewählt
               </p>
               <input
                 type="search"
@@ -444,7 +444,7 @@ export function EventForm({
           {availableCategories.length > 0 && (
             <div className="mb-4">
               <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">
-                Kategorien · {targetCategories.length} ausgewaehlt
+                Kategorien · {targetCategories.length} ausgewählt
               </p>
               <div className="flex flex-wrap gap-2">
                 {availableCategories.map((cat) => {
@@ -470,7 +470,7 @@ export function EventForm({
           {availableLanguages.length > 0 && (
             <div>
               <p className="text-cream/55 text-[10px] uppercase tracking-[0.22em] mb-2">
-                Sprachen · {targetLanguages.length} ausgewaehlt
+                Sprachen · {targetLanguages.length} ausgewählt
               </p>
               <div className="flex flex-wrap gap-2">
                 {availableLanguages.map((lang) => {

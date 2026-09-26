@@ -62,7 +62,7 @@ export default async function PendingPage() {
             <ul className="space-y-2 text-cream/75 text-sm leading-relaxed">
               <li>· TikTok-Profil aufraeumen (Bio, Profilbild, letztes Video)</li>
               <li>· Falls du Showcase willst: 1-2 Bilder bereitlegen</li>
-              <li>· Erste LIVE-Zeit fuer naechste Woche planen</li>
+              <li>· Erste LIVE-Zeit für nächste Woche planen</li>
             </ul>
           </div>
 

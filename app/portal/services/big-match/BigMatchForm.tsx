@@ -142,7 +142,7 @@ function Select({
         onChange={(e) => onChange(e.target.value)}
         className="w-full bg-transparent border-b border-champagne/20 focus:border-champagne text-cream py-3 focus:outline-none"
       >
-        <option value="" className="bg-ink">— bitte waehlen —</option>
+        <option value="" className="bg-ink">— bitte wählen —</option>
         {options.map((o) => (
           <option key={o} value={o} className="bg-ink">{o}</option>
         ))}

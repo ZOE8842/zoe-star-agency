@@ -59,7 +59,7 @@ export function LiveReportForm({ hasOpenReport }: { hasOpenReport: boolean }) {
       </div>
 
       <div>
-        <label className="eyebrow block mb-2">Was sollen wir besonders pruefen? (optional)</label>
+        <label className="eyebrow block mb-2">Was sollen wir besonders prüfen? (optional)</label>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 500))}
