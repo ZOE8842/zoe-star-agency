@@ -56,7 +56,7 @@ export default async function AboutPage() {
             </MotionReveal>
             <MotionReveal delay={0.18}>
               <p className="text-cream/70 text-base md:text-xl leading-relaxed max-w-2xl mt-7 md:mt-10">
-                ZOE⭐ STAR AGENCY ist Teil des <span className="text-champagne">TikTok Elite Agency Club Deutschland</span> mit Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung. Gegründet im Oktober 2025, seit dem ersten Tag Elite-Agentur.
+                ZOE⭐ STAR AGENCY ist Teil des <span className="text-champagne">TikTok Elite Agency Club Deutschland</span> mit Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung. Gegründet im Oktober 2025 und Mitglied im Elite Agency Club seit seinem Start im April 2026.
               </p>
             </MotionReveal>
           </div>
