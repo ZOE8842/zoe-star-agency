@@ -278,7 +278,7 @@ export default async function HomePage() {
           {/* Header */}
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-end mb-14 md:mb-16">
             <MotionReveal>
-              <LiveDot label="Elite Agency Club" meta="Deutschland · 2026" className="mb-6" />
+              <LiveDot label="Elite Agency Club" meta="Deutschland · seit 2025" className="mb-6" />
               <h2 className="heading-display text-cream text-4xl md:text-6xl leading-[1.0] tracking-[-0.02em]">
                 Deutschlands{" "}
                 <span className="text-champagne italic">Elite Agency Club.</span>
@@ -286,7 +286,7 @@ export default async function HomePage() {
             </MotionReveal>
             <MotionReveal delay={0.1}>
               <p className="text-cream/65 text-lg leading-relaxed max-w-md md:justify-self-end">
-                Persönliches Creator-Management aus Deutschland. Fokus auf TikTok LIVE — langfristig, exklusiv, mit echtem Aufbau-Plan.
+                Persönliches Creator-Management aus Deutschland, gegründet im Oktober 2025. Fokus auf TikTok LIVE — langfristig, exklusiv, mit echtem Aufbau-Plan.
               </p>
             </MotionReveal>
           </div>

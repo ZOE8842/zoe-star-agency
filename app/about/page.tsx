@@ -42,7 +42,7 @@ export default async function AboutPage() {
 
           <div className="container-luxe relative z-10 pt-32 md:pt-40 pb-20 md:pb-28">
             <MotionReveal>
-              <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · 2026" className="mb-6 md:mb-8" />
+              <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · seit 2025" className="mb-6 md:mb-8" />
             </MotionReveal>
             <MotionReveal delay={0.08}>
               <h1 className="leading-[0.92] tracking-[-0.025em] max-w-5xl">
@@ -56,7 +56,7 @@ export default async function AboutPage() {
             </MotionReveal>
             <MotionReveal delay={0.18}>
               <p className="text-cream/70 text-base md:text-xl leading-relaxed max-w-2xl mt-7 md:mt-10">
-                ZOE⭐ STAR AGENCY ist Teil des <span className="text-champagne">TikTok Elite Agency Club Deutschland</span> mit Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung.
+                ZOE⭐ STAR AGENCY ist Teil des <span className="text-champagne">TikTok Elite Agency Club Deutschland</span> mit Fokus auf TikTok LIVE, Creator-Aufbau und langfristige Entwicklung. Gegründet im Oktober 2025, seit dem ersten Tag Elite-Agentur.
               </p>
             </MotionReveal>
           </div>
@@ -111,6 +111,40 @@ export default async function AboutPage() {
                     <p className="md:col-span-3 eyebrow">{s.label}</p>
                     <p className="md:col-span-6 font-display italic text-cream text-2xl md:text-3xl leading-snug">{s.value}</p>
                     <p className="md:col-span-3 text-cream/55 text-sm md:text-base">{s.hint}</p>
+                  </div>
+                </MotionReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Erfolge — Event-Ergebnisse seit der Gründung (Oktober 2025).
+            Bewusst ohne Umsatz-/Diamanten-Zahlen, die bleiben intern. */}
+        <section className="relative py-20 md:py-28 overflow-hidden border-b border-champagne/10">
+          <div className="container-luxe relative z-10">
+            <div className="mb-12 md:mb-16">
+              <MotionReveal>
+                <p className="eyebrow mb-5">Erfolge</p>
+              </MotionReveal>
+              <MotionReveal delay={0.08}>
+                <h2 className="leading-[0.92] tracking-[-0.02em]">
+                  <span className="block mixed-type-line-1 text-cream/90 text-[40px] sm:text-[60px] md:text-[80px] lg:text-[96px]">Seit Oktober 2025.</span>
+                  <span className="block mixed-type-line-2 text-champagne -mt-1 text-[48px] sm:text-[72px] md:text-[96px] lg:text-[112px]">Gemeinsam erreicht.</span>
+                </h2>
+              </MotionReveal>
+            </div>
+
+            <div className="border-t border-champagne/15">
+              {[
+                { label: "LIVE Fest 2025", value: "Sieg bei den Newcomer-Agenturen." },
+                { label: "Community Fest 2026", value: "Platz 1 in der Gold-Liga." },
+                { label: "Regionale Events", value: "Viele Siege, zum Beispiel bei „Nie ohne mein Team“." },
+                { label: "Global Summit 2026", value: "Dabei beim TikTok LIVE Creator Networks Global Summit." },
+              ].map((s, i) => (
+                <MotionReveal key={s.label} delay={i * 0.08}>
+                  <div className="border-b border-champagne/15 py-7 md:py-9 grid md:grid-cols-12 gap-6 items-baseline">
+                    <p className="md:col-span-3 eyebrow">{s.label}</p>
+                    <p className="md:col-span-9 font-display italic text-cream text-2xl md:text-3xl leading-snug">{s.value}</p>
                   </div>
                 </MotionReveal>
               ))}

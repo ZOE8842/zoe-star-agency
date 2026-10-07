@@ -53,7 +53,7 @@ export default async function AgencyPage() {
 
           <div className="container-luxe relative z-10 pt-32 md:pt-40 pb-20 md:pb-28">
             <MotionReveal>
-              <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · 2026" className="mb-6 md:mb-8" />
+              <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · seit 2025" className="mb-6 md:mb-8" />
             </MotionReveal>
             <MotionReveal delay={0.08}>
               <h1 className="leading-[0.92] tracking-[-0.025em] max-w-5xl">

@@ -141,7 +141,7 @@ export default async function KooperationenPage({ searchParams }: SearchProps) {
 
           <div className="container-luxe relative z-10 w-full pt-32 pb-20 md:pt-40 md:pb-24">
             <div className="hero-rise" style={{ animationDelay: "0.05s" }}>
-              <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · 2026" />
+              <LiveDot label="TikTok Elite Agency Club" meta="Deutschland · seit 2025" />
             </div>
 
             <h1 className="mt-6 md:mt-8 leading-[0.92] tracking-[-0.025em] max-w-5xl">
